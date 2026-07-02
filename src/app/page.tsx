@@ -1,65 +1,129 @@
-import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-[calc(100vh-8rem)]">
+      {/* Hero */}
+      <div className="max-w-5xl mx-auto px-4 pt-24 pb-16 text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium mb-8 border border-border bg-gold-soft text-gold-royal">
+          <span className="w-2 h-2 rounded-full bg-gold" />
+          Nomba Hackathon 2026
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        <h1 className="text-5xl sm:text-7xl font-bold tracking-tight mb-6 leading-tight text-primary">
+          Route Every Payment
+          <br />
+          <span className="text-gold">Where It Belongs.</span>
+        </h1>
+
+        <p className="text-lg sm:text-xl max-w-2xl mx-auto mb-12 leading-relaxed text-muted">
+          One student payment. Multiple wallets. Zero reconciliation.
+          Split automatically routes fees to institution, faculty, department,
+          and association wallets with complete transparency.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-24">
+          <Link
+            href="/pay"
+            className="px-8 py-3.5 text-lg font-semibold rounded-xl bg-gold text-black hover:brightness-110 transition-all duration-200"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Pay Your Dues
+          </Link>
+          <Link
+            href="/register"
+            className="px-8 py-3.5 text-lg font-semibold rounded-xl border border-border text-primary hover:bg-hover transition-all duration-200"
           >
-            Documentation
-          </a>
+            Register Your Institution
+          </Link>
+          <Link
+            href="/dashboard"
+            className="px-8 py-3.5 text-lg font-semibold rounded-xl text-muted hover:text-primary transition-colors duration-200"
+          >
+            View Dashboard →
+          </Link>
         </div>
-      </main>
+
+        {/* How It Works */}
+        <div className="mb-24">
+          <h2 className="text-2xl font-bold mb-10 text-center text-primary">
+            How It Works
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[
+              { num: "01", title: "Institution Registers", desc: "University signs up and gets approved. Configures their fee structure." },
+              { num: "02", title: "Finance Configures Fees", desc: "Sets fee items per level and fixed allocation rules for each wallet." },
+              { num: "03", title: "Student Pays via Nomba", desc: "Enters matric, sees full breakdown, pays securely in seconds." },
+              { num: "04", title: "Split Routes Automatically", desc: "Funds atomically routed to wallets. Withdrawals require consensus approval." },
+            ].map((step) => (
+              <div
+                key={step.num}
+                className="p-6 rounded-xl border border-border bg-surface text-left transition-all duration-200 hover:scale-[1.02] hover:border-gold-royal"
+              >
+                <span className="text-sm font-mono mb-3 block text-gold">
+                  {step.num}
+                </span>
+                <h3 className="font-semibold mb-2 text-primary">{step.title}</h3>
+                <p className="text-sm leading-relaxed text-muted">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Features Grid */}
+        <div className="mb-24">
+          <h2 className="text-2xl font-bold mb-8 text-center text-primary">
+            Platform Features
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {[
+              "10 Role RBAC", "Multi-Role Users", "Fee per Level",
+              "Dept/Faculty/SUG Dues", "Nomba Integration",
+              "Fixed Allocation", "Withdrawal Consensus", "Immutable Ledger",
+              "Institution Onboarding", "CSV Import",
+            ].map((badge) => (
+              <span
+                key={badge}
+                className="px-3 py-2 text-xs font-medium rounded-lg border border-border bg-surface text-muted transition-all duration-200 hover:border-gold-royal hover:text-gold"
+              >
+                {badge}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Role Hierarchy */}
+        <div className="rounded-2xl border border-border bg-surface p-8 text-left max-w-3xl mx-auto">
+          <h2 className="text-xl font-bold mb-6 text-primary">Role Hierarchy</h2>
+          <div className="space-y-1">
+            {[
+              ["SUPER_ADMIN", "Global oversight, approves institutions"],
+              ["INSTITUTION_ADMIN", "Manages structure & users"],
+              ["FINANCE", "Configures fees & allocation rules"],
+              ["STUDENT_AFFAIRS", "Creates & manages associations"],
+              ["DEAN", "Faculty oversight, assigns HODs"],
+              ["HOD", "Department oversight, assigns advisors"],
+              ["STAFF / STAFF_ADVISOR", "Receives allowances, approves withdrawals"],
+              ["STUDENT_EXCO", "Initiates association withdrawals"],
+              ["STUDENT", "Pays fees, views transparency data"],
+            ].map(([role, desc]) => (
+              <div
+                key={role}
+                className="flex items-center gap-4 py-2.5 border-b border-border-subtle last:border-0"
+              >
+                <span className="text-xs font-mono font-bold px-2.5 py-1 rounded min-w-[160px] bg-gold-soft text-gold">
+                  {role}
+                </span>
+                <span className="text-sm text-secondary">{desc}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Tagline */}
+        <p className="mt-16 text-sm text-muted-dark">
+          Every payment. Every allocation. Complete transparency.
+        </p>
+      </div>
     </div>
   );
 }

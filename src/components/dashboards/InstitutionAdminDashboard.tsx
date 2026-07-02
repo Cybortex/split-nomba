@@ -1,0 +1,733 @@
+"use client";
+
+import { useState } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+type Tab = "overview" | "users" | "fees" | "allocation";
+
+// ============================================================================
+// ROLE LABELS (shared across tabs)
+// ============================================================================
+const ROLE_LABELS: Record<string, string> = {
+  SUPER_ADMIN: "Super Admin",
+  INSTITUTION_ADMIN: "Institution Admin",
+  FINANCE: "Finance",
+  STUDENT_AFFAIRS: "Student Affairs",
+  DEAN: "Dean",
+  HOD: "HOD",
+  STAFF: "Staff",
+  STAFF_ADVISOR: "Staff Advisor",
+  STUDENT_EXCO: "Student Exco",
+  STUDENT: "Student",
+};
+
+const ASSIGNABLE_ROLES = [
+  "FINANCE",
+  "STUDENT_AFFAIRS",
+  "DEAN",
+  "HOD",
+  "STAFF",
+  "STAFF_ADVISOR",
+  "STUDENT_EXCO",
+  "STUDENT",
+] as const;
+
+const FEE_CATEGORIES = [
+  { value: "tuition" as const, label: "Tuition" },
+  { value: "department_dues" as const, label: "Department Dues" },
+  { value: "faculty_dues" as const, label: "Faculty Dues" },
+  { value: "sug_dues" as const, label: "SUG Dues" },
+];
+
+const LEVELS = [100, 200, 300, 400, 500];
+
+const WALLET_TYPES = [
+  { value: "institution", label: "Institution" },
+  { value: "faculty", label: "Faculty" },
+  { value: "department", label: "Department" },
+  { value: "association", label: "Association" },
+] as const;
+
+// ============================================================================
+// TAB BUTTONS
+// ============================================================================
+function TabBar({ activeTab, onTabChange }: { activeTab: Tab; onTabChange: (tab: Tab) => void }) {
+  const tabs: { key: Tab; label: string; icon: string }[] = [
+    { key: "overview", label: "Overview", icon: "📊" },
+    { key: "users", label: "Users", icon: "👥" },
+    { key: "fees", label: "Fees", icon: "💰" },
+    { key: "allocation", label: "Allocation", icon: "⚖️" },
+  ];
+
+  return (
+    <div className="flex flex-wrap gap-2 mb-6">
+      {tabs.map((tab) => (
+        <button
+          key={tab.key}
+          onClick={() => onTabChange(tab.key)}
+          className={`px-4 py-2 text-sm font-medium rounded-lg border transition-all duration-200 ${
+            activeTab === tab.key
+              ? "bg-gold text-black border-gold"
+              : "bg-transparent text-secondary border-border hover:bg-hover"
+          }`}
+        >
+          <span className="mr-1.5">{tab.icon}</span>
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================================
+// OVERVIEW TAB
+// ============================================================================
+function OverviewTab({ institutionId }: { institutionId: string }) {
+  const wallets = useQuery(api.wallets.listAll, { institutionId: institutionId as any });
+  const students = useQuery(api.studentRecords.listStudents, { institutionId: institutionId as any });
+
+  if (!wallets) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <div className="skeleton w-8 h-8 rounded-full" />
+      </div>
+    );
+  }
+
+  const totalCollected = wallets.reduce((sum: number, w: any) => sum + w.totalCollected, 0);
+  const totalBalance = wallets.reduce((sum: number, w: any) => sum + w.availableBalance, 0);
+  const totalTransactions = wallets.reduce((sum: number, w: any) => sum + w.transactionCount, 0);
+  const totalStudents = students?.length ?? 0;
+
+  const stats = [
+    { label: "Total Collected", value: `₦${totalCollected.toLocaleString()}`, color: "text-gold" },
+    { label: "Available Balance", value: `₦${totalBalance.toLocaleString()}`, color: "text-success" },
+    { label: "Transactions", value: totalTransactions.toLocaleString(), color: "text-info" },
+    { label: "Active Students", value: totalStudents.toLocaleString(), color: "text-pending" },
+  ];
+
+  const walletTypeGroups = [
+    { type: "institution", label: "Institution", gradient: "from-gold/10 to-gold/5" },
+    { type: "faculty", label: "Faculty", gradient: "from-success/10 to-success/5" },
+    { type: "department", label: "Department", gradient: "from-info/10 to-info/5" },
+    { type: "association", label: "Association", gradient: "from-pending/10 to-pending/5" },
+  ] as const;
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((stat) => (
+          <div key={stat.label} className="p-6 rounded-xl border border-border bg-surface">
+            <p className="text-sm text-muted mb-1">{stat.label}</p>
+            <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Wallet Breakdown */}
+      {walletTypeGroups.map(({ type, label, gradient }) => {
+        const typeWallets = wallets.filter((w: any) => w.type === type);
+        if (typeWallets.length === 0) return null;
+
+        return (
+          <div key={type} className={`rounded-xl border border-border bg-gradient-to-br ${gradient} p-6`}>
+            <h3 className="font-semibold text-primary mb-4">{label} Wallets</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-muted">
+                    <th className="pb-2 font-medium">Name</th>
+                    <th className="pb-2 font-medium text-right">Balance</th>
+                    <th className="pb-2 font-medium text-right">Collected</th>
+                    <th className="pb-2 font-medium text-right">Txns</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {typeWallets.map((wallet: any) => (
+                    <tr key={wallet._id} className="border-t border-border-subtle">
+                      <td className="py-2 font-medium text-primary">{wallet.name}</td>
+                      <td className="py-2 text-right font-mono text-success">
+                        ₦{wallet.availableBalance.toLocaleString()}
+                      </td>
+                      <td className="py-2 text-right font-mono text-gold">
+                        ₦{wallet.totalCollected.toLocaleString()}
+                      </td>
+                      <td className="py-2 text-right text-secondary">{wallet.transactionCount}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })}
+
+      {wallets.length === 0 && (
+        <div className="p-12 rounded-xl border border-border bg-surface text-center">
+          <p className="text-muted">No wallets created yet. Import an institution structure to get started.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// USERS TAB
+// ============================================================================
+function UsersTab({ institutionId }: { institutionId: string }) {
+  const currentUser = useQuery(api.auth.getCurrentUser);
+  const users = useQuery(api.auth.listInstitutionUsers, { institutionId: institutionId as any });
+  const addRole = useMutation(api.auth.addUserRole);
+  const removeRole = useMutation(api.auth.removeUserRole);
+  const deactivate = useMutation(api.auth.deactivateUser);
+
+  const [processing, setProcessing] = useState<string | null>(null);
+  const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const showMessage = (type: "success" | "error", text: string) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage(null), 4000);
+  };
+
+  const handleAddRole = async (userId: string, role: string) => {
+    setProcessing(`add-${userId}-${role}`);
+    try {
+      await addRole({ userId: userId as any, role });
+      showMessage("success", `Added ${ROLE_LABELS[role] || role} role`);
+    } catch (err: any) {
+      showMessage("error", err.message);
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleRemoveRole = async (userId: string, role: string) => {
+    setProcessing(`remove-${userId}-${role}`);
+    try {
+      await removeRole({ userId: userId as any, role });
+      showMessage("success", `Removed ${ROLE_LABELS[role] || role} role`);
+    } catch (err: any) {
+      showMessage("error", err.message);
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleDeactivate = async (userId: string) => {
+    if (!confirm("Deactivate this user? They will not be able to log in.")) return;
+    setProcessing(`deactivate-${userId}`);
+    try {
+      await deactivate({ userId: userId as any });
+      showMessage("success", "User deactivated");
+    } catch (err: any) {
+      showMessage("error", err.message);
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  if (!currentUser || !users) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <div className="skeleton w-8 h-8 rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-semibold text-primary">User Management</h2>
+          <p className="text-xs text-muted mt-0.5">{users.length} users in this institution</p>
+        </div>
+      </div>
+
+      {message && (
+        <div className={`p-3 rounded-lg text-sm border ${
+          message.type === "success"
+            ? "bg-success/10 text-success border-success/20"
+            : "bg-error/10 text-error border-error/20"
+        }`}>
+          {message.text}
+        </div>
+      )}
+
+      {users.length === 0 ? (
+        <div className="p-8 rounded-xl border border-border bg-surface text-center">
+          <p className="text-muted">No users found in this institution.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {users.map((user: any) => (
+            <div
+              key={user._id}
+              className="p-4 rounded-xl border border-border bg-surface transition-all duration-200 hover:border-gold-royal"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gold/10 flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs font-bold text-gold">
+                        {user.email.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-primary truncate">{user.email}</p>
+                      <p className="text-xs text-muted font-mono truncate">
+                        ID: {user.clerkId.substring(0, 12)}...
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Roles */}
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {user.roles.map((role: string) => (
+                      <span
+                        key={role}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium ${
+                          !user.isActive
+                            ? "bg-surface-secondary text-muted"
+                            : role === "SUPER_ADMIN" || role === "INSTITUTION_ADMIN"
+                            ? "bg-gold/10 text-gold"
+                            : "bg-surface-secondary text-secondary"
+                        }`}
+                      >
+                        {ROLE_LABELS[role] || role}
+                        {role !== "SUPER_ADMIN" && role !== "INSTITUTION_ADMIN" && role !== "STUDENT" && user.roles.length > 1 && (
+                          <button
+                            onClick={() => handleRemoveRole(user._id, role)}
+                            disabled={processing === `remove-${user._id}-${role}`}
+                            className="ml-1 hover:text-error transition-colors duration-200"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </span>
+                    ))}
+                    {!user.isActive && (
+                      <span className="px-2.5 py-1 rounded text-xs font-medium bg-error/10 text-error">
+                        Deactivated
+                      </span>
+                    )}
+                    {user.isActive && (
+                      <span className="px-2 py-0.5 rounded text-xs bg-success/10 text-success">
+                        Active
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 ml-4 flex-shrink-0">
+                  <button
+                    onClick={() => setExpandedUser(expandedUser === user._id ? null : user._id)}
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-secondary hover:bg-hover transition-all duration-200"
+                  >
+                    {expandedUser === user._id ? "Close" : "Manage"}
+                  </button>
+                  {user.isActive && (
+                    <button
+                      onClick={() => handleDeactivate(user._id)}
+                      disabled={processing === `deactivate-${user._id}`}
+                      className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-error hover:bg-error/10 transition-all duration-200 disabled:opacity-50"
+                    >
+                      {processing === `deactivate-${user._id}` ? "..." : "Deactivate"}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Expanded: Add Role */}
+              {expandedUser === user._id && (
+                <div className="mt-4 pt-4 border-t border-border-subtle">
+                  <p className="text-xs font-medium text-muted mb-2">Add Role</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {ASSIGNABLE_ROLES.filter(
+                      (role) => !user.roles.includes(role)
+                    ).map((role) => (
+                      <button
+                        key={role}
+                        onClick={() => handleAddRole(user._id, role)}
+                        disabled={processing === `add-${user._id}-${role}`}
+                        className="px-2.5 py-1 text-xs font-medium rounded-lg border border-border text-secondary bg-surface-secondary hover:bg-hover transition-all duration-200 disabled:opacity-50"
+                      >
+                        + {ROLE_LABELS[role] || role}
+                      </button>
+                    ))}
+                    {ASSIGNABLE_ROLES.filter(
+                      (role) => !user.roles.includes(role)
+                    ).length === 0 && (
+                      <p className="text-xs text-muted">User has all assignable roles.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// FEES TAB
+// ============================================================================
+function FeesTab({ institutionId }: { institutionId: string }) {
+  const [selectedLevel, setSelectedLevel] = useState<number>(100);
+  const feeSummary = useQuery(api.fees.getFeeSummary, { institutionId: institutionId as any });
+  const addFeeItem = useMutation(api.fees.addFeeItem);
+  const removeFeeItem = useMutation(api.fees.removeFeeItem);
+
+  const [newItem, setNewItem] = useState({ itemName: "", amount: "", category: "tuition" as "tuition" | "department_dues" | "faculty_dues" | "sug_dues" });
+  const [adding, setAdding] = useState(false);
+  const [feeMessage, setFeeMessage] = useState("");
+
+  const levelData = Array.isArray(feeSummary)
+    ? (feeSummary as any).find((l: any) => l.level === selectedLevel)
+    : null;
+  const levelFees = levelData?.categories?.flatMap((c: any) => c.items) || [];
+  const totalAmount = levelData?.total || 0;
+
+  const handleAdd = async () => {
+    if (!newItem.itemName || !newItem.amount) return;
+    setAdding(true);
+    setFeeMessage("");
+    try {
+      await addFeeItem({
+        institutionId: institutionId as any,
+        level: selectedLevel,
+        itemName: newItem.itemName,
+        amount: Number(newItem.amount),
+        category: newItem.category,
+      });
+      setNewItem({ itemName: "", amount: "", category: "tuition" });
+      setFeeMessage("Fee item added successfully!");
+      setTimeout(() => setFeeMessage(""), 3000);
+    } catch (err: any) {
+      setFeeMessage(err.message || "Failed to add fee item");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const handleRemove = async (itemId: string) => {
+    try {
+      await removeFeeItem({ itemId: itemId as any });
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="font-semibold text-primary">Level Fee Configuration</h2>
+        <p className="text-xs text-muted mt-0.5">Configure fixed fee items per academic level.</p>
+      </div>
+
+      {/* Level Selector */}
+      <div className="flex gap-2">
+        {LEVELS.map((level) => (
+          <button
+            key={level}
+            onClick={() => setSelectedLevel(level)}
+            className={`px-4 py-2 text-sm font-semibold rounded-lg border transition-all duration-200 ${
+              selectedLevel === level
+                ? "bg-gold text-black border-gold"
+                : "bg-transparent text-secondary border-border hover:bg-hover"
+            }`}
+          >
+            {level}
+          </button>
+        ))}
+      </div>
+
+      {feeMessage && (
+        <div className={`p-3 rounded-lg text-sm border ${
+          feeMessage.includes("success") || feeMessage.includes("Success")
+            ? "bg-success/10 text-success border-success/20"
+            : "bg-error/10 text-error border-error/20"
+        }`}>
+          {feeMessage}
+        </div>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Fee Items */}
+        <div className="p-5 rounded-xl border border-border bg-surface">
+          <h3 className="font-semibold text-primary mb-3">Fee Items — {selectedLevel} Level</h3>
+          {levelFees.length > 0 ? (
+            <div className="space-y-2">
+              {levelFees.map((item: any) => (
+                <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-surface-secondary">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-medium text-primary truncate">{item.name}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded flex-shrink-0 ${
+                      item.category === "tuition" ? "bg-gold/10 text-gold" :
+                      item.category === "department_dues" ? "bg-info/10 text-info" :
+                      item.category === "faculty_dues" ? "bg-success/10 text-success" :
+                      "bg-pending/10 text-pending"
+                    }`}>
+                      {FEE_CATEGORIES.find((c) => c.value === item.category)?.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <span className="text-sm font-mono font-medium text-primary">
+                      ₦{item.amount.toLocaleString()}
+                    </span>
+                    <button
+                      onClick={() => handleRemove(item.id)}
+                      className="text-sm text-muted hover:text-error transition-colors duration-200"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <div className="flex justify-between pt-3 border-t border-border mt-3">
+                <span className="text-sm font-semibold text-primary">Total</span>
+                <span className="text-sm font-mono font-bold text-gold">
+                  ₦{totalAmount.toLocaleString()}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted py-8 text-center">No fee items configured for this level.</p>
+          )}
+        </div>
+
+        {/* Add Fee Item */}
+        <div className="p-5 rounded-xl border border-border bg-surface">
+          <h3 className="font-semibold text-primary mb-3">Add Fee Item</h3>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium mb-1 text-secondary">Item Name</label>
+              <input
+                type="text"
+                placeholder="e.g., Tuition, Lab Fee"
+                value={newItem.itemName}
+                onChange={(e) => setNewItem({ ...newItem, itemName: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1 text-secondary">Category</label>
+              <select
+                value={newItem.category}
+                onChange={(e) => setNewItem({ ...newItem, category: e.target.value as any })}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
+              >
+                {FEE_CATEGORIES.map((cat) => (
+                  <option key={cat.value} value={cat.value}>{cat.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1 text-secondary">Amount (₦)</label>
+              <input
+                type="number"
+                placeholder="50000"
+                value={newItem.amount}
+                onChange={(e) => setNewItem({ ...newItem, amount: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
+              />
+            </div>
+            <button
+              onClick={handleAdd}
+              disabled={adding || !newItem.itemName || !newItem.amount}
+              className="w-full py-2.5 text-sm font-semibold rounded-lg bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110"
+            >
+              {adding ? "Adding..." : "Add Fee Item"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// ALLOCATION TAB
+// ============================================================================
+function AllocationTab({ institutionId }: { institutionId: string }) {
+  const rules = useQuery(api.payments.getAllocationRules, { institutionId: institutionId as any });
+  const saveRules = useMutation(api.payments.saveAllocationRules);
+
+  const [newRule, setNewRule] = useState({
+    walletType: "institution" as string,
+    targetEntityId: "",
+    targetName: "",
+    amount: "",
+    priority: "1",
+  });
+  const [saving, setSaving] = useState(false);
+  const [allocMessage, setAllocMessage] = useState("");
+
+  const handleAdd = async () => {
+    if (!newRule.targetName || !newRule.amount) return;
+    setSaving(true);
+    setAllocMessage("");
+    try {
+      await saveRules({
+        institutionId: institutionId as any,
+        rules: [{
+          walletType: newRule.walletType as "institution" | "faculty" | "department" | "association",
+          entityKey: newRule.targetEntityId || newRule.targetName.toLowerCase().replace(/\s+/g, "_"),
+          targetEntityId: newRule.targetEntityId || newRule.targetName.toLowerCase().replace(/\s+/g, "_"),
+          targetName: newRule.targetName,
+          amount: Number(newRule.amount),
+          priority: Number(newRule.priority),
+        }],
+      });
+      setAllocMessage("Allocation rule added successfully!");
+      setNewRule({ walletType: "institution", targetEntityId: "", targetName: "", amount: "", priority: "1" });
+      setTimeout(() => setAllocMessage(""), 3000);
+    } catch (err: any) {
+      setAllocMessage(err.message || "Failed to add rule");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="font-semibold text-primary">Fixed Allocation Rules</h2>
+        <p className="text-xs text-muted mt-0.5">
+          Define fixed ₦ amounts each wallet receives per student payment. Applied in priority order.
+        </p>
+      </div>
+
+      {allocMessage && (
+        <div className={`p-3 rounded-lg text-sm border ${
+          allocMessage.includes("success") || allocMessage.includes("Success")
+            ? "bg-success/10 text-success border-success/20"
+            : "bg-error/10 text-error border-error/20"
+        }`}>
+          {allocMessage}
+        </div>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Current Rules */}
+        <div className="p-5 rounded-xl border border-border bg-surface">
+          <h3 className="font-semibold text-primary mb-3">Current Rules</h3>
+          {rules && rules.length > 0 ? (
+            <div className="space-y-2">
+              {[...rules].sort((a: any, b: any) => a.priority - b.priority).map((rule: any, i: number) => (
+                <div key={rule._id || i} className="flex items-center justify-between p-3 rounded-lg bg-surface-secondary">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-xs font-mono text-muted-dark flex-shrink-0">#{rule.priority}</span>
+                    <div className="min-w-0">
+                      <span className="text-sm font-medium text-primary truncate block">{rule.targetName}</span>
+                      <span className="text-xs px-2 py-0.5 rounded bg-gold/10 text-gold-royal">
+                        {rule.walletType}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-sm font-mono font-medium text-primary flex-shrink-0">
+                    ₦{rule.amount.toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted py-8 text-center">No allocation rules configured.</p>
+          )}
+        </div>
+
+        {/* Add Rule */}
+        <div className="p-5 rounded-xl border border-border bg-surface">
+          <h3 className="font-semibold text-primary mb-3">Add Allocation Rule</h3>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium mb-1 text-secondary">Wallet Type</label>
+              <select
+                value={newRule.walletType}
+                onChange={(e) => setNewRule({ ...newRule, walletType: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
+              >
+                {WALLET_TYPES.map((wt) => (
+                  <option key={wt.value} value={wt.value}>{wt.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1 text-secondary">Wallet Name</label>
+              <input
+                type="text"
+                placeholder="e.g., Main Institution Wallet"
+                value={newRule.targetName}
+                onChange={(e) => setNewRule({ ...newRule, targetName: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1 text-secondary">Fixed Amount (₦)</label>
+              <input
+                type="number"
+                placeholder="50000"
+                value={newRule.amount}
+                onChange={(e) => setNewRule({ ...newRule, amount: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1 text-secondary">Priority</label>
+              <input
+                type="number"
+                placeholder="1"
+                value={newRule.priority}
+                onChange={(e) => setNewRule({ ...newRule, priority: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
+              />
+              <p className="text-xs text-muted mt-1">Lower number = higher priority (applied first)</p>
+            </div>
+            <button
+              onClick={handleAdd}
+              disabled={saving || !newRule.targetName || !newRule.amount}
+              className="w-full py-2.5 text-sm font-semibold rounded-lg bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110"
+            >
+              {saving ? "Adding..." : "Add Rule"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN DASHBOARD
+// ============================================================================
+export function InstitutionAdminDashboard({ institutionId }: { institutionId?: string }) {
+  const myInst = useQuery(api.auth.getMyInstitution);
+  const effectiveInstId = institutionId || (myInst?._id as string | undefined);
+  const [activeTab, setActiveTab] = useState<Tab>("overview");
+
+  if (!effectiveInstId) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="skeleton w-8 h-8 rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 animate-fade-in">
+      {/* Tab Navigation */}
+      <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Tab Content */}
+      {activeTab === "overview" && <OverviewTab institutionId={effectiveInstId} />}
+      {activeTab === "users" && <UsersTab institutionId={effectiveInstId} />}
+      {activeTab === "fees" && <FeesTab institutionId={effectiveInstId} />}
+      {activeTab === "allocation" && <AllocationTab institutionId={effectiveInstId} />}
+    </div>
+  );
+}

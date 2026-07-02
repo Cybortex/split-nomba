@@ -1,0 +1,92 @@
+matric,faculty,department,level,email,fullName
+FUT/2022/CSC/001,Computing,Computer Science,200,ade.olabisi@fut.edu.ng,Ade Olabisi
+FUT/2022/CSC/002,Computing,Computer Science,200,chidi.okonkwo@fut.edu.ng,Chidi Okonkwo
+FUT/2022/CSC/003,Computing,Computer Science,300,fatima.bello@fut.edu.ng,Fatima Bello
+FUT/2022/CSC/004,Computing,Computer Science,300,oluwaseun.adeyemi@fut.edu.ng,Oluwaseun Adeyemi
+FUT/2022/CSC/005,Computing,Computer Science,400,amina.hassan@fut.edu.ng,Amina Hassan
+FUT/2022/CSC/006,Computing,Computer Science,400,emeka.nwachukwu@fut.edu.ng,Emeka Nwachukwu
+FUT/2022/CSC/007,Computing,Computer Science,500,funmi.ogunlesi@fut.edu.ng,Funmi Ogunlesi
+FUT/2022/CSC/008,Computing,Computer Science,500,ibrahim.suleiman@fut.edu.ng,Ibrahim Suleiman
+FUT/2022/CSC/009,Computing,Computer Science,100,joy.udeh@fut.edu.ng,Joy Udeh
+FUT/2022/CSC/010,Computing,Computer Science,100,kehinde.adewale@fut.edu.ng,Kehinde Adewale
+FUT/2022/CYB/001,Computing,Cyber Security,200,lateef.yusuf@fut.edu.ng,Lateef Yusuf
+FUT/2022/CYB/002,Computing,Cyber Security,200,mariam.danjuma@fut.edu.ng,Mariam Danjuma
+FUT/2022/CYB/003,Computing,Cyber Security,300,ngozi.obi@fut.edu.ng,Ngozi Obi
+FUT/2022/CYB/004,Computing,Cyber Security,300,peter.akpan@fut.edu.ng,Peter Akpan
+FUT/2022/CYB/005,Computing,Cyber Security,400,queen.ekwueme@fut.edu.ng,Queen Ekwueme
+FUT/2022/CYB/006,Computing,Cyber Security,400,rasheed.abdullahi@fut.edu.ng,Rasheed Abdullahi
+FUT/2022/CYB/007,Computing,Cyber Security,500,sarah.charles@fut.edu.ng,Sarah Charles
+FUT/2022/CYB/008,Computing,Cyber Security,500,tunde.balogun@fut.edu.ng,Tunde Balogun
+FUT/2022/CYB/009,Computing,Cyber Security,100,uche.nnamdi@fut.edu.ng,Uche Nnamdi
+FUT/2022/CYB/010,Computing,Cyber Security,100,vincent.okoro@fut.edu.ng,Vincent Okoro
+FUT/2022/SE/001,Computing,Software Engineering,200,adedayo.oladipo@fut.edu.ng,Adedayo Oladipo
+FUT/2022/SE/002,Computing,Software Engineering,200,blessing.etim@fut.edu.ng,Blessing Etim
+FUT/2022/SE/003,Computing,Software Engineering,300,chinonso.eze@fut.edu.ng,Chinonso Eze
+FUT/2022/SE/004,Computing,Software Engineering,300,damilola.ogunbiyi@fut.edu.ng,Damilola Ogunbiyi
+FUT/2022/SE/005,Computing,Software Engineering,400,esther.nduka@fut.edu.ng,Esther Nduka
+FUT/2022/SE/006,Computing,Software Engineering,400,femi.alabi@fut.edu.ng,Femi Alabi
+FUT/2022/SE/007,Computing,Software Engineering,500,grace.olaniyan@fut.edu.ng,Grace Olaniyan
+FUT/2022/SE/008,Computing,Software Engineering,500,henry.udeagbala@fut.edu.ng,Henry Udeagbala
+FUT/2022/SE/009,Computing,Software Engineering,100,ifeanyi.mbachu@fut.edu.ng,Ifeanyi Mbachu
+FUT/2022/SE/010,Computing,Software Engineering,100,jennifer.ali@fut.edu.ng,Jennifer Ali
+FUT/2022/IT/001,Computing,Information Technology,200,kenneth.adeola@fut.edu.ng,Kenneth Adeola
+FUT/2022/IT/002,Computing,Information Technology,200,lola.ajayi@fut.edu.ng,Lola Ajayi
+FUT/2022/IT/003,Computing,Information Technology,300,michael.obinna@fut.edu.ng,Michael Obinna
+FUT/2022/IT/004,Computing,Information Technology,300,nehimiah.shola@fut.edu.ng,Nehimiah Shola
+FUT/2022/IT/005,Computing,Information Technology,400,oluchi.okenwa@fut.edu.ng,Oluchi Okenwa
+FUT/2022/IT/006,Computing,Information Technology,400,patience.ekong@fut.edu.ng,Patience Ekong
+FUT/2022/IT/007,Computing,Information Technology,500,quadri.oyedele@fut.edu.ng,Quadri Oyedele
+FUT/2022/IT/008,Computing,Information Technology,500,ruth.anuforo@fut.edu.ng,Ruth Anuforo
+FUT/2022/IT/009,Computing,Information Technology,100,simon.achumba@fut.edu.ng,Simon Achumba
+FUT/2022/IT/010,Computing,Information Technology,100,tolulope.fashola@fut.edu.ng,Tolulope Fashola
+FUT/2022/CIS/001,Computing,Computer Information Systems,200,uyi.omojola@fut.edu.ng,Uyi Omojola
+FUT/2022/CIS/002,Computing,Computer Information Systems,200,vivian.ekwu@fut.edu.ng,Vivian Ekwu
+FUT/2022/CIS/003,Computing,Computer Information Systems,300,wasiu.adeniyi@fut.edu.ng,Wasiu Adeniyi
+FUT/2022/CIS/004,Computing,Computer Information Systems,300,abigail.johnson@fut.edu.ng,Abigail Johnson
+FUT/2022/CIS/005,Computing,Computer Information Systems,400,benedict.otunba@fut.edu.ng,Benedict Otunba
+FUT/2022/CIS/006,Computing,Computer Information Systems,400,cynthia.bassey@fut.edu.ng,Cynthia Bassey
+FUT/2022/CIS/007,Computing,Computer Information Systems,100,david.ifeanyi@fut.edu.ng,David Ifeanyi
+FUT/2022/CIS/008,Computing,Computer Information Systems,100,elizabeth.ndubuisi@fut.edu.ng,Elizabeth Ndubuisi
+FUT/2022/EE/001,Engineering,Electrical Engineering,200,fredrick.ajibola@fut.edu.ng,Fredrick Ajibola
+FUT/2022/EE/002,Engineering,Electrical Engineering,200,gloria.anamah@fut.edu.ng,Gloria Anamah
+FUT/2022/EE/003,Engineering,Electrical Engineering,300,hannah.okeke@fut.edu.ng,Hannah Okeke
+FUT/2022/EE/004,Engineering,Electrical Engineering,300,isaac.ntia@fut.edu.ng,Isaac Ntia
+FUT/2022/EE/005,Engineering,Electrical Engineering,400,john.akinyemi@fut.edu.ng,John Akinyemi
+FUT/2022/EE/006,Engineering,Electrical Engineering,400,kemi.ogundele@fut.edu.ng,Kemi Ogundele
+FUT/2022/EE/007,Engineering,Electrical Engineering,500,lawal.adebayo@fut.edu.ng,Lawal Adebayo
+FUT/2022/EE/008,Engineering,Electrical Engineering,500,martha.chukwuma@fut.edu.ng,Martha Chukwuma
+FUT/2022/EE/009,Engineering,Electrical Engineering,100,nathan.ogechi@fut.edu.ng,Nathan Ogechi
+FUT/2022/EE/010,Engineering,Electrical Engineering,100,olivia.duru@fut.edu.ng,Olivia Duru
+FUT/2022/ME/001,Engineering,Mechanical Engineering,200,precious.uwazie@fut.edu.ng,Precious Uwazie
+FUT/2022/ME/002,Engineering,Mechanical Engineering,200,raphael.igwe@fut.edu.ng,Raphael Igwe
+FUT/2022/ME/003,Engineering,Mechanical Engineering,300,samuel.olagunju@fut.edu.ng,Samuel Olagunju
+FUT/2022/ME/004,Engineering,Mechanical Engineering,300,taiwo.olarewaju@fut.edu.ng,Taiwo Olarewaju
+FUT/2022/ME/005,Engineering,Mechanical Engineering,400,ubong.ekere@fut.edu.ng,Ubong Ekere
+FUT/2022/ME/006,Engineering,Mechanical Engineering,400,veronica.amadi@fut.edu.ng,Veronica Amadi
+FUT/2022/ME/007,Engineering,Mechanical Engineering,500,williams.edeh@fut.edu.ng,Williams Edeh
+FUT/2022/ME/008,Engineering,Mechanical Engineering,500,yemisi.bolaji@fut.edu.ng,Yemisi Bolaji
+FUT/2022/ME/009,Engineering,Mechanical Engineering,100,zainab.kabir@fut.edu.ng,Zainab Kabir
+FUT/2022/ME/010,Engineering,Mechanical Engineering,100,chukwudi.okpara@fut.edu.ng,Chukwudi Okpara
+FUT/2022/CE/001,Engineering,Civil Engineering,200,ebele.odafe@fut.edu.ng,Ebele Odafe
+FUT/2022/CE/002,Engineering,Civil Engineering,200,godwin.udoh@fut.edu.ng,Godwin Udoh
+FUT/2022/CE/003,Engineering,Civil Engineering,300,helen.ekwueme@fut.edu.ng,Helen Ekwueme
+FUT/2022/CE/004,Engineering,Civil Engineering,300,innocent.ugwu@fut.edu.ng,Innocent Ugwu
+FUT/2022/CE/005,Engineering,Civil Engineering,400,jacob.oboh@fut.edu.ng,Jacob Oboh
+FUT/2022/CE/006,Engineering,Civil Engineering,400,kudirat.adenuga@fut.edu.ng,Kudirat Adenuga
+FUT/2022/CE/007,Engineering,Civil Engineering,500,loveth.akpan@fut.edu.ng,Loveth Akpan
+FUT/2022/CE/008,Engineering,Civil Engineering,500,matthew.olanrewaju@fut.edu.ng,Matthew Olanrewaju
+FUT/2022/CE/009,Engineering,Civil Engineering,100,nnenna.obiakor@fut.edu.ng,Nnenna Obiakor
+FUT/2022/CE/010,Engineering,Civil Engineering,100,olalekan.salami@fut.edu.ng,Olalekan Salami
+FUT/2022/CH/001,Engineering,Chemical Engineering,200,bisi.adeyinka@fut.edu.ng,Bisi Adeyinka
+FUT/2022/CH/002,Engineering,Chemical Engineering,200,charles.igbokwe@fut.edu.ng,Charles Igbokwe
+FUT/2022/CH/003,Engineering,Chemical Engineering,300,daniel.obinna@fut.edu.ng,Daniel Obinna
+FUT/2022/CH/004,Engineering,Chemical Engineering,300,esther.fadipe@fut.edu.ng,Esther Fadipe
+FUT/2022/CH/005,Engineering,Chemical Engineering,400,favour.otu@fut.edu.ng,Favour Otu
+FUT/2022/CH/006,Engineering,Chemical Engineering,400,gabriel.ani@fut.edu.ng,Gabriel Ani
+FUT/2022/CH/007,Engineering,Chemical Engineering,100,hauwa.garba@fut.edu.ng,Hauwa Garba
+FUT/2022/CH/008,Engineering,Chemical Engineering,100,ifeoluwa.adeleke@fut.edu.ng,Ifeoluwa Adeleke
+FUT/2022/AG/001,Engineering,Agricultural Engineering,200,judith.ekwu@fut.edu.ng,Judith Ekwu
+FUT/2022/AG/002,Engineering,Agricultural Engineering,300,kingsley.ochai@fut.edu.ng,Kingsley Ochai
+FUT/2022/AG/003,Engineering,Agricultural Engineering,400,lilian.obi@fut.edu.ng,Lilian Obi
+FUT/2022/AG/004,Engineering,Agricultural Engineering,500,moses.adeleke@fut.edu.ng,Moses Adeleke
+FUT/2022/AG/005,Engineering,Agricultural Engineering,100,ndidi.okonkwo@fut.edu.ng,Ndidi Okonkwo

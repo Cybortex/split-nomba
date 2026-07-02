@@ -1,0 +1,114 @@
+import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@/convex/_generated/api";
+
+const client = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+/**
+ * Verify Nomba webhook signature using HMAC-SHA256.
+ */
+function verifyNombaSignature(payload: string, signature: string): boolean {
+  const secret = process.env.NOMBA_WEBHOOK_SECRET;
+  if (!secret) {
+    console.error("NOMBA_WEBHOOK_SECRET not configured");
+    return false;
+  }
+
+  const hash = crypto
+    .createHmac("sha256", secret)
+    .update(payload)
+    .digest("hex");
+
+  return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(signature));
+}
+
+/**
+ * Handle incoming Nomba webhook events.
+ * POST /api/webhooks/nomba
+ */
+export async function POST(request: NextRequest) {
+  const signature = request.headers.get("x-nomba-signature");
+  if (!signature) {
+    console.error("Missing X-Nomba-Signature header");
+    return NextResponse.json({ error: "Missing signature" }, { status: 401 });
+  }
+
+  const bodyText = await request.text();
+
+  if (!verifyNombaSignature(bodyText, signature)) {
+    console.error("Invalid webhook signature");
+    return NextResponse.json(
+      { error: "Unauthorized: invalid signature" },
+      { status: 401 }
+    );
+  }
+
+  let body: any;
+  try {
+    body = JSON.parse(bodyText);
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  try {
+    const { event, data } = body;
+
+    if (event !== "transaction.completed") {
+      console.log(`Ignoring event type: ${event}`);
+      return NextResponse.json({ received: true });
+    }
+
+    // ⚠️ IDEMPOTENCY CHECK
+    const txnRef = data.reference || data.transactionId;
+
+    const existingTxn = await client.query(api.payments.getPaymentByReference, {
+      reference: txnRef,
+    });
+
+    if (existingTxn && existingTxn.status === "completed") {
+      console.log(`✓ Already processed: ${txnRef}`);
+      return NextResponse.json({ already_processed: true });
+    }
+
+    if (!existingTxn) {
+      console.error(`Payment not found: ${txnRef}`);
+      return NextResponse.json({ error: "Payment record not found" });
+    }
+
+    // ⚠️ AMOUNT VERIFICATION
+    if (existingTxn.amount !== data.amount) {
+      console.error(
+        `Amount mismatch: DB ₦${existingTxn.amount} vs webhook ₦${data.amount}`
+      );
+      await client.mutation(api.paymentsInternal.logAudit, {
+        institutionId: existingTxn.institutionId,
+        action: "PAYMENT_FAILED",
+        entityId: existingTxn._id,
+        newValue: { error: "Amount mismatch" },
+        success: false,
+      });
+      return NextResponse.json({ error: "Amount mismatch" });
+    }
+
+    // Route payment to wallets with institution context
+    const allocation = await client.mutation(api.payments.routePayment, {
+      institutionId: existingTxn.institutionId,
+      paymentId: existingTxn._id,
+      nombaTransactionId: data.transactionId,
+      amount: data.amount,
+      faculty: existingTxn.faculty,
+      department: existingTxn.department,
+    });
+
+    console.log(`✓ Payment routed: ${txnRef} → wallets updated`, allocation);
+
+    return NextResponse.json({
+      success: true,
+      allocation,
+    });
+  } catch (error) {
+    console.error("Webhook error:", error);
+    return NextResponse.json({ error: "Internal processing error" });
+  }
+}

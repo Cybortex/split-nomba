@@ -1,26 +1,180 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Backgrounds */
+  --color-app: #08090B;
+  --color-surface: #0D0E12;
+  --color-surface-secondary: #121317;
+  --color-surface-alt: #0F1116;
+  --color-hover: #1D2028;
+
+  /* Accents */
+  --color-gold: #FFD700;
+  --color-gold-royal: #C9A03F;
+  --color-gold-soft: rgba(255, 215, 0, 0.08);
+  --color-gold-subtle: rgba(255, 215, 0, 0.05);
+
+  /* Text */
+  --color-primary: #FFFFFF;
+  --color-secondary: #D5DBE5;
+  --color-muted: #A5ADBA;
+  --color-muted-dark: #525866;
+
+  /* Borders */
+  --color-border: #313541;
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+
+  /* Status */
+  --color-success: #22C55E;
+  --color-error: #EF4444;
+  --color-pending: #F59E0B;
+  --color-info: #3B82F6;
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.3s ease-out;
+  --animate-scale-in: scale-in 0.2s ease-out;
+  --animate-pulse-gold: pulse-gold 2s infinite;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse-gold {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Base styles */
+body {
+  background-color: var(--color-app);
+  color: var(--color-primary);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #313541;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #525866;
+}
+
+/* Selection */
+::selection {
+  background-color: rgba(255, 215, 0, 0.2);
+  color: #FFFFFF;
+}
+
+/* Skeleton loader */
+@utility skeleton {
+  background: linear-gradient(90deg, #121317 25%, #1D2028 50%, #121317 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Gold focus ring */
+@utility focus-ring-gold {
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #FFD700;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ===== PRINT STYLES ===== */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  #receipt {
+    background: white !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  #receipt * {
+    color: black !important;
+    background: transparent !important;
+  }
+
+  #receipt .text-gold,
+  #receipt .text-gold-royal {
+    color: #B8860B !important;
+  }
+
+  #receipt .text-success {
+    color: #15803D !important;
+  }
+
+  #receipt .text-error {
+    color: #DC2626 !important;
+  }
+
+  #receipt .text-info {
+    color: #2563EB !important;
+  }
+
+  #receipt .text-pending {
+    color: #D97706 !important;
+  }
+
+  #receipt .bg-surface,
+  #receipt .bg-surface-secondary {
+    background: #F9FAFB !important;
+  }
+
+  #receipt .bg-gold-subtle,
+  #receipt .bg-success\/10,
+  #receipt .bg-pending\/10 {
+    background: #F3F4F6 !important;
+  }
+
+  #receipt .border-border,
+  #receipt .border-border-subtle {
+    border-color: #E5E7EB !important;
+  }
+
+  #receipt .font-mono {
+    font-size: 12px !important;
+  }
+
+  @page {
+    margin: 1.5cm;
+    size: A4 portrait;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }

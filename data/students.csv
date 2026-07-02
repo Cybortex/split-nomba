@@ -1,0 +1,11 @@
+matric,faculty,department,level,email,fullName
+FUT/2022/CSC/001,Computing,Computer Science,200,student1@fut.edu.ng,John Doe
+FUT/2022/CSC/002,Computing,Computer Science,200,student2@fut.edu.ng,Jane Smith
+FUT/2022/CSC/003,Computing,Computer Science,300,student3@fut.edu.ng,Michael Ade
+FUT/2022/CYB/001,Computing,Cyber Security,100,student4@fut.edu.ng,Sarah Okafor
+FUT/2022/CYB/002,Computing,Cyber Security,200,student5@fut.edu.ng,David Ibrahim
+FUT/2022/SE/001,Computing,Software Engineering,300,student6@fut.edu.ng,Grace Oyelade
+FUT/2022/SE/002,Computing,Software Engineering,400,student7@fut.edu.ng,Samuel Eze
+FUT/2022/EE/001,Engineering,Electrical Engineering,200,student8@fut.edu.ng,Esther Bello
+FUT/2022/ME/001,Engineering,Mechanical Engineering,100,student9@fut.edu.ng,Daniel Alabi
+FUT/2022/CE/001,Engineering,Civil Engineering,500,student10@fut.edu.ng,Ruth Nwachukwu

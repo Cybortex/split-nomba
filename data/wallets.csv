@@ -1,0 +1,17 @@
+type,name,entityId
+faculty,Computing Faculty,computing
+faculty,Engineering Faculty,engineering
+department,Computer Science Department,cs
+department,Cyber Security Department,cyber
+department,Software Engineering Department,se
+department,Electrical Engineering Department,ee
+department,Mechanical Engineering Department,me
+department,Civil Engineering Department,ce
+association,CS Association,cs-assoc
+association,Cyber Security Association,cyber-assoc
+association,Software Engineering Association,se-assoc
+association,Electrical Engineering Association,ee-assoc
+association,Mechanical Engineering Association,me-assoc
+association,Civil Engineering Association,ce-assoc
+institution,FUT Minna Main Wallet,fut-minna
+institution,ICT Infrastructure,ict
