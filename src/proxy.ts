@@ -17,9 +17,10 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   // After sign-in: redirect authenticated users from the root landing page
-  // to their role-appropriate dashboard. SUPER_ADMIN will be further
-  // redirected to /admin by the dashboard page client-side.
-  // All other roles land on /dashboard directly.
+  // to their dashboard. SUPER_ADMIN users are redirected to /admin by the
+  // dashboard page client-side (roles are stored in Convex, not Clerk claims).
+  // Admin routes at /admin/* are protected by the admin layout which checks
+  // for the SUPER_ADMIN role server-side.
   const { userId } = await auth();
   if (userId && req.nextUrl.pathname === "/") {
     return Response.redirect(new URL("/dashboard", req.url));

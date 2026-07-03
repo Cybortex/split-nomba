@@ -65,7 +65,7 @@ function DashboardContent() {
 
   const { isSignedIn } = useAuth();
 
-  // SUPER_ADMIN never belongs on /dashboard — redirect to /admin
+  // SUPER_ADMIN does not belong on /dashboard — immediate redirect to /admin
   useEffect(() => {
     if (currentUser && currentUser.roles.includes("SUPER_ADMIN")) {
       router.replace("/admin");
@@ -100,14 +100,9 @@ function DashboardContent() {
     );
   }
 
-  // SUPER_ADMIN landing on /dashboard will be redirected by useEffect above
-  // While the redirect is pending, show nothing meaningful
+  // SUPER_ADMIN: redirect immediately, don't render anything
   if (currentUser.roles.includes("SUPER_ADMIN")) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted text-sm">Redirecting to admin panel...</p>
-      </div>
-    );
+    return null;
   }
 
   const currentRole = selectedRole || activeRole;
