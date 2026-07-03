@@ -279,6 +279,119 @@ export const removeFeeItem = mutation({
 });
 
 /**
+ * Get fee overview for the currently logged-in student.
+ * Returns the active session + fee breakdown for their level.
+ * STUDENT self-service query.
+ */
+export const getMyFeeOverview = query({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("clerkId"), identity.subject))
+      .first();
+
+    if (!user || !user.roles.includes("STUDENT")) {
+      throw new Error("Not a student user");
+    }
+
+    if (!user.institutionId) {
+      throw new Error("Student has no institution assigned");
+    }
+
+    const matric = user.permissions[0];
+    if (!matric) {
+      throw new Error("No matric number found in your profile");
+    }
+
+    // Get student record
+    const student = await ctx.db
+      .query("studentRecords")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("matric"), matric),
+          q.eq(q.field("institutionId"), user.institutionId as any)
+        )
+      )
+      .first();
+
+    if (!student) {
+      throw new Error("Student record not found");
+    }
+
+    // Get active session
+    const activeSession = await ctx.db
+      .query("academicSessions")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("institutionId"), user.institutionId as any),
+          q.eq(q.field("isActive"), true)
+        )
+      )
+      .first();
+
+    // Get fee items for student's level
+    const feeItems = await ctx.db
+      .query("feeConfig")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("institutionId"), user.institutionId as any),
+          q.eq(q.field("level"), student.level)
+        )
+      )
+      .collect();
+
+    // Build breakdown
+    const breakdown: Record<string, { items: Array<{ name: string; amount: number }>; total: number }> = {};
+    for (const item of feeItems) {
+      if (!breakdown[item.category]) {
+        breakdown[item.category] = { items: [], total: 0 };
+      }
+      breakdown[item.category].items.push({ name: item.itemName, amount: item.amount });
+      breakdown[item.category].total += item.amount;
+    }
+
+    const totalAmount = feeItems.reduce((sum, item) => sum + item.amount, 0);
+
+    // Check if student has a completed payment this session
+    // (we consider any completed payment as paid for the session)
+    const existingPayment = await ctx.db
+      .query("payments")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("studentMatric"), matric),
+          q.eq(q.field("institutionId"), user.institutionId as any),
+          q.eq(q.field("status"), "completed")
+        )
+      )
+      .first();
+
+    return {
+      student: {
+        matric: student.matric,
+        faculty: student.faculty,
+        department: student.department,
+        level: student.level,
+      },
+      session: activeSession
+        ? { id: activeSession._id, name: activeSession.name, isActive: activeSession.isActive }
+        : null,
+      feeBreakdown: {
+        categories: Object.entries(breakdown).map(([category, data]) => ({
+          category,
+          items: data.items,
+          total: data.total,
+        })),
+        total: totalAmount,
+      },
+      hasPaid: !!existingPayment,
+    };
+  },
+});
+
+/**
  * Calculate total fee for a student based on their level (internal).
  */
 export const calculateLevelFee = query({

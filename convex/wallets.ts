@@ -135,35 +135,117 @@ export const getDeanView = query({
 });
 
 /**
- * Get student view — aggregate totals, no RBAC but institution-scoped.
+ * Get all wallets the current user has access to, with their access level.
+ * This replaces the old getStudentView which showed aggregate totals.
+ * Each role sees only the wallets they are scoped to.
  */
-export const getStudentView = query({
-  args: { institutionId: v.id("institutions") },
-  handler: async (ctx, args) => {
-    // Student view is public within an institution
+export const getMyAccessibleWallets = query({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const user = await ctx.db
+      .query("users")
+      .filter((q: any) => q.eq(q.field("clerkId"), identity.subject))
+      .first();
+
+    if (!user || !user.institutionId) return [];
+
     const allWallets = await ctx.db
       .query("wallets")
-      .filter((q) =>
-        q.eq(q.field("institutionId"), args.institutionId as any)
-      )
+      .filter((q: any) => q.eq(q.field("institutionId"), user.institutionId as any))
       .collect();
 
-    const totalCollected = allWallets.reduce(
-      (sum, w) => sum + w.totalCollected,
-      0
-    );
-    const totalTransactions = allWallets.reduce(
-      (sum, w) => sum + w.transactionCount,
-      0
-    );
+    const allAssociations = await ctx.db
+      .query("associations")
+      .filter((q: any) => q.eq(q.field("institutionId"), user.institutionId as any))
+      .collect();
 
-    return {
-      totalCollected,
-      totalTransactions,
-      walletCount: allWallets.length,
-    };
+    const accessible: Array<{
+      wallet: any;
+      access: "view" | "transact";
+      association?: any;
+    }> = [];
+
+    for (const wallet of allWallets) {
+      const access = await getWalletAccess(ctx, user, wallet, allAssociations);
+      if (access) {
+        const association = wallet.associationId
+          ? allAssociations.find((a: any) => a._id.toString() === (wallet.associationId as any).toString())
+          : undefined;
+        accessible.push({ wallet, access, association });
+      }
+    }
+
+    return accessible;
   },
 });
+
+/**
+ * Determine what access (if any) a user has to a specific wallet.
+ */
+async function getWalletAccess(
+  ctx: any,
+  user: any,
+  wallet: any,
+  allAssociations: any[]
+): Promise<"view" | "transact" | null> {
+  // SUPER_ADMIN, INSTITUTION_ADMIN, FINANCE: can view and transact all wallets
+  if (["SUPER_ADMIN", "INSTITUTION_ADMIN", "FINANCE"].some((r) => user.roles.includes(r))) {
+    return "transact";
+  }
+
+  // STUDENT_AFFAIRS: view-only on SUG wallet (type="association" linked to a "sug" association)
+  if (user.roles.includes("STUDENT_AFFAIRS") && wallet.associationId) {
+    const assoc = allAssociations.find(
+      (a: any) => a._id.toString() === wallet.associationId.toString()
+    );
+    if (assoc && assoc.type === "sug") {
+      return "view";
+    }
+  }
+
+  // DEAN: view-only on "faculty" wallet where entityId matches their permissions
+  if (user.roles.includes("DEAN") && wallet.type === "faculty") {
+    if (user.permissions.includes(wallet.entityId)) {
+      return "view";
+    }
+    // Also check if entityId starts with any of their permissions (faculty prefix)
+    if (user.permissions.some((p: string) => wallet.entityId.startsWith(p))) {
+      return "view";
+    }
+  }
+
+  // HOD: view-only on "department" wallet where entityId matches their permissions
+  if (user.roles.includes("HOD") && wallet.type === "department") {
+    if (user.permissions.includes(wallet.entityId)) {
+      return "view";
+    }
+  }
+
+  // STAFF_ADVISOR or STUDENT_EXCO: check if assigned to this wallet's association
+  if (
+    (user.roles.includes("STAFF_ADVISOR") || user.roles.includes("STUDENT_EXCO")) &&
+    wallet.associationId
+  ) {
+    const assoc = allAssociations.find(
+      (a: any) => a._id.toString() === wallet.associationId.toString()
+    );
+    if (assoc) {
+      const isAdvisor =
+        user.roles.includes("STAFF_ADVISOR") &&
+        assoc.staffAdvisorClerkId === user.clerkId;
+      const isExco =
+        user.roles.includes("STUDENT_EXCO") &&
+        assoc.studentExcoClerkIds.includes(user.clerkId);
+
+      if (isAdvisor) return "view";
+      if (isExco) return "transact";
+    }
+  }
+
+  return null;
+}
 
 /**
  * Get association wallet (STUDENT_EXCO, STAFF_ADVISOR, FINANCE+).

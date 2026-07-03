@@ -10,49 +10,62 @@ export const createAssociation = mutation({
   args: {
     institutionId: v.id("institutions"),
     name: v.string(),
-    type: v.union(v.literal("faculty"), v.literal("department")),
+    slug: v.string(),
+    type: v.union(v.literal("sug"), v.literal("faculty"), v.literal("department")),
     facultyId: v.optional(v.string()),
     departmentId: v.optional(v.string()),
-    entityId: v.string(),
+    entityId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user = await requirePermission(ctx, "STUDENT_AFFAIRS", {
       institutionId: args.institutionId as any,
     });
 
-    // Check for duplicate entityId
+    if (!args.slug.trim()) {
+      throw new Error("Association slug is required");
+    }
+
+    // Check for duplicate slug within type
     const existing = await ctx.db
       .query("associations")
       .filter((q) =>
         q.and(
-          q.eq(q.field("entityId"), args.entityId),
+          q.eq(q.field("slug"), args.slug.trim().toUpperCase()),
+          q.eq(q.field("type"), args.type),
           q.eq(q.field("institutionId"), args.institutionId as any)
         )
       )
       .first();
 
     if (existing) {
-      throw new Error(`Association with entityId "${args.entityId}" already exists`);
+      throw new Error(`Association with slug "${args.slug}" and type "${args.type}" already exists`);
     }
+
+    // Auto-generate entityId from slug if not provided
+    const entityId = args.entityId || `${args.type}-${args.slug.trim().toUpperCase()}`;
 
     const associationId = await ctx.db.insert("associations", {
       institutionId: args.institutionId,
       name: args.name,
+      slug: args.slug.trim().toUpperCase(),
       type: args.type,
       facultyId: args.facultyId,
       departmentId: args.departmentId,
-      entityId: args.entityId,
+      entityId,
       staffAdvisorClerkId: undefined,
       studentExcoClerkIds: [],
       isActive: true,
       createdAt: Date.now(),
     });
 
+    // Determine wallet type based on association type
+    const walletType = args.type === "sug" ? "association" : args.type === "faculty" ? "faculty" : "department";
+
     // Also create the wallet for this association
     const walletId = await ctx.db.insert("wallets", {
       institutionId: args.institutionId,
-      type: "association",
-      entityId: args.entityId,
+      type: walletType as any,
+      entityId,
       name: args.name,
       associationId,
       totalCollected: 0,
@@ -70,8 +83,87 @@ export const createAssociation = mutation({
       entityId: associationId,
       newValue: JSON.stringify({
         name: args.name,
+        slug: args.slug,
         type: args.type,
-        entityId: args.entityId,
+        entityId,
+      }),
+      timestamp: Date.now(),
+      success: true,
+    });
+
+    return { associationId, walletId };
+  },
+});
+
+/**
+ * Create the SUG association for an institution (STUDENT_AFFAIRS or INSTITUTION_ADMIN).
+ * There should be exactly one SUG per institution.
+ */
+export const createSUG = mutation({
+  args: {
+    institutionId: v.id("institutions"),
+    name: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await requirePermission(ctx, "STUDENT_AFFAIRS", {
+      institutionId: args.institutionId as any,
+    });
+
+    // Check if SUG already exists
+    const existing = await ctx.db
+      .query("associations")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("type"), "sug"),
+          q.eq(q.field("institutionId"), args.institutionId as any)
+        )
+      )
+      .first();
+
+    if (existing) {
+      throw new Error("SUG association already exists for this institution");
+    }
+
+    const sugName = args.name || "Student Union Government";
+    const slug = "SUG";
+    const entityId = `sug-${slug}`;
+
+    const associationId = await ctx.db.insert("associations", {
+      institutionId: args.institutionId,
+      name: sugName,
+      slug,
+      type: "sug",
+      entityId,
+      staffAdvisorClerkId: undefined,
+      studentExcoClerkIds: [],
+      isActive: true,
+      createdAt: Date.now(),
+    });
+
+    // Create SUG wallet
+    const walletId = await ctx.db.insert("wallets", {
+      institutionId: args.institutionId,
+      type: "association",
+      entityId,
+      name: sugName,
+      associationId,
+      totalCollected: 0,
+      availableBalance: 0,
+      minimumBalance: 0,
+      transactionCount: 0,
+    });
+
+    await ctx.db.insert("auditLogs", {
+      institutionId: args.institutionId,
+      userId: user.clerkId,
+      action: "ASSOCIATION_CREATED",
+      entity: "associations",
+      entityId: associationId,
+      newValue: JSON.stringify({
+        name: sugName,
+        slug: "SUG",
+        type: "sug",
+        entityId,
       }),
       timestamp: Date.now(),
       success: true,

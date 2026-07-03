@@ -18,6 +18,7 @@ import type * as initiatePayment from "../initiatePayment.js";
 import type * as payments from "../payments.js";
 import type * as paymentsInternal from "../paymentsInternal.js";
 import type * as seed from "../seed.js";
+import type * as sessions from "../sessions.js";
 import type * as studentRecords from "../studentRecords.js";
 import type * as users from "../users.js";
 import type * as wallets from "../wallets.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   payments: typeof payments;
   paymentsInternal: typeof paymentsInternal;
   seed: typeof seed;
+  sessions: typeof sessions;
   studentRecords: typeof studentRecords;
   users: typeof users;
   wallets: typeof wallets;

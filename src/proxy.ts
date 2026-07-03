@@ -15,6 +15,15 @@ export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
     await auth.protect();
   }
+
+  // After sign-in: redirect authenticated users from the root landing page
+  // to their role-appropriate dashboard. SUPER_ADMIN will be further
+  // redirected to /admin by the dashboard page client-side.
+  // All other roles land on /dashboard directly.
+  const { userId } = await auth();
+  if (userId && req.nextUrl.pathname === "/") {
+    return Response.redirect(new URL("/dashboard", req.url));
+  }
 });
 
 export const config = {

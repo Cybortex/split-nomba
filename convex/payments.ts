@@ -3,247 +3,215 @@ import { mutation, query } from "./_generated/server";
 import { requirePermission } from "./auth";
 
 // ============================================================================
-// ALLOCATION CONFIGURATION
+// ROUTE PAYMENT — Distribute to 4 wallets using feeConfig categories
 // ============================================================================
 
 /**
- * Get allocation rules for an institution (FINANCE+).
+ * Helper: credit a wallet with funds and log the immutable transaction.
  */
-export const getAllocationRules = query({
-  args: { institutionId: v.id("institutions") },
-  handler: async (ctx, args) => {
-    await requirePermission(ctx, "FINANCE", {
-      institutionId: args.institutionId as any,
-    });
-
-    return await ctx.db
-      .query("allocationRules")
-      .filter((q) =>
-        q.eq(q.field("institutionId"), args.institutionId as any)
-      )
-      .order("asc")
-      .collect();
-  },
-});
-
-/**
- * Save allocation rules for an institution (FINANCE+).
- * Replaces all existing rules atomically.
- * Every account receives a fixed amount — no percentages.
- */
-export const saveAllocationRules = mutation({
-  args: {
-    institutionId: v.id("institutions"),
-    rules: v.array(
-      v.object({
-        walletType: v.union(v.literal("institution"), v.literal("faculty"), v.literal("department"), v.literal("association"), v.literal("ict")),
-        entityKey: v.string(),
-        amount: v.number(), // fixed amount in Naira
-        targetEntityId: v.string(),
-        targetName: v.string(),
-        priority: v.number(),
-      })
-    ),
-  },
-  handler: async (ctx, args) => {
-    const user = await requirePermission(ctx, "FINANCE", {
-      institutionId: args.institutionId as any,
-    });
-
-    // Delete existing rules
-    const existingRules = await ctx.db
-      .query("allocationRules")
-      .filter((q) =>
-        q.eq(q.field("institutionId"), args.institutionId as any)
-      )
-      .collect();
-
-    for (const rule of existingRules) {
-      await ctx.db.delete(rule._id);
-    }
-
-    // Insert new rules (all fixed amounts)
-    for (const rule of args.rules) {
-      await ctx.db.insert("allocationRules", {
-        institutionId: args.institutionId,
-        walletType: rule.walletType,
-        entityKey: rule.entityKey,
-        amount: rule.amount,
-        targetEntityId: rule.targetEntityId,
-        targetName: rule.targetName,
-        priority: rule.priority,
-      });
-    }
-
-    // Log audit
-    await ctx.db.insert("auditLogs", {
-      institutionId: args.institutionId,
-      userId: user.clerkId,
-      action: "ALLOCATION_RULES_UPDATED",
-      entity: "allocationRules",
-      entityId: args.institutionId,
-      newValue: JSON.stringify({ rulesCount: args.rules.length }),
-      timestamp: Date.now(),
-      success: true,
-    });
-
-    return { updated: args.rules.length };
-  },
-});
-
-/**
- * Calculate allocation from rules for a given amount.
- * Every account receives a fixed amount — no percentages.
- */
-function calculateAllocationFromRules(
+async function creditWallet(
+  ctx: any,
+  walletId: any,
+  institutionId: any,
+  paymentReference: string,
   amount: number,
-  rules: Array<{
-    amount: number;
-    targetEntityId: string;
-    targetName: string;
-    priority: number;
-  }>
+  reason: string
 ) {
-  const allocation: Record<string, { amount: number; name: string }> = {};
-  let remainingAmount = amount;
+  const wallet = await ctx.db
+    .query("wallets")
+    .filter((q: any) => q.eq(q.field("_id"), walletId))
+    .first();
 
-  // Sort by priority
-  const sortedRules = [...rules].sort((a, b) => a.priority - b.priority);
+  if (!wallet) return;
 
-  for (const rule of sortedRules) {
-    // Fixed allocation: cap at remaining if amount exceeds what's left
-    const allocatedAmount = Math.min(rule.amount, remainingAmount);
+  await ctx.db.patch(walletId, {
+    availableBalance: (wallet.availableBalance || 0) + amount,
+    totalCollected: (wallet.totalCollected || 0) + amount,
+    transactionCount: (wallet.transactionCount || 0) + 1,
+  });
 
-    allocation[rule.targetEntityId] = {
-      amount: allocatedAmount,
-      name: rule.targetName,
-    };
-
-    remainingAmount -= allocatedAmount;
-  }
-
-  return { allocation, remainder: remainingAmount };
+  await ctx.db.insert("walletTransactions", {
+    walletId: walletId,
+    institutionId: institutionId,
+    paymentReference,
+    amount,
+    direction: "credit",
+    reason,
+    timestamp: Date.now(),
+  });
 }
 
-// ============================================================================
-// ROUTE PAYMENT — Distribute to wallets using configurable rules
-// ============================================================================
-
+/**
+ * Route a completed payment to the 4 designated wallets:
+ * 1. Institution wallet (tuition)
+ * 2. SUG wallet (sug_dues)
+ * 3. Student's Faculty wallet (faculty_dues)
+ * 4. Student's Department wallet (department_dues)
+ *
+ * Uses association slugs to look up the correct wallets.
+ * No more allocationRules — amounts come directly from feeConfig categories.
+ */
 export const routePayment = mutation({
   args: {
     institutionId: v.id("institutions"),
     paymentId: v.id("payments"),
     nombaTransactionId: v.string(),
-    amount: v.number(),
-    faculty: v.string(),
-    department: v.string(),
+    feeBreakdown: v.object({
+      tuition: v.number(),
+      sugDues: v.number(),
+      facultyDues: v.number(),
+      departmentDues: v.number(),
+    }),
+    facultySlug: v.string(),
+    departmentSlug: v.string(),
+    platformFee: v.number(),
   },
   handler: async (ctx, args) => {
-    // Get allocation rules for this institution
-    const rules = await ctx.db
-      .query("allocationRules")
-      .filter((q) =>
-        q.eq(q.field("institutionId"), args.institutionId as any)
-      )
-      .order("asc")
-      .collect();
+    const allocation: Record<string, { amount: number; name: string }> = {};
 
-    if (rules.length === 0) {
-      throw new Error("No allocation rules configured for this institution");
+    // 1. Institution wallet — always exists (created on institution setup)
+    const instWallet = await ctx.db
+      .query("wallets")
+      .filter((q: any) =>
+        q.and(
+          q.eq(q.field("type"), "institution"),
+          q.eq(q.field("institutionId"), args.institutionId as any)
+        )
+      )
+      .first();
+
+    if (instWallet && args.feeBreakdown.tuition > 0) {
+      await creditWallet(
+        ctx,
+        instWallet._id,
+        args.institutionId,
+        args.nombaTransactionId,
+        args.feeBreakdown.tuition,
+        "tuition_received"
+      );
+      allocation[instWallet.name] = { amount: args.feeBreakdown.tuition, name: instWallet.name };
     }
 
-    // Calculate allocation
-    const { allocation, remainder } = calculateAllocationFromRules(
-      args.amount,
-      rules
-    );
-
-    // Credit each wallet
-    for (const [entityId, alloc] of Object.entries(allocation)) {
-      if (alloc.amount <= 0) continue;
-
-      // Get or create wallet
-      let wallet = await ctx.db
-        .query("wallets")
-        .filter((q) =>
+    // 2. SUG wallet — find by association type "sug"
+    if (args.feeBreakdown.sugDues > 0) {
+      const sugAssociation = await ctx.db
+        .query("associations")
+        .filter((q: any) =>
           q.and(
-            q.eq(q.field("entityId"), entityId),
+            q.eq(q.field("type"), "sug"),
             q.eq(q.field("institutionId"), args.institutionId as any)
           )
         )
         .first();
 
-      if (!wallet) {
-        const walletId = await ctx.db.insert("wallets", {
-          institutionId: args.institutionId,
-          type: "institution",
-          entityId,
-          name: alloc.name,
-          totalCollected: 0,
-          availableBalance: 0,
-          minimumBalance: 0,
-          transactionCount: 0,
-        });
-
-        wallet = (await ctx.db
+      if (sugAssociation) {
+        const sugWallet = await ctx.db
           .query("wallets")
-          .filter((q) =>
+          .filter((q: any) =>
+            q.eq(q.field("associationId"), sugAssociation._id as any)
+          )
+          .first();
+
+        if (sugWallet) {
+          await creditWallet(
+            ctx,
+            sugWallet._id,
+            args.institutionId,
+            args.nombaTransactionId,
+            args.feeBreakdown.sugDues,
+            "sug_dues_received"
+          );
+          allocation[sugWallet.name] = { amount: args.feeBreakdown.sugDues, name: sugWallet.name };
+        }
+      }
+    }
+
+    // 3. Faculty wallet — find association by type="faculty" + slug
+    if (args.feeBreakdown.facultyDues > 0 && args.facultySlug) {
+      const facultyAssociation = await ctx.db
+        .query("associations")
+        .filter((q: any) =>
+          q.and(
+            q.eq(q.field("type"), "faculty"),
+            q.eq(q.field("slug"), args.facultySlug.toUpperCase()),
+            q.eq(q.field("institutionId"), args.institutionId as any)
+          )
+        )
+        .first();
+
+      if (facultyAssociation) {
+        const facultyWallet = await ctx.db
+          .query("wallets")
+          .filter((q: any) =>
             q.and(
-              q.eq(q.field("entityId"), entityId),
+              q.eq(q.field("associationId"), facultyAssociation._id as any),
               q.eq(q.field("institutionId"), args.institutionId as any)
             )
           )
-          .first())!;
+          .first();
+
+        if (facultyWallet) {
+          await creditWallet(
+            ctx,
+            facultyWallet._id,
+            args.institutionId,
+            args.nombaTransactionId,
+            args.feeBreakdown.facultyDues,
+            "faculty_dues_received"
+          );
+          allocation[facultyWallet.name] = { amount: args.feeBreakdown.facultyDues, name: facultyWallet.name };
+        }
       }
-
-      // Update wallet
-      await ctx.db.patch(wallet._id, {
-        availableBalance: (wallet.availableBalance || 0) + alloc.amount,
-        totalCollected: (wallet.totalCollected || 0) + alloc.amount,
-        transactionCount: (wallet.transactionCount || 0) + 1,
-      });
-
-      // Log in immutable ledger
-      await ctx.db.insert("walletTransactions", {
-        walletId: wallet._id,
-        institutionId: args.institutionId,
-        paymentReference: args.nombaTransactionId,
-        amount: alloc.amount,
-        direction: "credit",
-        reason: "payment_received",
-        timestamp: Date.now(),
-      });
     }
 
-    // Handle remainder
-    if (remainder > 0) {
-      const firstRule = rules[0];
-      const instWallet = await ctx.db
-        .query("wallets")
-        .filter((q) =>
+    // 4. Department wallet — find association by type="department" + slug
+    if (args.feeBreakdown.departmentDues > 0 && args.departmentSlug) {
+      const deptAssociation = await ctx.db
+        .query("associations")
+        .filter((q: any) =>
           q.and(
-            q.eq(q.field("entityId"), firstRule.targetEntityId),
+            q.eq(q.field("type"), "department"),
+            q.eq(q.field("slug"), args.departmentSlug.toUpperCase()),
             q.eq(q.field("institutionId"), args.institutionId as any)
           )
         )
         .first();
 
-      if (instWallet) {
-        await ctx.db.patch(instWallet._id, {
-          availableBalance: (instWallet.availableBalance || 0) + remainder,
-          totalCollected: (instWallet.totalCollected || 0) + remainder,
-        });
+      if (deptAssociation) {
+        const deptWallet = await ctx.db
+          .query("wallets")
+          .filter((q: any) =>
+            q.and(
+              q.eq(q.field("associationId"), deptAssociation._id as any),
+              q.eq(q.field("institutionId"), args.institutionId as any)
+            )
+          )
+          .first();
 
-        await ctx.db.insert("walletTransactions", {
-          walletId: instWallet._id,
-          institutionId: args.institutionId,
-          paymentReference: args.nombaTransactionId,
-          amount: remainder,
-          direction: "credit",
-          reason: "rounding_adjustment",
-          timestamp: Date.now(),
-        });
+        if (deptWallet) {
+          await creditWallet(
+            ctx,
+            deptWallet._id,
+            args.institutionId,
+            args.nombaTransactionId,
+            args.feeBreakdown.departmentDues,
+            "department_dues_received"
+          );
+          allocation[deptWallet.name] = { amount: args.feeBreakdown.departmentDues, name: deptWallet.name };
+        }
       }
+    }
+
+    // 5. Platform fee — credit to institution wallet if exists, or just log
+    if (args.platformFee > 0 && instWallet) {
+      await creditWallet(
+        ctx,
+        instWallet._id,
+        args.institutionId,
+        args.nombaTransactionId,
+        args.platformFee,
+        "platform_fee"
+      );
     }
 
     // Mark payment completed

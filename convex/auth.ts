@@ -187,6 +187,18 @@ export const approveInstitution = mutation({
       createdAt: Date.now(),
     });
 
+    // Create institution wallet
+    await ctx.db.insert("wallets", {
+      institutionId: institutionId as any,
+      type: "institution",
+      entityId: institutionId.toString(),
+      name: registration.name,
+      totalCollected: 0,
+      availableBalance: 0,
+      minimumBalance: 0,
+      transactionCount: 0,
+    });
+
     await ctx.db.patch(args.registrationId, {
       status: "approved",
       reviewedBy: admin.clerkId,
@@ -258,6 +270,162 @@ export const listPendingRegistrations = query({
       .query("institutionRegistrations")
       .filter((q) => q.eq(q.field("status"), "pending"))
       .collect();
+  },
+});
+
+/**
+ * Create an institution directly with its INSTITUTION_ADMIN user (SUPER_ADMIN only).
+ * Atomically creates both records so the institution is never orphaned.
+ * The user must already exist in Clerk — provide their clerkId and email.
+ */
+export const createInstitutionDirect = mutation({
+  args: {
+    name: v.string(),
+    adminClerkId: v.string(),
+    adminEmail: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requirePermission(ctx, "SUPER_ADMIN");
+
+    // Check if admin user already exists (in any institution)
+    const existingUser = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("clerkId"), args.adminClerkId))
+      .first();
+
+    if (existingUser) {
+      throw new Error(`User ${args.adminEmail} already exists in the system`);
+    }
+
+    // Check for duplicate institution name
+    const existingInst = await ctx.db
+      .query("institutions")
+      .filter((q) => q.eq(q.field("name"), args.name))
+      .first();
+
+    if (existingInst) {
+      throw new Error(`Institution "${args.name}" already exists`);
+    }
+
+    // Create institution (no registrationId since this is direct creation)
+    const institutionId = await ctx.db.insert("institutions", {
+      name: args.name,
+      adminClerkId: args.adminClerkId,
+      isActive: true,
+      createdAt: Date.now(),
+    });
+
+    // Create institution wallet
+    await ctx.db.insert("wallets", {
+      institutionId: institutionId as any,
+      type: "institution",
+      entityId: institutionId.toString(),
+      name: args.name,
+      totalCollected: 0,
+      availableBalance: 0,
+      minimumBalance: 0,
+      transactionCount: 0,
+    });
+
+    // Create INSTITUTION_ADMIN user
+    await ctx.db.insert("users", {
+      clerkId: args.adminClerkId,
+      email: args.adminEmail,
+      roles: ["INSTITUTION_ADMIN"],
+      activeRole: "INSTITUTION_ADMIN",
+      institutionId: institutionId,
+      permissions: [],
+      isActive: true,
+    });
+
+    // Audit trail
+    await ctx.db.insert("auditLogs", {
+      institutionId: institutionId,
+      userId: admin.clerkId,
+      action: "INSTITUTION_APPROVED",
+      entity: "institutions",
+      entityId: institutionId,
+      newValue: JSON.stringify({
+        name: args.name,
+        adminEmail: args.adminEmail,
+      }),
+      timestamp: Date.now(),
+      success: true,
+    });
+
+    await ctx.db.insert("auditLogs", {
+      institutionId: institutionId,
+      userId: admin.clerkId,
+      action: "USER_ROLE_CHANGED",
+      entity: "users",
+      entityId: institutionId,
+      newValue: JSON.stringify({
+        roles: ["INSTITUTION_ADMIN"],
+        institutionId: institutionId,
+      }),
+      timestamp: Date.now(),
+      success: true,
+    });
+
+    return {
+      institutionId,
+      name: args.name,
+      adminEmail: args.adminEmail,
+    };
+  },
+});
+
+/**
+ * Update institution profile (INSTITUTION_ADMIN+ for their own institution).
+ */
+export const updateInstitutionProfile = mutation({
+  args: {
+    institutionId: v.id("institutions"),
+    name: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    address: v.optional(v.string()),
+    website: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await requirePermission(ctx, "INSTITUTION_ADMIN", {
+      institutionId: args.institutionId as any,
+    });
+
+    const institution = await ctx.db
+      .query("institutions")
+      .filter((q) => q.eq(q.field("_id"), args.institutionId as any))
+      .first();
+
+    if (!institution) throw new Error("Institution not found");
+
+    const updates: Record<string, any> = {};
+    if (args.name !== undefined) {
+      if (!args.name.trim()) throw new Error("Institution name is required");
+      updates.name = args.name.trim();
+    }
+    if (args.phone !== undefined) updates.phone = args.phone;
+    if (args.address !== undefined) updates.address = args.address;
+    if (args.website !== undefined) updates.website = args.website;
+
+    await ctx.db.patch(args.institutionId, updates);
+
+    await ctx.db.insert("auditLogs", {
+      institutionId: args.institutionId,
+      userId: user.clerkId,
+      action: "INSTITUTION_UPDATED",
+      entity: "institutions",
+      entityId: args.institutionId,
+      oldValue: JSON.stringify({
+        name: institution.name,
+        phone: institution.phone,
+        address: institution.address,
+      }),
+      newValue: JSON.stringify(updates),
+      timestamp: Date.now(),
+      success: true,
+    });
+
+    return { updated: true };
   },
 });
 

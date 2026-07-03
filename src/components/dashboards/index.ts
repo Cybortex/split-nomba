@@ -5,6 +5,5 @@ export { StaffDashboard } from "./StaffDashboard";
 export { HODDashboard } from "./HODDashboard";
 export { StaffAdvisorDashboard } from "./StaffAdvisorDashboard";
 export { StudentExcoDashboard } from "./StudentExcoDashboard";
-export { SuperAdminDashboard } from "./SuperAdminDashboard";
 export { StudentAffairsDashboard } from "./StudentAffairsDashboard";
 export { InstitutionAdminDashboard } from "./InstitutionAdminDashboard";

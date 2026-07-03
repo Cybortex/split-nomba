@@ -36,23 +36,14 @@ export const initiatePayment = action({
       throw new Error(`Student ${args.studentMatric} is not active`);
     }
 
-    // 2. Get allocation rules and fee configuration
-    const rules = await ctx.runQuery(i.paymentsInternal.getRulesForInstitution, {
-      institutionId: args.institutionId,
-    });
-
-    if (rules.length === 0) {
-      throw new Error("Allocation rules not configured. Contact administration.");
-    }
-
-    // 3. Calculate fee from student's level fee items
+    // 2. Calculate fee from student's level fee items (no allocationRules needed)
     const levelFee = await ctx.runQuery(i.fees.calculateLevelFee, {
       institutionId: args.institutionId,
       level: studentRecord.level,
     });
 
     let amount: number;
-    let feeBreakdown: {
+    const feeBreakdown: {
       tuition: number;
       departmentDues: number;
       facultyDues: number;
@@ -61,17 +52,34 @@ export const initiatePayment = action({
 
     if (levelFee.total > 0) {
       amount = levelFee.total;
-      feeBreakdown = {
-        tuition: levelFee.tuition || 0,
-        departmentDues: levelFee.departmentDues || 0,
-        facultyDues: levelFee.facultyDues || 0,
-        sugDues: levelFee.sugDues || 0,
-      };
+      feeBreakdown.tuition = levelFee.tuition || 0;
+      feeBreakdown.departmentDues = levelFee.departmentDues || 0;
+      feeBreakdown.facultyDues = levelFee.facultyDues || 0;
+      feeBreakdown.sugDues = levelFee.sugDues || 0;
     } else {
-      // Fallback: compute total from fixed allocation rules
-      const fixedTotal = rules.reduce((sum: number, r: any) => sum + r.amount, 0);
-      amount = fixedTotal > 0 ? fixedTotal : 75000;
-      feeBreakdown = { tuition: amount, departmentDues: 0, facultyDues: 0, sugDues: 0 };
+      // Fallback: default amount if no fee config
+      amount = 75000;
+      feeBreakdown.tuition = 75000;
+    }
+
+    // Platform fee — ₦100 added on top of fee total
+    const platformFee = 100;
+    const totalToCharge = amount + platformFee;
+
+    // 3. Get student slug data for routing
+    const facultySlug = (studentRecord as any).facultySlug || "";
+    const departmentSlug = (studentRecord as any).departmentSlug || "";
+
+    if (!facultySlug) {
+      throw new Error(
+        `Faculty slug not set for ${args.studentMatric}. Set it in the student record (e.g., "SCIENCE") to enable payment routing.`
+      );
+    }
+
+    if (!departmentSlug) {
+      throw new Error(
+        `Department slug not set for ${args.studentMatric}. Set it in the student record (e.g., "COMP-SCI") to enable payment routing.`
+      );
     }
 
     // 4. Generate unique reference for idempotency
@@ -96,7 +104,7 @@ export const initiatePayment = action({
       );
     }
 
-    // 6. Call Nomba
+    // 6. Call Nomba with totalToCharge (fee total + platform fee)
     const nombaApiKey = process.env.NOMBA_API_KEY;
     const nombaBaseUrl = process.env.NOMBA_BASE_URL;
 
@@ -113,7 +121,7 @@ export const initiatePayment = action({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          amount,
+          amount: totalToCharge,
           currency: "NGN",
           customerName: "Student",
           customerEmail: studentRecord.email,
@@ -127,6 +135,8 @@ export const initiatePayment = action({
             department: studentRecord.department,
             level: studentRecord.level,
             institutionId: args.institutionId,
+            facultySlug,
+            departmentSlug,
           },
         }),
       }
@@ -140,7 +150,7 @@ export const initiatePayment = action({
 
     const nombaData = await nombaResponse.json();
 
-    // 7. Save payment record
+    // 7. Save payment record — store fee total + breakdown data for webhook
     const paymentId = await ctx.runMutation(i.paymentsInternal.createPayment, {
       institutionId: args.institutionId,
       nombaTransactionId: nombaData.data.transactionId,
@@ -151,6 +161,13 @@ export const initiatePayment = action({
       level: studentRecord.level,
       amount,
       status: "pending",
+      feeTuition: feeBreakdown.tuition,
+      feeSugDues: feeBreakdown.sugDues,
+      feeFacultyDues: feeBreakdown.facultyDues,
+      feeDepartmentDues: feeBreakdown.departmentDues,
+      facultySlug,
+      departmentSlug,
+      platformFee,
     });
 
     // 8. Log audit
@@ -158,7 +175,7 @@ export const initiatePayment = action({
       institutionId: args.institutionId,
       action: "PAYMENT_INITIATED",
       entityId: paymentId,
-      newValue: { reference, amount, matric: args.studentMatric },
+      newValue: { reference, amount: totalToCharge, matric: args.studentMatric, platformFee },
       success: true,
     });
 
@@ -168,7 +185,11 @@ export const initiatePayment = action({
       transactionId: nombaData.data.transactionId,
       expiresAt: nombaData.data.expiresAt,
       amount,
+      platformFee,
+      totalToCharge,
       feeBreakdown,
+      facultySlug,
+      departmentSlug,
     };
   },
 });

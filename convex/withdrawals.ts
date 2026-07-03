@@ -4,7 +4,11 @@ import { requirePermission } from "./auth";
 
 /**
  * Initiate a withdrawal request (STUDENT_EXCO only).
- * Student Exco starts the process → Staff Advisor must approve.
+ *
+ * 3-tier consensus:
+ * - SUG: Exco-only — auto-approved immediately (no Staff Advisor needed)
+ * - Faculty: Exco initiates → Faculty Staff Advisor approves
+ * - Department: Exco initiates → Department Staff Advisor approves
  */
 export const initiateWithdrawal = mutation({
   args: {
@@ -30,12 +34,6 @@ export const initiateWithdrawal = mutation({
       throw new Error("You are not an executive of this association");
     }
 
-    if (!association.staffAdvisorClerkId) {
-      throw new Error(
-        "No Staff Advisor assigned to this association. Contact Student Affairs."
-      );
-    }
-
     // Verify wallet belongs to this association
     const wallet = await ctx.db
       .query("wallets")
@@ -50,22 +48,70 @@ export const initiateWithdrawal = mutation({
       );
     }
 
-    // Check for existing pending withdrawal
+    // Check for existing pending or approved withdrawal
     const existingPending = await ctx.db
       .query("withdrawalRequests")
       .filter((q) =>
         q.and(
           q.eq(q.field("associationId"), args.associationId as any),
-          q.eq(q.field("status"), "pending")
+          q.or(q.eq(q.field("status"), "pending"), q.eq(q.field("status"), "approved"))
         )
       )
       .first();
 
     if (existingPending) {
-      throw new Error("A pending withdrawal request already exists for this association");
+      throw new Error("A pending or approved withdrawal request already exists for this association");
     }
 
-    // Create withdrawal request
+    // Determine if this is a SUG association (no approval needed)
+    const isSUG = association.type === "sug";
+
+    if (isSUG) {
+      // SUG: auto-approve — no Staff Advisor needed
+      const withdrawalId = await ctx.db.insert("withdrawalRequests", {
+        institutionId: args.institutionId,
+        associationId: args.associationId,
+        walletId: args.walletId,
+        amount: args.amount,
+        reason: args.reason,
+        initiatedBy: user.clerkId,
+        approvedBy: user.clerkId, // self-approved
+        status: "approved",
+        createdAt: Date.now(),
+        approvedAt: Date.now(),
+      });
+
+      await ctx.db.insert("auditLogs", {
+        institutionId: args.institutionId,
+        userId: user.clerkId,
+        action: "WITHDRAWAL_INITIATED",
+        entity: "withdrawalRequests",
+        entityId: withdrawalId,
+        newValue: JSON.stringify({
+          amount: args.amount,
+          reason: args.reason,
+          associationId: args.associationId,
+          type: "sug_auto_approved",
+        }),
+        timestamp: Date.now(),
+        success: true,
+      });
+
+      return {
+        withdrawalId,
+        status: "approved",
+        message: "SUG withdrawal auto-approved. Ready to execute.",
+      };
+    }
+
+    // Faculty or Department: require Staff Advisor
+    if (!association.staffAdvisorClerkId) {
+      throw new Error(
+        "No Staff Advisor assigned to this association. Contact Student Affairs."
+      );
+    }
+
+    // Create pending withdrawal request
     const withdrawalId = await ctx.db.insert("withdrawalRequests", {
       institutionId: args.institutionId,
       associationId: args.associationId,

@@ -76,10 +76,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Payment record not found" });
     }
 
-    // ⚠️ AMOUNT VERIFICATION
-    if (existingTxn.amount !== data.amount) {
+    // ⚠️ AMOUNT VERIFICATION — allow the total charged to be >= the fee amount (platform fee adds on top)
+    if (existingTxn.amount > data.amount) {
       console.error(
-        `Amount mismatch: DB ₦${existingTxn.amount} vs webhook ₦${data.amount}`
+        `Amount insufficient: DB fee ₦${existingTxn.amount} vs webhook ₦${data.amount}`
       );
       await client.mutation(api.paymentsInternal.logAudit, {
         institutionId: existingTxn.institutionId,
@@ -91,14 +91,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Amount mismatch" });
     }
 
-    // Route payment to wallets with institution context
+    // Use fee breakdown stored on the payment record at creation time
+    const breakdown = {
+      tuition: (existingTxn as any).feeTuition || existingTxn.amount,
+      sugDues: (existingTxn as any).feeSugDues || 0,
+      facultyDues: (existingTxn as any).feeFacultyDues || 0,
+      departmentDues: (existingTxn as any).feeDepartmentDues || 0,
+    };
+
+    // Get slug data from payment record
+    const facultySlug = (existingTxn as any).facultySlug || "";
+    const departmentSlug = (existingTxn as any).departmentSlug || "";
+    const platformFee = (existingTxn as any).platformFee || Math.max(0, data.amount - existingTxn.amount);
+
+    // Route payment to the 4 wallets using feeConfig-based routing
     const allocation = await client.mutation(api.payments.routePayment, {
       institutionId: existingTxn.institutionId,
       paymentId: existingTxn._id,
       nombaTransactionId: data.transactionId,
-      amount: data.amount,
-      faculty: existingTxn.faculty,
-      department: existingTxn.department,
+      feeBreakdown: breakdown,
+      facultySlug,
+      departmentSlug,
+      platformFee,
     });
 
     console.log(`✓ Payment routed: ${txnRef} → wallets updated`, allocation);

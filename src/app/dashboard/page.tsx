@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
   FinanceDashboard, 
@@ -13,7 +14,6 @@ import {
   HODDashboard,
   StaffAdvisorDashboard,
   StudentExcoDashboard,
-  SuperAdminDashboard,
   StudentAffairsDashboard,
   InstitutionAdminDashboard,
 } from "@/components/dashboards";
@@ -61,8 +61,16 @@ function DashboardContent() {
   const switchRole = useMutation(api.auth.switchActiveRole);
   const myInstitution = useQuery(api.auth.getMyInstitution);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const router = useRouter();
 
   const { isSignedIn } = useAuth();
+
+  // SUPER_ADMIN never belongs on /dashboard — redirect to /admin
+  useEffect(() => {
+    if (currentUser && currentUser.roles.includes("SUPER_ADMIN")) {
+      router.replace("/admin");
+    }
+  }, [currentUser, router]);
 
   if (!isSignedIn) {
     return (
@@ -88,6 +96,16 @@ function DashboardContent() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="skeleton w-8 h-8 rounded-full" />
+      </div>
+    );
+  }
+
+  // SUPER_ADMIN landing on /dashboard will be redirected by useEffect above
+  // While the redirect is pending, show nothing meaningful
+  if (currentUser.roles.includes("SUPER_ADMIN")) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted text-sm">Redirecting to admin panel...</p>
       </div>
     );
   }
@@ -127,14 +145,11 @@ function DashboardContent() {
         />
       )}
 
-      {/* Role-based Dashboard */}
-      {currentRole === "SUPER_ADMIN" && <SuperAdminDashboard />}
+      {/* Role-based Dashboard — all dashboards self-resolve their scoping */}
       {currentRole === "INSTITUTION_ADMIN" && <InstitutionAdminDashboard />}
       {currentRole === "FINANCE" && <FinanceDashboard />}
       {currentRole === "STUDENT_AFFAIRS" && <StudentAffairsDashboard />}
-      {currentRole === "DEAN" && currentUser.permissions.length > 0 && (
-        <DeanDashboard entityId={currentUser.permissions[0]} />
-      )}
+      {currentRole === "DEAN" && <DeanDashboard />}
       {currentRole === "HOD" && <HODDashboard />}
       {currentRole === "STAFF" && <StaffDashboard />}
       {currentRole === "STAFF_ADVISOR" && <StaffAdvisorDashboard />}

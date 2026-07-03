@@ -2,11 +2,29 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { WalletCard, TransactionList } from "@/components/WalletCard";
 
-export function DeanDashboard({ entityId, institutionId }: { entityId: string; institutionId?: string }) {
-  const data = useQuery(api.wallets.getDeanView, entityId && institutionId ? { entityId, institutionId: institutionId as any } : "skip");
+export function DeanDashboard() {
+  const currentUser = useQuery(api.auth.getCurrentUser);
+  const myInst = useQuery(api.auth.getMyInstitution);
+  const accessibleWallets = useQuery(api.wallets.getMyAccessibleWallets);
 
-  if (!data) {
+  const entityId = currentUser?.permissions?.[0];
+  const institutionId = myInst?._id as string | undefined;
+
+  const facultyWalletData = accessibleWallets?.find(
+    (w: any) => w.wallet.type === "faculty"
+  );
+  const facultyWallet = facultyWalletData?.wallet;
+
+  const transactions = useQuery(
+    api.wallets.getTransactions,
+    facultyWallet && institutionId
+      ? { walletEntityId: facultyWallet.entityId, institutionId: institutionId as any }
+      : "skip"
+  );
+
+  if (!currentUser || !myInst || !accessibleWallets) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="skeleton w-8 h-8 rounded-full" />
@@ -14,58 +32,33 @@ export function DeanDashboard({ entityId, institutionId }: { entityId: string; i
     );
   }
 
+  if (!entityId) {
+    return (
+      <div className="p-12 rounded-xl border border-border bg-surface text-center">
+        <p className="text-muted">
+          No faculty assigned. Contact your Institution Admin to set your faculty permissions.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="mb-6">
+    <div className="space-y-6 animate-fade-in">
+      <div>
         <h1 className="text-2xl font-bold text-primary">Faculty Dashboard</h1>
-        <p className="text-muted">Viewing collections for your faculty</p>
+        <p className="text-sm text-muted mt-1">
+          Viewing collections for your assigned faculty.
+        </p>
       </div>
 
-      {data.faculty ? (
+      {facultyWallet ? (
         <>
-          {/* Faculty Summary */}
-          <div className="p-6 rounded-xl border border-border bg-surface">
-            <h2 className="font-semibold text-primary mb-4">{data.faculty.name}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-surface-secondary p-4 rounded-xl">
-                <p className="text-sm text-muted">Available Balance</p>
-                <p className="text-xl font-bold text-success">₦{data.faculty.availableBalance.toLocaleString()}</p>
-              </div>
-              <div className="bg-surface-secondary p-4 rounded-xl">
-                <p className="text-sm text-muted">Total Collected</p>
-                <p className="text-xl font-bold text-gold">₦{data.faculty.totalCollected.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Department Wallets */}
-          {data.departments.length > 0 && (
-            <div className="p-6 rounded-xl border border-border bg-surface">
-              <h2 className="font-semibold text-primary mb-4">Departments under this Faculty</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-muted">
-                      <th className="pb-3 font-medium">Department</th>
-                      <th className="pb-3 font-medium text-right">Balance</th>
-                      <th className="pb-3 font-medium text-right">Collected</th>
-                      <th className="pb-3 font-medium text-right">Txns</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.departments.map((dept: any) => (
-                      <tr key={dept._id} className="border-t border-border-subtle">
-                        <td className="py-3 font-medium text-primary">{dept.name}</td>
-                        <td className="py-3 text-right font-mono text-success">₦{dept.availableBalance.toLocaleString()}</td>
-                        <td className="py-3 text-right font-mono text-gold">₦{dept.totalCollected.toLocaleString()}</td>
-                        <td className="py-3 text-right text-secondary">{dept.transactionCount}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+          <WalletCard wallet={facultyWallet} />
+          <TransactionList
+            transactions={transactions || []}
+            title="Recent Transactions"
+            emptyMessage="No transactions yet for this faculty."
+          />
         </>
       ) : (
         <div className="p-12 rounded-xl border border-border bg-surface text-center">

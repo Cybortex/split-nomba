@@ -3,7 +3,7 @@ import { v } from "convex/values";
 
 const REGISTRATION_STATUS = v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected"));
 const STUDENT_STATUS = v.union(v.literal("active"), v.literal("graduated"), v.literal("withdrawn"));
-const ASSOCIATION_TYPE = v.union(v.literal("faculty"), v.literal("department"));
+const ASSOCIATION_TYPE = v.union(v.literal("sug"), v.literal("faculty"), v.literal("department"));
 const PAYMENT_STATUS = v.union(v.literal("pending"), v.literal("completed"), v.literal("failed"), v.literal("cancelled"));
 const WALLET_TYPE = v.union(v.literal("faculty"), v.literal("department"), v.literal("association"), v.literal("institution"));
 const TXN_DIRECTION = v.union(v.literal("credit"), v.literal("debit"));
@@ -30,7 +30,14 @@ const AUDIT_ACTION = v.union(
   v.literal("FEE_CONFIG_UPDATED"),
   v.literal("ASSOCIATION_CREATED"),
   v.literal("ASSOCIATION_ASSIGNED"),
-  v.literal("DASHBOARD_VIEWED")
+  v.literal("DASHBOARD_VIEWED"),
+  v.literal("SESSION_CREATED"),
+  v.literal("SESSION_ACTIVATED"),
+  v.literal("STUDENT_ADDED"),
+  v.literal("STUDENT_UPDATED"),
+  v.literal("STUDENT_STATUS_CHANGED"),
+  v.literal("INSTITUTION_UPDATED"),
+  v.literal("STAFF_ALLOWANCE_PAID")
 );
 
 export default defineSchema({
@@ -49,8 +56,11 @@ export default defineSchema({
 
   institutions: defineTable({
     name: v.string(),
-    registrationId: v.id("institutionRegistrations"),
+    registrationId: v.optional(v.id("institutionRegistrations")),
     adminClerkId: v.string(),
+    phone: v.optional(v.string()),
+    address: v.optional(v.string()),
+    website: v.optional(v.string()),
     isActive: v.boolean(),
     createdAt: v.number(),
   }).index("by_adminClerkId", ["adminClerkId"]),
@@ -81,25 +91,14 @@ export default defineSchema({
     .index("by_institution_level", ["institutionId", "level"])
     .index("by_institution", ["institutionId"]),
 
-  // ===== ALLOCATION RULES =====
-  allocationRules: defineTable({
-    institutionId: v.id("institutions"),
-    walletType: ALLOCATION_WALLET_TYPE,
-    entityKey: v.string(),
-    amount: v.number(),
-    targetEntityId: v.string(),
-    targetName: v.string(),
-    priority: v.number(),
-  })
-    .index("by_institution", ["institutionId"])
-    .index("by_walletType", ["walletType"]),
-
   // ===== STUDENT RECORDS =====
   studentRecords: defineTable({
     institutionId: v.id("institutions"),
     matric: v.string(),
     faculty: v.string(),
     department: v.string(),
+    facultySlug: v.optional(v.string()),
+    departmentSlug: v.optional(v.string()),
     level: v.number(),
     email: v.string(),
     status: STUDENT_STATUS,
@@ -112,6 +111,7 @@ export default defineSchema({
   associations: defineTable({
     institutionId: v.id("institutions"),
     name: v.string(),
+    slug: v.string(),
     type: ASSOCIATION_TYPE,
     facultyId: v.optional(v.string()),
     departmentId: v.optional(v.string()),
@@ -138,6 +138,14 @@ export default defineSchema({
     status: PAYMENT_STATUS,
     createdAt: v.number(),
     completedAt: v.optional(v.number()),
+    // Fee breakdown for routing (stored at creation, used by webhook)
+    feeTuition: v.optional(v.number()),
+    feeSugDues: v.optional(v.number()),
+    feeFacultyDues: v.optional(v.number()),
+    feeDepartmentDues: v.optional(v.number()),
+    facultySlug: v.optional(v.string()),
+    departmentSlug: v.optional(v.string()),
+    platformFee: v.optional(v.number()),
   })
     .index("by_reference", ["reference"])
     .index("by_nombaTransactionId", ["nombaTransactionId"])
@@ -193,6 +201,18 @@ export default defineSchema({
     .index("by_institution", ["institutionId"])
     .index("by_association", ["associationId"])
     .index("by_status", ["status"]),
+
+  // ===== ACADEMIC SESSIONS =====
+  academicSessions: defineTable({
+    institutionId: v.id("institutions"),
+    name: v.string(),
+    startDate: v.number(),
+    endDate: v.number(),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_institution", ["institutionId"])
+    .index("by_institution_active", ["institutionId", "isActive"]),
 
   // ===== IMMUTABLE AUDIT TRAIL =====
   auditLogs: defineTable({

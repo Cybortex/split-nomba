@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { WalletCard, TransactionList } from "@/components/WalletCard";
 
-export function StudentAffairsDashboard({ institutionId }: { institutionId?: string }) {
+export function StudentAffairsDashboard() {
   const myInst = useQuery(api.auth.getMyInstitution);
-  const effectiveInstId = institutionId || (myInst?._id as string | undefined);
+  const effectiveInstId = myInst?._id as string | undefined;
 
   const associations = useQuery(
     api.associations.listAssociations,
@@ -20,17 +21,35 @@ export function StudentAffairsDashboard({ institutionId }: { institutionId?: str
     api.auth.getUsersByRole,
     effectiveInstId ? { institutionId: effectiveInstId as any, roles: ["STUDENT_EXCO"] } : "skip"
   );
+  const accessibleWallets = useQuery(api.wallets.getMyAccessibleWallets);
+
+  // Find the SUG wallet from accessible wallets
+  const sugWalletData = accessibleWallets?.find(
+    (w: any) => w.association?.type === "sug"
+  );
+  const sugWallet = sugWalletData?.wallet;
+
+  const sugTransactions = useQuery(
+    api.wallets.getTransactions,
+    sugWallet && effectiveInstId
+      ? { walletEntityId: sugWallet.entityId, institutionId: effectiveInstId as any }
+      : "skip"
+  );
 
   const createAssociation = useMutation(api.associations.createAssociation);
+  const createSUG = useMutation(api.associations.createSUG);
   const assignStaffAdvisor = useMutation(api.associations.assignStaffAdvisor);
   const assignStudentExco = useMutation(api.associations.assignStudentExco);
   const removeStudentExco = useMutation(api.associations.removeStudentExco);
 
   const [showCreate, setShowCreate] = useState(false);
+  const [showCreateSUG, setShowCreateSUG] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [creatingSUG, setCreatingSUG] = useState(false);
   const [createError, setCreateError] = useState("");
   const [assocForm, setAssocForm] = useState({
     name: "",
+    slug: "",
     type: "department" as "faculty" | "department",
     entityId: "",
   });
@@ -52,7 +71,9 @@ export function StudentAffairsDashboard({ institutionId }: { institutionId?: str
     (excos || []).map((u: any) => [u.clerkId, u])
   );
 
-  if (!associations || !advisors || !excos) {
+  const sugExists = !!sugWallet;
+
+  if (!associations || !advisors || !excos || !accessibleWallets) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="skeleton w-8 h-8 rounded-full" />
@@ -68,22 +89,39 @@ export function StudentAffairsDashboard({ institutionId }: { institutionId?: str
   );
 
   const handleCreate = async () => {
-    if (!assocForm.name || !effectiveInstId) return;
+    if (!assocForm.name || !assocForm.slug || !effectiveInstId) return;
     setCreating(true);
     setCreateError("");
     try {
       await createAssociation({
         institutionId: effectiveInstId as any,
         name: assocForm.name,
+        slug: assocForm.slug.toUpperCase(),
         type: assocForm.type,
-        entityId: assocForm.entityId || assocForm.name.toLowerCase().replace(/\s+/g, "_"),
+        entityId: assocForm.entityId || undefined,
       });
       setShowCreate(false);
-      setAssocForm({ name: "", type: "department", entityId: "" });
+      setAssocForm({ name: "", slug: "", type: "department", entityId: "" });
     } catch (err: any) {
       setCreateError(err.message);
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleCreateSUG = async () => {
+    if (!effectiveInstId) return;
+    setCreatingSUG(true);
+    setCreateError("");
+    try {
+      await createSUG({
+        institutionId: effectiveInstId as any,
+      });
+      setShowCreateSUG(false);
+    } catch (err: any) {
+      setCreateError(err.message);
+    } finally {
+      setCreatingSUG(false);
     }
   };
 
@@ -144,12 +182,20 @@ export function StudentAffairsDashboard({ institutionId }: { institutionId?: str
             Create and manage student associations, assign advisors and executives.
           </p>
         </div>
-        <button
-          onClick={() => setShowCreate(!showCreate)}
-          className="px-4 py-2 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200"
-        >
-          {showCreate ? "Cancel" : "Create Association"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowCreateSUG(!showCreateSUG)}
+            className="px-4 py-2 text-sm font-semibold rounded-lg border border-gold text-gold-royal hover:bg-gold/5 transition-all duration-200"
+          >
+            {showCreateSUG ? "Cancel" : "Create SUG"}
+          </button>
+          <button
+            onClick={() => setShowCreate(!showCreate)}
+            className="px-4 py-2 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200"
+          >
+            {showCreate ? "Cancel" : "Create Association"}
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -177,6 +223,58 @@ export function StudentAffairsDashboard({ institutionId }: { institutionId?: str
         </div>
       </div>
 
+      {/* SUG Wallet Section */}
+      {sugWallet ? (
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-primary">SUG Treasury</h2>
+          <WalletCard wallet={sugWallet} access="view" subtitle="Student Union Government" />
+          <TransactionList
+            transactions={sugTransactions || []}
+            title="SUG Wallet Transactions"
+            emptyMessage="No transactions for the SUG wallet yet."
+          />
+        </div>
+      ) : (
+        <div className="p-6 rounded-xl border border-border bg-surface">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-lg">🎓</span>
+              <div>
+                <p className="font-semibold text-primary">SUG Wallet</p>
+                <p className="text-xs text-muted">
+                  {showCreateSUG
+                    ? "Create the SUG association to enable the treasury."
+                    : "No SUG association created yet. Click 'Create SUG' above to get started."}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create SUG Form */}
+      {showCreateSUG && (
+        <div className="p-6 rounded-2xl border border-border bg-surface space-y-4">
+          <h2 className="font-semibold text-primary">Create SUG Association</h2>
+          {createError && (
+            <div className="p-3 rounded-lg text-sm bg-error/10 text-error border border-error/20">
+              {createError}
+            </div>
+          )}
+          <p className="text-sm text-muted">
+            Creates the Student Union Government association for this institution.
+            Only one SUG can exist per institution.
+          </p>
+          <button
+            onClick={handleCreateSUG}
+            disabled={creatingSUG}
+            className="px-6 py-2.5 text-sm font-semibold rounded-lg bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110"
+          >
+            {creatingSUG ? "Creating..." : "Create SUG"}
+          </button>
+        </div>
+      )}
+
       {/* Create Association Form */}
       {showCreate && (
         <div className="p-6 rounded-2xl border border-border bg-surface space-y-4">
@@ -196,14 +294,27 @@ export function StudentAffairsDashboard({ institutionId }: { institutionId?: str
                 placeholder="e.g., Computer Science Association"
                 value={assocForm.name}
                 onChange={(e) =>
-                  setAssocForm({
-                    ...assocForm,
-                    name: e.target.value,
-                    entityId: e.target.value.toLowerCase().replace(/\s+/g, "_"),
-                  })
+                  setAssocForm({ ...assocForm, name: e.target.value })
                 }
                 className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1.5 text-secondary">
+                Slug (unique identifier)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., COMP-SCI"
+                value={assocForm.slug}
+                onChange={(e) =>
+                  setAssocForm({ ...assocForm, slug: e.target.value.toUpperCase() })
+                }
+                className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
+              />
+              <p className="text-xs text-muted mt-1">
+                Unique slug used for payment routing. E.g., &quot;SCIENCE&quot; for Faculty of Science.
+              </p>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1.5 text-secondary">
@@ -220,27 +331,10 @@ export function StudentAffairsDashboard({ institutionId }: { institutionId?: str
                 <option value="faculty">Faculty-level</option>
               </select>
             </div>
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium mb-1.5 text-secondary">
-                Entity ID (auto-filled from name)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g., cs_association"
-                value={assocForm.entityId}
-                onChange={(e) =>
-                  setAssocForm({ ...assocForm, entityId: e.target.value })
-                }
-                className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
-              />
-              <p className="text-xs text-muted mt-1">
-                Must be unique within this institution. Used as the wallet entity reference.
-              </p>
-            </div>
           </div>
           <button
             onClick={handleCreate}
-            disabled={creating || !assocForm.name}
+            disabled={creating || !assocForm.name || !assocForm.slug}
             className="px-6 py-2.5 text-sm font-semibold rounded-lg bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110"
           >
             {creating ? "Creating..." : "Create Association"}

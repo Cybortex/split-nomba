@@ -47,23 +47,6 @@ export const getByReference = internalQuery({
 });
 
 // ============================================================================
-// ALLOCATION RULES (Internal)
-// ============================================================================
-
-export const getRulesForInstitution = internalQuery({
-  args: { institutionId: v.id("institutions") },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("allocationRules")
-      .filter((q: any) =>
-        q.eq(q.field("institutionId"), args.institutionId as any)
-      )
-      .order("asc")
-      .collect();
-  },
-});
-
-// ============================================================================
 // CREATE PAYMENT (Internal)
 // ============================================================================
 
@@ -78,6 +61,13 @@ export const createPayment = internalMutation({
     level: v.number(),
     amount: v.number(),
     status: v.string(),
+    feeTuition: v.optional(v.number()),
+    feeSugDues: v.optional(v.number()),
+    feeFacultyDues: v.optional(v.number()),
+    feeDepartmentDues: v.optional(v.number()),
+    facultySlug: v.optional(v.string()),
+    departmentSlug: v.optional(v.string()),
+    platformFee: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("payments", {
@@ -90,6 +80,13 @@ export const createPayment = internalMutation({
       level: args.level,
       amount: args.amount,
       status: args.status as "pending" | "completed" | "failed" | "cancelled",
+      feeTuition: args.feeTuition,
+      feeSugDues: args.feeSugDues,
+      feeFacultyDues: args.feeFacultyDues,
+      feeDepartmentDues: args.feeDepartmentDues,
+      facultySlug: args.facultySlug,
+      departmentSlug: args.departmentSlug,
+      platformFee: args.platformFee,
       createdAt: Date.now(),
     });
   },
