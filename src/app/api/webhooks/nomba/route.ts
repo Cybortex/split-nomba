@@ -3,7 +3,13 @@ import crypto from "crypto";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 
-const client = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+function getConvexClient(): ConvexHttpClient {
+  const url = process.env.NEXT_PUBLIC_CONVEX_URL;
+  if (!url) {
+    throw new Error("NEXT_PUBLIC_CONVEX_URL environment variable is not set");
+  }
+  return new ConvexHttpClient(url);
+}
 
 /**
  * Verify Nomba webhook signature using HMAC-SHA256.
@@ -62,6 +68,7 @@ export async function POST(request: NextRequest) {
     // ⚠️ IDEMPOTENCY CHECK
     const txnRef = data.reference || data.transactionId;
 
+    const client = getConvexClient();
     const existingTxn = await client.query(api.payments.getPaymentByReference, {
       reference: txnRef,
     });
