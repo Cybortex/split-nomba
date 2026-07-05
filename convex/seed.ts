@@ -8,6 +8,13 @@ import { v } from "convex/values";
  * Once a SUPER_ADMIN exists, all subsequent users must be created
  * through the normal flow (createInstitutionUser for users with roles).
  *
+ * After bootstrapping, sync the SUPER_ADMIN role to Clerk metadata so
+ * middleware can redirect to /admin before the page loads:
+ *
+ *   curl -X POST https://<your-app>/api/clerk/sync-role \
+ *     -H "Content-Type: application/json" \
+ *     -d '{"clerkId":"user_2_xxx","isSuperAdmin":true}'
+ *
  * Usage:
  *   1. Go to Clerk Dashboard → Users → Create User (email + password)
  *   2. Copy the Clerk ID (user_2_xxx) and the email
@@ -30,12 +37,12 @@ export const bootstrapSuperAdmin = mutation({
     // Check if a SUPER_ADMIN already exists (any user with SUPER_ADMIN in roles)
     const allUsers = await ctx.db.query("users").collect();
     const hasSuperAdmin = allUsers.some((u: any) =>
-      u.roles.includes("SUPER_ADMIN")
+      u.roles.includes("SUPER_ADMIN"),
     );
 
     if (hasSuperAdmin) {
       throw new Error(
-        "A SUPER_ADMIN already exists. Bootstrap is a one-time operation."
+        "A SUPER_ADMIN already exists. Bootstrap is a one-time operation.",
       );
     }
 
@@ -48,7 +55,7 @@ export const bootstrapSuperAdmin = mutation({
     if (existing) {
       throw new Error(
         `User with clerkId "${args.clerkId}" already exists. ` +
-          "Use a different Clerk ID or modify the existing user's roles."
+          "Use a different Clerk ID or modify the existing user's roles.",
       );
     }
 

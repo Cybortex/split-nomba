@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
   FinanceDashboard, 
@@ -61,16 +60,8 @@ function DashboardContent() {
   const switchRole = useMutation(api.auth.switchActiveRole);
   const myInstitution = useQuery(api.auth.getMyInstitution);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
-  const router = useRouter();
 
   const { isSignedIn } = useAuth();
-
-  // SUPER_ADMIN does not belong on /dashboard — immediate redirect to /admin
-  useEffect(() => {
-    if (currentUser && currentUser.roles.includes("SUPER_ADMIN")) {
-      router.replace("/admin");
-    }
-  }, [currentUser, router]);
 
   if (!isSignedIn) {
     return (
@@ -98,11 +89,6 @@ function DashboardContent() {
         <div className="skeleton w-8 h-8 rounded-full" />
       </div>
     );
-  }
-
-  // SUPER_ADMIN: redirect immediately, don't render anything
-  if (currentUser.roles.includes("SUPER_ADMIN")) {
-    return null;
   }
 
   const currentRole = selectedRole || activeRole;
