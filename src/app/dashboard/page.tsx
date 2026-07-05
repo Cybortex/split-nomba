@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { Suspense } from "react";
+import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@clerk/nextjs";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { 
   FinanceDashboard, 
@@ -17,49 +18,10 @@ import {
   InstitutionAdminDashboard,
 } from "@/components/dashboards";
 
-function RoleSwitcher({ roles, activeRole, onSwitch }: {
-  roles: string[];
-  activeRole: string;
-  onSwitch: (role: string) => void;
-}) {
-  const roleLabels: Record<string, string> = {
-    SUPER_ADMIN: "Super Admin",
-    INSTITUTION_ADMIN: "Institution Admin",
-    FINANCE: "Finance",
-    STUDENT_AFFAIRS: "Student Affairs",
-    DEAN: "Dean",
-    HOD: "HOD",
-    STAFF: "Staff",
-    STAFF_ADVISOR: "Staff Advisor",
-    STUDENT_EXCO: "Student Exco",
-    STUDENT: "Student",
-  };
-
-  return (
-    <div className="flex flex-wrap gap-2 mb-6">
-      {roles.map((role) => (
-        <button
-          key={role}
-          onClick={() => onSwitch(role)}
-          className={`px-4 py-2 text-sm font-medium rounded-lg border transition-all duration-200 ${
-            activeRole === role
-              ? "bg-gold text-black border-gold"
-              : "bg-transparent text-secondary border-border hover:bg-hover"
-          }`}
-        >
-          {roleLabels[role] || role}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function DashboardContent() {
   const currentUser = useQuery(api.auth.getCurrentUser);
   const activeRole = useQuery(api.auth.getMyActiveRole);
-  const switchRole = useMutation(api.auth.switchActiveRole);
-  const myInstitution = useQuery(api.auth.getMyInstitution);
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const searchParams = useSearchParams();
 
   const { isSignedIn } = useAuth();
 
@@ -91,60 +53,34 @@ function DashboardContent() {
     );
   }
 
-  const currentRole = selectedRole || activeRole;
-
-  const handleRoleSwitch = async (role: string) => {
-    try {
-      await switchRole({ role });
-      setSelectedRole(role);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const activeTab = searchParams.get("tab") || "overview";
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-primary">
-          {myInstitution?.name || "Dashboard"}
-        </h1>
-        <p className="text-sm mt-1 text-muted">
-          Signed in as{" "}
-          <span className="font-mono text-xs px-2 py-0.5 rounded bg-gold-soft text-gold">
-            {currentRole}
-          </span>
-        </p>
-      </div>
-
-      {/* Role Switcher */}
-      {currentUser.roles.length > 1 && (
-        <RoleSwitcher
-          roles={currentUser.roles}
-          activeRole={currentRole}
-          onSwitch={handleRoleSwitch}
-        />
-      )}
-
-      {/* Role-based Dashboard — all dashboards self-resolve their scoping */}
-      {currentRole === "INSTITUTION_ADMIN" && <InstitutionAdminDashboard />}
-      {currentRole === "FINANCE" && <FinanceDashboard />}
-      {currentRole === "STUDENT_AFFAIRS" && <StudentAffairsDashboard />}
-      {currentRole === "DEAN" && <DeanDashboard />}
-      {currentRole === "HOD" && <HODDashboard />}
-      {currentRole === "STAFF" && <StaffDashboard />}
-      {currentRole === "STAFF_ADVISOR" && <StaffAdvisorDashboard />}
-      {currentRole === "STUDENT_EXCO" && <StudentExcoDashboard />}
-      {currentRole === "STUDENT" && <StudentDashboard />}
+      {activeRole === "INSTITUTION_ADMIN" && <InstitutionAdminDashboard activeTab={activeTab} />}
+      {activeRole === "FINANCE" && <FinanceDashboard activeTab={activeTab} />}
+      {activeRole === "STUDENT_AFFAIRS" && <StudentAffairsDashboard activeTab={activeTab} />}
+      {activeRole === "DEAN" && <DeanDashboard activeTab={activeTab} />}
+      {activeRole === "HOD" && <HODDashboard activeTab={activeTab} />}
+      {activeRole === "STAFF" && <StaffDashboard activeTab={activeTab} />}
+      {activeRole === "STAFF_ADVISOR" && <StaffAdvisorDashboard activeTab={activeTab} />}
+      {activeRole === "STUDENT_EXCO" && <StudentExcoDashboard activeTab={activeTab} />}
+      {activeRole === "STUDENT" && <StudentDashboard activeTab={activeTab} />}
     </div>
   );
 }
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-[calc(100vh-8rem)] py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        <DashboardContent />
+    <div className="min-h-[calc(100vh-8rem)]">
+      <div className="max-w-7xl mx-auto">
+        <Suspense fallback={
+          <div className="flex items-center justify-center h-64 bg-app">
+            <div className="skeleton w-8 h-8 rounded-full" />
+          </div>
+        }>
+          <DashboardContent />
+        </Suspense>
       </div>
     </div>
   );

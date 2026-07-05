@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { WalletCard, TransactionList } from "@/components/WalletCard";
 
-export function StaffAdvisorDashboard() {
+export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: string }) {
   const currentUser = useQuery(api.auth.getCurrentUser);
   const myInst = useQuery(api.auth.getMyInstitution);
   const accessibleWallets = useQuery(api.wallets.getMyAccessibleWallets);
@@ -104,103 +104,115 @@ export function StaffAdvisorDashboard() {
         </p>
       </div>
 
-      {/* Association Wallet Card */}
-      {assocWallet && (
-        <WalletCard
-          wallet={assocWallet}
-          access="view"
-          subtitle={`${association.type} Association Wallet`}
-        />
-      )}
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="p-6 rounded-xl border border-border bg-surface">
-          <p className="text-sm text-muted mb-1">Pending Approval</p>
-          <p className="text-2xl font-bold text-pending">{pendingRequests.length}</p>
-        </div>
-        <div className="p-6 rounded-xl border border-border bg-surface">
-          <p className="text-sm text-muted mb-1">Approved (Ready to Execute)</p>
-          <p className="text-2xl font-bold text-info">{approvedRequests.length}</p>
-        </div>
-      </div>
-
-      {/* Pending Requests */}
-      {pendingRequests.length > 0 && (
-        <div className="rounded-xl border border-border bg-surface overflow-hidden">
-          <div className="px-6 py-4 border-b border-border">
-            <h2 className="font-semibold text-primary">Pending Approval</h2>
-          </div>
-          <div className="divide-y divide-border-subtle">
-            {pendingRequests.map((req: any) => (
-              <div key={req._id} className="px-6 py-4 flex items-center justify-between hover:bg-hover transition-colors duration-150">
-                <div>
-                  <span className="text-lg font-bold text-gold font-mono">₦{req.amount.toLocaleString()}</span>
-                  <p className="text-sm text-secondary mt-1">{req.reason}</p>
-                  <p className="text-xs text-muted mt-0.5">
-                    Initiated {new Date(req.createdAt).toLocaleDateString()}
-                  </p>
+      {activeTab === "overview" && (
+        <>
+          {/* Association Wallet Card */}
+          {assocWallet ? (
+            <>
+              <WalletCard
+                wallet={assocWallet}
+                access="view"
+                subtitle={`${association.type} Association Wallet`}
+              />
+              {/* Transactions */}
+              {transactions && transactions.length > 0 ? (
+                <TransactionList
+                  transactions={transactions}
+                  maxItems={10}
+                  title="Wallet Transactions"
+                />
+              ) : (
+                <div className="p-12 rounded-xl border border-border bg-surface text-center">
+                  <p className="text-muted">No wallet transactions for this association yet.</p>
                 </div>
-                <button
-                  onClick={() => handleApprove(req._id)}
-                  disabled={processing === req._id}
-                  className="px-4 py-2 text-sm font-semibold rounded-lg bg-info text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50"
-                >
-                  {processing === req._id ? "..." : "Approve"}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
+              )}
+            </>
+          ) : (
+            <div className="p-12 rounded-xl border border-border bg-surface text-center">
+              <p className="text-muted">No wallet data available for this association yet.</p>
+            </div>
+          )}
+        </>
       )}
 
-      {/* Approved - Ready to Execute */}
-      {approvedRequests.length > 0 && (
-        <div className="rounded-xl border border-border bg-surface overflow-hidden">
-          <div className="px-6 py-4 border-b border-border">
-            <h2 className="font-semibold text-primary">Ready to Execute</h2>
+      {activeTab === "withdrawals" && (
+        <>
+          {/* Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-6 rounded-xl border border-border bg-surface">
+              <p className="text-sm text-muted mb-1">Pending Approval</p>
+              <p className="text-2xl font-bold text-pending">{pendingRequests.length}</p>
+            </div>
+            <div className="p-6 rounded-xl border border-border bg-surface">
+              <p className="text-sm text-muted mb-1">Approved (Ready to Execute)</p>
+              <p className="text-2xl font-bold text-info">{approvedRequests.length}</p>
+            </div>
           </div>
-          <div className="divide-y divide-border-subtle">
-            {approvedRequests.map((req: any) => (
-              <div key={req._id} className="px-6 py-4 flex items-center justify-between hover:bg-hover transition-colors duration-150">
-                <div>
-                  <span className="text-lg font-bold text-info font-mono">₦{req.amount.toLocaleString()}</span>
-                  <p className="text-sm text-secondary mt-1">{req.reason}</p>
-                  <p className="text-xs text-muted mt-0.5">
-                    Approved {req.approvedAt ? new Date(req.approvedAt).toLocaleDateString() : ""}
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleExecute(req._id)}
-                  disabled={processing === req._id}
-                  className="px-4 py-2 text-sm font-semibold rounded-lg bg-success text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50"
-                >
-                  {processing === req._id ? "..." : "Execute"}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {/* Transactions & Empty State */}
-      {transactions && transactions.length > 0 ? (
-        <TransactionList
-          transactions={transactions}
-          maxItems={10}
-          title="Wallet Transactions"
-        />
-      ) : requests && pendingRequests.length === 0 && approvedRequests.length === 0 ? (
-        <div className="p-12 rounded-xl border border-border bg-surface text-center">
-          <p className="text-muted">No withdrawal requests or transactions for this association yet.</p>
-        </div>
-      ) : (
-        <TransactionList
-          transactions={[]}
-          maxItems={10}
-          title="Wallet Transactions"
-          emptyMessage="No transactions yet for this association."
-        />
+          {/* Pending Requests */}
+          {pendingRequests.length > 0 && (
+            <div className="rounded-xl border border-border bg-surface overflow-hidden">
+              <div className="px-6 py-4 border-b border-border">
+                <h2 className="font-semibold text-primary">Pending Approval</h2>
+              </div>
+              <div className="divide-y divide-border-subtle">
+                {pendingRequests.map((req: any) => (
+                  <div key={req._id} className="px-6 py-4 flex items-center justify-between hover:bg-hover transition-colors duration-150">
+                    <div>
+                      <span className="text-lg font-bold text-gold font-mono">₦{req.amount.toLocaleString()}</span>
+                      <p className="text-sm text-secondary mt-1">{req.reason}</p>
+                      <p className="text-xs text-muted mt-0.5">
+                        Initiated {new Date(req.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleApprove(req._id)}
+                      disabled={processing === req._id}
+                      className="px-4 py-2 text-sm font-semibold rounded-lg bg-info text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50"
+                    >
+                      {processing === req._id ? "..." : "Approve"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Approved - Ready to Execute */}
+          {approvedRequests.length > 0 && (
+            <div className="rounded-xl border border-border bg-surface overflow-hidden">
+              <div className="px-6 py-4 border-b border-border">
+                <h2 className="font-semibold text-primary">Ready to Execute</h2>
+              </div>
+              <div className="divide-y divide-border-subtle">
+                {approvedRequests.map((req: any) => (
+                  <div key={req._id} className="px-6 py-4 flex items-center justify-between hover:bg-hover transition-colors duration-150">
+                    <div>
+                      <span className="text-lg font-bold text-info font-mono">₦{req.amount.toLocaleString()}</span>
+                      <p className="text-sm text-secondary mt-1">{req.reason}</p>
+                      <p className="text-xs text-muted mt-0.5">
+                        Approved {req.approvedAt ? new Date(req.approvedAt).toLocaleDateString() : ""}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleExecute(req._id)}
+                      disabled={processing === req._id}
+                      className="px-4 py-2 text-sm font-semibold rounded-lg bg-success text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50"
+                    >
+                      {processing === req._id ? "..." : "Execute"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {pendingRequests.length === 0 && approvedRequests.length === 0 && (
+            <div className="p-12 rounded-xl border border-border bg-surface text-center">
+              <p className="text-muted">No pending or approved withdrawal requests for this association.</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

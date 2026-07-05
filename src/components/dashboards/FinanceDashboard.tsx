@@ -324,10 +324,15 @@ function FeesTab({ institutionId }: { institutionId: string }) {
 // ============================================================================
 // MAIN FINANCE DASHBOARD
 // ============================================================================
-export function FinanceDashboard({ institutionId }: { institutionId?: string }) {
+export function FinanceDashboard({ 
+  institutionId,
+  activeTab = "overview"
+}: { 
+  institutionId?: string;
+  activeTab?: string;
+}) {
   const myInst = useQuery(api.auth.getMyInstitution);
   const effectiveInstId = institutionId || (myInst?._id as string | undefined);
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
 
   if (!effectiveInstId) {
     return (
@@ -343,20 +348,16 @@ export function FinanceDashboard({ institutionId }: { institutionId?: string }) 
       <div>
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-bold text-primary">Finance Dashboard</h2>
-          <span className="text-xs px-2 py-0.5 rounded bg-gold/10 text-gold-royal">
+          <span className="text-xs px-2 py-0.5 rounded bg-gold/10 text-gold-royal font-mono">
             FINANCE
           </span>
         </div>
         <p className="text-xs text-muted mt-0.5">Manage fee structures, allocation rules, and view wallet performance.</p>
       </div>
 
-      {/* Tab Navigation */}
-      <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
-
       {/* Tab Content */}
       {activeTab === "overview" && <OverviewTab institutionId={effectiveInstId} />}
       {activeTab === "fees" && <FeesTab institutionId={effectiveInstId} />}
-
     </div>
   );
 }

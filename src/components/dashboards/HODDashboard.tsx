@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { WalletCard, TransactionList } from "@/components/WalletCard";
 
-export function HODDashboard() {
+export function HODDashboard({ activeTab }: { activeTab?: string }) {
   const currentUser = useQuery(api.auth.getCurrentUser);
   const myInst = useQuery(api.auth.getMyInstitution);
   const accessibleWallets = useQuery(api.wallets.getMyAccessibleWallets);

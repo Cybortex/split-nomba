@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter, usePathname } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 
 const NAV_ITEMS = [
   {
@@ -44,11 +46,24 @@ const NAV_ITEMS = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { isLoaded, isSignedIn } = useAuth();
   const currentUser = useQuery(api.auth.getCurrentUser);
   const router = useRouter();
   const pathname = usePathname();
 
-  if (!currentUser) {
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push("/sign-in");
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  useEffect(() => {
+    if (currentUser && !currentUser.roles.includes("SUPER_ADMIN")) {
+      router.push("/dashboard");
+    }
+  }, [currentUser, router]);
+
+  if (!isLoaded || currentUser === undefined) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="skeleton w-12 h-12 rounded-xl" />
@@ -56,7 +71,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!currentUser.roles.includes("SUPER_ADMIN")) {
+  if (!isSignedIn) {
+    return null;
+  }
+
+  if (currentUser === null || !currentUser.roles.includes("SUPER_ADMIN")) {
     return (
       <div className="flex items-center justify-center h-screen">
         <p className="text-muted">Redirecting to dashboard...</p>

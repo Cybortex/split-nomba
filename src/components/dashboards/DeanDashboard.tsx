@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { WalletCard, TransactionList } from "@/components/WalletCard";
 
-export function DeanDashboard() {
+export function DeanDashboard({ activeTab }: { activeTab?: string }) {
   const currentUser = useQuery(api.auth.getCurrentUser);
   const myInst = useQuery(api.auth.getMyInstitution);
   const accessibleWallets = useQuery(api.wallets.getMyAccessibleWallets);

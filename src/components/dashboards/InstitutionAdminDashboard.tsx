@@ -913,10 +913,15 @@ function SettingsTab({ institutionId }: { institutionId: string }) {
 // ============================================================================
 // MAIN DASHBOARD
 // ============================================================================
-export function InstitutionAdminDashboard({ institutionId }: { institutionId?: string }) {
+export function InstitutionAdminDashboard({ 
+  institutionId,
+  activeTab = "overview" 
+}: { 
+  institutionId?: string; 
+  activeTab?: string;
+}) {
   const myInst = useQuery(api.auth.getMyInstitution);
   const effectiveInstId = institutionId || (myInst?._id as string | undefined);
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
 
   if (!effectiveInstId) {
     return (
@@ -931,14 +936,12 @@ export function InstitutionAdminDashboard({ institutionId }: { institutionId?: s
       <div>
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-bold text-primary">Institution Admin Dashboard</h2>
-          <span className="text-xs px-2 py-0.5 rounded bg-gold/10 text-gold-royal">INSTITUTION_ADMIN</span>
+          <span className="text-xs px-2 py-0.5 rounded bg-gold/10 text-gold-royal font-mono">INSTITUTION_ADMIN</span>
         </div>
         <p className="text-xs text-muted mt-0.5">
           Manage users, students, staff, academic sessions, and institution settings.
         </p>
       </div>
-
-      <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
       {activeTab === "overview" && <OverviewTab institutionId={effectiveInstId} />}
       {activeTab === "users" && <UsersTab institutionId={effectiveInstId} />}

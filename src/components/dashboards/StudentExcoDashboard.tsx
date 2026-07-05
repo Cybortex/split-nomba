@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { WalletCard, TransactionList } from "@/components/WalletCard";
 
-export function StudentExcoDashboard() {
+export function StudentExcoDashboard({ activeTab = "overview" }: { activeTab?: string }) {
   const currentUser = useQuery(api.auth.getCurrentUser);
   const myInst = useQuery(api.auth.getMyInstitution);
   const accessibleWallets = useQuery(api.wallets.getMyAccessibleWallets);
@@ -106,7 +106,9 @@ export function StudentExcoDashboard() {
     setProcessing(requestId);
     setError("");
     try {
-      await execute({ withdrawalId: requestId as any });
+      await execute({
+        withdrawalId: requestId as any,
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -125,12 +127,14 @@ export function StudentExcoDashboard() {
             <span className="font-medium text-primary">{association.name}</span>.
           </p>
         </div>
-        <button
-          onClick={() => setShowInitiate(!showInitiate)}
-          className="px-4 py-2 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200"
-        >
-          {showInitiate ? "Cancel" : "New Withdrawal"}
-        </button>
+        {activeTab === "withdrawals" && (
+          <button
+            onClick={() => setShowInitiate(!showInitiate)}
+            className="px-4 py-2 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200"
+          >
+            {showInitiate ? "Cancel" : "New Withdrawal"}
+          </button>
+        )}
       </div>
 
       {error && (
@@ -139,114 +143,126 @@ export function StudentExcoDashboard() {
         </div>
       )}
 
-      {/* Wallet & Transactions Section */}
-      {assocWallet && (
+      {activeTab === "overview" && (
         <>
-          <WalletCard
-            wallet={assocWallet}
-            access="transact"
-            subtitle={`${association.type} Association • Withdrawable`}
-          />
-          <TransactionList
-            transactions={transactions || []}
-            title="Wallet Transactions"
-            emptyMessage="No transactions for this wallet yet."
-          />
+          {/* Wallet & Transactions Section */}
+          {assocWallet ? (
+            <>
+              <WalletCard
+                wallet={assocWallet}
+                access="transact"
+                subtitle={`${association.type} Association • Withdrawable`}
+              />
+              <TransactionList
+                transactions={transactions || []}
+                title="Wallet Transactions"
+                emptyMessage="No transactions for this wallet yet."
+              />
+            </>
+          ) : (
+            <div className="p-12 rounded-xl border border-border bg-surface text-center">
+              <p className="text-muted">No wallet data available yet.</p>
+            </div>
+          )}
         </>
       )}
 
-      {/* Initiate Withdrawal Form */}
-      {showInitiate && (
-        <div className="p-6 rounded-2xl border border-border bg-surface space-y-4">
-          <h2 className="font-semibold text-primary">Initiate Withdrawal</h2>
-          {assocWallet && (
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-surface-secondary border border-border">
-              <span className="text-lg">💰</span>
+      {activeTab === "withdrawals" && (
+        <>
+          {/* Initiate Withdrawal Form */}
+          {showInitiate && (
+            <div className="p-6 rounded-2xl border border-border bg-surface space-y-4">
+              <h2 className="font-semibold text-primary">Initiate Withdrawal</h2>
+              {assocWallet && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-surface-secondary border border-border">
+                  <span className="text-lg">💰</span>
+                  <div>
+                    <p className="text-sm font-medium text-primary">{assocWallet.name}</p>
+                    <p className="text-xs text-muted">
+                      Available: ₦{(assocWallet.availableBalance || 0).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              )}
               <div>
-                <p className="text-sm font-medium text-primary">{assocWallet.name}</p>
-                <p className="text-xs text-muted">
-                  Available: ₦{(assocWallet.availableBalance || 0).toLocaleString()}
-                </p>
+                <label className="block text-sm font-medium mb-1.5 text-secondary">Amount (₦)</label>
+                <input
+                  type="number"
+                  placeholder="50000"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  max={assocWallet?.availableBalance || 0}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
+                />
               </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5 text-secondary">Reason</label>
+                <textarea
+                  placeholder="Purpose of withdrawal"
+                  value={reason}
+                  rows={2}
+                  onChange={(e) => setReason(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none resize-none focus:border-gold"
+                />
+              </div>
+              <button
+                onClick={handleInitiate}
+                disabled={processing === "initiate" || !assocWallet}
+                className="px-6 py-2.5 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200 disabled:opacity-50"
+              >
+                {processing === "initiate" ? "Initiating..." : "Submit for Approval"}
+              </button>
             </div>
           )}
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-secondary">Amount (₦)</label>
-            <input
-              type="number"
-              placeholder="50000"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              max={assocWallet?.availableBalance || 0}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-secondary">Reason</label>
-            <textarea
-              placeholder="Purpose of withdrawal"
-              value={reason}
-              rows={2}
-              onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none resize-none focus:border-gold"
-            />
-          </div>
-          <button
-            onClick={handleInitiate}
-            disabled={processing === "initiate" || !assocWallet}
-            className="px-6 py-2.5 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200 disabled:opacity-50"
-          >
-            {processing === "initiate" ? "Initiating..." : "Submit for Approval"}
-          </button>
-        </div>
-      )}
 
-      {/* Requests List */}
-      {myRequests.length > 0 ? (
-        <div className="space-y-3">
-          {myRequests.map((req: any) => (
-            <div
-              key={req._id}
-              className="p-5 rounded-2xl border border-border bg-surface transition-all duration-200 hover:border-gold-royal"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold text-gold font-mono">
-                      ₦{req.amount.toLocaleString()}
-                    </span>
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded font-medium ${
-                        req.status === "pending"
-                          ? "bg-pending/10 text-pending"
-                          : "bg-info/10 text-info"
-                      }`}
-                    >
-                      {req.status}
-                    </span>
+          {/* Requests List */}
+          {myRequests.length > 0 ? (
+            <div className="space-y-3">
+              {myRequests.map((req: any) => (
+                <div
+                  key={req._id}
+                  className="p-5 rounded-2xl border border-border bg-surface transition-all duration-200 hover:border-gold-royal"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-bold text-gold font-mono">
+                          ₦{req.amount.toLocaleString()}
+                        </span>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded font-medium ${
+                            req.status === "pending"
+                              ? "bg-pending/10 text-pending font-mono"
+                              : "bg-info/10 text-info font-mono"
+                          }`}
+                        >
+                          {req.status}
+                        </span>
+                      </div>
+                      <p className="text-sm text-secondary mt-1">{req.reason}</p>
+                      <p className="text-xs text-muted mt-1">
+                        Created {new Date(req.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    {req.status === "approved" && (
+                      <button
+                        onClick={() => handleExecute(req._id)}
+                        disabled={processing === req._id}
+                        className="px-4 py-2 text-sm font-semibold rounded-lg bg-success text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50"
+                      >
+                        {processing === req._id ? "..." : "Execute"}
+                      </button>
+                    )}
                   </div>
-                  <p className="text-sm text-secondary mt-1">{req.reason}</p>
-                  <p className="text-xs text-muted mt-1">
-                    Created {new Date(req.createdAt).toLocaleDateString()}
-                  </p>
                 </div>
-                {req.status === "approved" && (
-                  <button
-                    onClick={() => handleExecute(req._id)}
-                    disabled={processing === req._id}
-                    className="px-4 py-2 text-sm font-semibold rounded-lg bg-success text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50"
-                  >
-                    {processing === req._id ? "..." : "Execute"}
-                  </button>
-                )}
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="p-12 rounded-xl border border-border bg-surface text-center">
-          <p className="text-muted">No withdrawal requests yet. Initiate one to get started.</p>
-        </div>
+          ) : (
+            <div className="p-12 rounded-xl border border-border bg-surface text-center">
+              <p className="text-muted">No withdrawal requests yet. Initiate one to get started.</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

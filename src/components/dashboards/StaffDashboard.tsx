@@ -1,6 +1,6 @@
 "use client";
 
-export function StaffDashboard() {
+export function StaffDashboard({ activeTab }: { activeTab?: string }) {
   // MOCKUP: Staff personal allowance dashboard
   // TODO: Connect to real backend queries when allowance/payroll system is built
 

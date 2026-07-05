@@ -2,9 +2,14 @@
 
 import { useAuth, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 export default function Navbar() {
   const { isSignedIn } = useAuth();
+  const currentUser = useQuery(api.auth.getCurrentUser);
+
+  const isSuperAdmin = currentUser?.roles?.includes("SUPER_ADMIN");
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border-subtle bg-app/95 backdrop-blur-2xl">
@@ -20,24 +25,21 @@ export default function Navbar() {
             </Link>
             {isSignedIn && (
               <div className="hidden md:flex items-center gap-6">
-                <Link
-                  href="/dashboard"
-                  className="text-sm font-medium text-secondary hover:text-primary transition-colors duration-200"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/pay"
-                  className="text-sm font-medium text-secondary hover:text-primary transition-colors duration-200"
-                >
-                  Pay Dues
-                </Link>
-                <Link
-                  href="/withdrawals"
-                  className="text-sm font-medium text-secondary hover:text-primary transition-colors duration-200"
-                >
-                  Withdrawals
-                </Link>
+                {isSuperAdmin ? (
+                  <Link
+                    href="/admin"
+                    className="text-sm font-medium text-secondary hover:text-primary transition-colors duration-200"
+                  >
+                    Admin Portal
+                  </Link>
+                ) : (
+                  <Link
+                    href="/dashboard"
+                    className="text-sm font-medium text-secondary hover:text-primary transition-colors duration-200"
+                  >
+                    Dashboard
+                  </Link>
+                )}
               </div>
             )}
           </div>
@@ -45,42 +47,20 @@ export default function Navbar() {
           {/* Right */}
           <div className="flex items-center gap-3">
             {isSignedIn ? (
-              <>
-                <div className="hidden md:flex items-center gap-2">
-                  <Link
-                    href="/admin/institutions"
-                    className="text-xs px-3 py-1.5 rounded-md text-muted bg-surface-secondary hover:bg-hover hover:text-secondary transition-all duration-200"
-                  >
-                    Institutions
-                  </Link>
-                  <Link
-                    href="/admin/users"
-                    className="text-xs px-3 py-1.5 rounded-md text-muted bg-surface-secondary hover:bg-hover hover:text-secondary transition-all duration-200"
-                  >
-                    Users
-                  </Link>
-                  <Link
-                    href="/admin/audit"
-                    className="text-xs px-3 py-1.5 rounded-md text-muted bg-surface-secondary hover:bg-hover hover:text-secondary transition-all duration-200"
-                  >
-                    Audit
-                  </Link>
-                </div>
-                <UserButton
-                  appearance={{
-                    elements: {
-                      userButtonAvatarBox: "w-8 h-8",
-                      userButtonPopoverCard: {
-                        backgroundColor: "#121317",
-                        border: "1px solid #313541",
-                      },
-                      userButtonPopoverActionItem: {
-                        color: "#D5DBE5",
-                      },
+              <UserButton
+                appearance={{
+                  elements: {
+                    userButtonAvatarBox: "w-8 h-8",
+                    userButtonPopoverCard: {
+                      backgroundColor: "#121317",
+                      border: "1px solid #313541",
                     },
-                  }}
-                />
-              </>
+                    userButtonPopoverActionItem: {
+                      color: "#D5DBE5",
+                    },
+                  },
+                }}
+              />
             ) : (
               <div className="flex items-center gap-3">
                 <Link
