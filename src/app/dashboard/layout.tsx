@@ -4,7 +4,8 @@ import { useEffect, useState, Suspense } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { syncSuperAdminRole } from "@/lib/clerk-sync";
 
 const ROLE_NAV_ITEMS: Record<string, { key: string; label: string; icon: string }[]> = {
   INSTITUTION_ADMIN: [
@@ -188,6 +189,7 @@ function SidebarContent() {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn } = useAuth();
+  const { user: clerkUser } = useUser();
   const currentUser = useQuery(api.auth.getCurrentUser);
   const router = useRouter();
 
@@ -198,10 +200,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [isLoaded, isSignedIn, router]);
 
   useEffect(() => {
-    if (currentUser && currentUser.roles.includes("SUPER_ADMIN")) {
-      router.push("/admin");
+    if (currentUser) {
+      const isSuper = currentUser.roles.includes("SUPER_ADMIN");
+      
+      if (isSuper) {
+        // Auto-heal Clerk metadata to true and redirect
+        if (clerkUser && clerkUser.publicMetadata?.isSuperAdmin !== true) {
+          syncSuperAdminRole(currentUser.clerkId, true).catch(console.error);
+        }
+        router.push("/admin");
+      } else {
+        // Auto-heal Clerk metadata to false if they hit dashboard
+        if (clerkUser && clerkUser.publicMetadata?.isSuperAdmin !== false) {
+          syncSuperAdminRole(currentUser.clerkId, false).catch(console.error);
+        }
+      }
     }
-  }, [currentUser, router]);
+  }, [currentUser, clerkUser, router]);
 
   if (!isLoaded || currentUser === undefined) {
     return (

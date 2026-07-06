@@ -1,10 +1,10 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@clerk/nextjs";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
   FinanceDashboard, 
@@ -22,6 +22,7 @@ function DashboardContent() {
   const currentUser = useQuery(api.auth.getCurrentUser);
   const activeRole = useQuery(api.auth.getMyActiveRole);
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const { isSignedIn } = useAuth();
 
@@ -44,6 +45,12 @@ function DashboardContent() {
       </div>
     );
   }
+
+  useEffect(() => {
+    if (currentUser?.roles.includes("SUPER_ADMIN")) {
+      router.push("/admin");
+    }
+  }, [currentUser, router]);
 
   if (!currentUser || !activeRole) {
     return (

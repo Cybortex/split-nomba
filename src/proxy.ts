@@ -31,29 +31,28 @@ export default clerkMiddleware(async (auth, req) => {
 
   const { userId } = await auth();
 
-  // SUPER_ADMIN routing — middleware runs BEFORE the page loads,
-  // so there's zero flash of the wrong dashboard.
-  // The isSuperAdmin flag is stored in Clerk's public metadata, synced
-  // automatically when the SUPER_ADMIN role is assigned (via the
-  // bootstrap action or /api/clerk/sync-role endpoint).
-  if (userId && (isDashboardRoute(req) || isAdminRoute(req))) {
+  if (userId) {
     const client = await clerkClient();
     const clerkUser = await client.users.getUser(userId);
     const isSuperAdmin = clerkUser.publicMetadata.isSuperAdmin as boolean;
 
+    // After sign-in: redirect authenticated users from the root landing page to their correct area
+    if (req.nextUrl.pathname === "/") {
+      if (isSuperAdmin) {
+        return Response.redirect(new URL("/admin", req.url));
+      } else {
+        return Response.redirect(new URL("/dashboard", req.url));
+      }
+    }
+
+    // Protect dashboard and admin routes from unauthorized cross-access
     if (isSuperAdmin && isDashboardRoute(req)) {
       return Response.redirect(new URL("/admin", req.url));
     }
 
-    if (!isSuperAdmin && isAdminRoute(req)) {
+    if (isSuperAdmin === false && isAdminRoute(req)) {
       return Response.redirect(new URL("/dashboard", req.url));
     }
-  }
-
-  // After sign-in: redirect authenticated users from the root landing page
-  // to their dashboard.
-  if (userId && req.nextUrl.pathname === "/") {
-    return Response.redirect(new URL("/dashboard", req.url));
   }
 });
 

@@ -4,10 +4,12 @@ import { useAuth, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const { isSignedIn } = useAuth();
   const currentUser = useQuery(api.auth.getCurrentUser);
+  const pathname = usePathname();
 
   const isSuperAdmin = currentUser?.roles?.includes("SUPER_ADMIN");
 
@@ -25,17 +27,49 @@ export default function Navbar() {
             </Link>
             {isSignedIn && (
               <div className="hidden md:flex items-center gap-6">
-                {isSuperAdmin ? (
-                  <Link
-                    href="/admin"
-                    className="text-sm font-medium text-secondary hover:text-primary transition-colors duration-200"
-                  >
-                    Admin Portal
-                  </Link>
+                {currentUser === undefined ? (
+                  <div className="h-4 w-20 rounded bg-border animate-pulse" />
+                ) : isSuperAdmin ? (
+                  <>
+                    <Link
+                      href="/admin"
+                      className={`text-sm font-medium transition-all duration-200 ${
+                        pathname === "/admin" ? "text-gold" : "text-secondary hover:text-primary"
+                      }`}
+                    >
+                      Overview
+                    </Link>
+                    <Link
+                      href="/admin/approvals"
+                      className={`text-sm font-medium transition-all duration-200 ${
+                        pathname === "/admin/approvals" ? "text-gold" : "text-secondary hover:text-primary"
+                      }`}
+                    >
+                      Approvals
+                    </Link>
+                    <Link
+                      href="/admin/institutions"
+                      className={`text-sm font-medium transition-all duration-200 ${
+                        pathname === "/admin/institutions" ? "text-gold" : "text-secondary hover:text-primary"
+                      }`}
+                    >
+                      Institutions
+                    </Link>
+                    <Link
+                      href="/admin/audit"
+                      className={`text-sm font-medium transition-all duration-200 ${
+                        pathname === "/admin/audit" ? "text-gold" : "text-secondary hover:text-primary"
+                      }`}
+                    >
+                      Audit Log
+                    </Link>
+                  </>
                 ) : (
                   <Link
                     href="/dashboard"
-                    className="text-sm font-medium text-secondary hover:text-primary transition-colors duration-200"
+                    className={`text-sm font-medium transition-all duration-200 ${
+                      pathname?.startsWith("/dashboard") ? "text-gold" : "text-secondary hover:text-primary"
+                    }`}
                   >
                     Dashboard
                   </Link>
