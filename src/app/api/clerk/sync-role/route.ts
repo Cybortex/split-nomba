@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const res = await fetch(
       `https://api.clerk.com/v1/users/${clerkId}/metadata`,
       {
-        method: "POST",
+        method: "PATCH",
         headers: {
           Authorization: `Bearer ${CLERK_SECRET_KEY}`,
           "Content-Type": "application/json",
