@@ -24,7 +24,7 @@ export default function Home() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-24">
           <Link
-            href="/pay"
+            href="/dashboard/pay"
             className="px-8 py-3.5 text-lg font-semibold rounded-xl bg-gold text-black hover:brightness-110 transition-all duration-200"
           >
             Pay Your Dues

@@ -17,6 +17,7 @@ const isPublicRoute = createRouteMatcher([
 
 const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
 const isDashboardRoute = createRouteMatcher(["/dashboard(.*)"]);
+const isPublicAuthGate = createRouteMatcher(["/", "/register", "/sign-in(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   // Protect all non-public routes — unauthenticated users are redirected to /sign-in
@@ -36,15 +37,12 @@ export default clerkMiddleware(async (auth, req) => {
     const clerkUser = await client.users.getUser(userId);
     const isSuperAdmin = clerkUser.publicMetadata.isSuperAdmin as boolean | undefined;
 
-    // After sign-in: redirect authenticated users from the root landing page to their correct area.
-    // Only redirect to /admin if explicitly marked as super admin.
-    // If isSuperAdmin is undefined (not yet synced), fall through to /dashboard and let the
-    // client-side layout handle auto-sync and re-routing.
-    if (req.nextUrl.pathname === "/") {
+    // Prevent logged-in users from visiting public auth pages (/, /register, /sign-in)
+    if (isPublicAuthGate(req)) {
       if (isSuperAdmin === true) {
         return Response.redirect(new URL("/admin", req.url));
       } else {
-        // Covers both false and undefined — non-admin users go to /dashboard
+        // Redirect to dashboard (if isSuperAdmin is undefined/unsynced, dashboard layout will redirect to /admin)
         return Response.redirect(new URL("/dashboard", req.url));
       }
     }

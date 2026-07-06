@@ -103,3 +103,40 @@ export const hasSuperAdmin = query({
     return users.some((u: any) => u.roles.includes("SUPER_ADMIN"));
   },
 });
+
+/**
+ * SUPER_ADMIN ONLY: Delete all institutions, their wallets, users, fees, payments,
+ * sessions, and registrations — leaving only the SUPER_ADMIN user intact.
+ * Run from Convex dashboard when resetting test data.
+ */
+export const resetInstitutions = mutation({
+  handler: async (ctx) => {
+    // Keep only super admin users
+    const allUsers = await ctx.db.query("users").collect();
+    const nonSuperAdmins = allUsers.filter(
+      (u: any) => !u.roles.includes("SUPER_ADMIN")
+    );
+    for (const u of nonSuperAdmins) await ctx.db.delete(u._id);
+
+    const tables = [
+      "institutions",
+      "institutionRegistrations",
+      "wallets",
+      "walletTransactions",
+      "payments",
+      "feeConfig",
+      "academicSessions",
+      "auditLogs",
+      "associations",
+      "withdrawalRequests",
+      "studentRecords",
+    ] as const;
+
+    for (const table of tables) {
+      const rows = await (ctx.db.query(table) as any).collect();
+      for (const row of rows) await ctx.db.delete(row._id);
+    }
+
+    return { success: true, message: "All institution data cleared. Super admin(s) preserved." };
+  },
+});

@@ -1,4 +1,5 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, action, internalMutation, internalQuery } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
 // ============================================================================
@@ -900,3 +901,388 @@ export async function requirePermission(
 
   return user;
 }
+
+// ============================================================================
+// INSTITUTION APPROVAL ACTION (creates Clerk user + Convex record atomically)
+// ============================================================================
+
+/**
+ * Internal mutation: Approve the registration and create the institution + wallet in the DB.
+ * Called by the approveAndSetupInstitution action.
+ */
+export const approveInstitutionInternal = internalMutation({
+  args: {
+    registrationId: v.id("institutionRegistrations"),
+    superAdminClerkId: v.string(),
+    adminClerkId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const registration = await ctx.db
+      .query("institutionRegistrations")
+      .filter((q: any) => q.eq(q.field("_id"), args.registrationId))
+      .first();
+
+    if (!registration) throw new Error("Registration not found");
+    if (registration.status !== "pending")
+      throw new Error("Registration already processed");
+
+    // Create institution
+    const institutionId = await ctx.db.insert("institutions", {
+      name: registration.name,
+      registrationId: args.registrationId,
+      adminClerkId: args.adminClerkId,
+      isActive: true,
+      createdAt: Date.now(),
+    });
+
+    // Create institution wallet
+    await ctx.db.insert("wallets", {
+      institutionId: institutionId as any,
+      type: "institution",
+      entityId: institutionId.toString(),
+      name: registration.name,
+      totalCollected: 0,
+      availableBalance: 0,
+      minimumBalance: 0,
+      transactionCount: 0,
+    });
+
+    // Mark registration as approved
+    await ctx.db.patch(args.registrationId, {
+      status: "approved",
+      reviewedBy: args.superAdminClerkId,
+      reviewedAt: Date.now(),
+    });
+
+    // Audit log
+    await ctx.db.insert("auditLogs", {
+      institutionId: institutionId as any,
+      userId: args.superAdminClerkId,
+      action: "INSTITUTION_APPROVED",
+      entity: "institutions",
+      entityId: institutionId,
+      newValue: JSON.stringify({ name: registration.name, adminEmail: registration.adminEmail }),
+      timestamp: Date.now(),
+      success: true,
+    });
+
+    return {
+      institutionId,
+      adminEmail: registration.adminEmail,
+      adminName: registration.adminName,
+      institutionName: registration.name,
+    };
+  },
+});
+
+/**
+ * Internal mutation: Create the INSTITUTION_ADMIN user record in Convex.
+ * Called by the approveAndSetupInstitution action after Clerk user creation.
+ */
+export const createInstitutionAdminRecord = internalMutation({
+  args: {
+    clerkId: v.string(),
+    email: v.string(),
+    institutionId: v.id("institutions"),
+    superAdminClerkId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Avoid duplicates
+    const existing = await ctx.db
+      .query("users")
+      .filter((q: any) => q.eq(q.field("clerkId"), args.clerkId))
+      .first();
+
+    if (existing) return existing._id;
+
+    const userId = await ctx.db.insert("users", {
+      clerkId: args.clerkId,
+      email: args.email,
+      roles: ["INSTITUTION_ADMIN"],
+      activeRole: "INSTITUTION_ADMIN",
+      institutionId: args.institutionId,
+      permissions: [],
+      isActive: true,
+    });
+
+    await ctx.db.insert("auditLogs", {
+      institutionId: args.institutionId,
+      userId: args.superAdminClerkId,
+      action: "USER_ROLE_CHANGED",
+      entity: "users",
+      entityId: userId,
+      newValue: JSON.stringify({
+        roles: ["INSTITUTION_ADMIN"],
+        email: args.email,
+        institutionId: args.institutionId,
+      }),
+      timestamp: Date.now(),
+      success: true,
+    });
+
+    return userId;
+  },
+});
+
+/**
+ * ACTION: Approve an institution registration and fully set up the admin account.
+ *
+ * Flow:
+ *   1. Verify caller is SUPER_ADMIN
+ *   2. Create institution + wallet in Convex DB (internalMutation)
+ *   3. Create Clerk user with email (no password — email code sign-in)
+ *   4. Create Convex user record with INSTITUTION_ADMIN role (internalMutation)
+ *   5. Generate a 7-day Clerk sign-in token (magic link for first login)
+ *   6. Return the sign-in URL to display in the admin dashboard
+ */
+export const approveAndSetupInstitution = action({
+  args: { registrationId: v.id("institutionRegistrations") },
+  handler: async (ctx, args): Promise<{
+    institutionId: string;
+    adminEmail: string;
+    institutionName: string;
+    signInUrl: string | null;
+    clerkId: string;
+  }> => {
+    // Verify caller is authenticated and is a SUPER_ADMIN
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+    const superAdminClerkId = identity.subject;
+
+    const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY;
+    if (!CLERK_SECRET_KEY) throw new Error("CLERK_SECRET_KEY not configured");
+
+    // ── Step 1: We need to peek at the registration to get the email ──────────
+    // (we'll do this in the internal mutation, but we need it for Clerk first)
+    // We'll pass a placeholder clerkId and update it after Clerk user creation.
+    // To solve the chicken-and-egg, we create the Clerk user first,
+    // then run the internal mutation with the real clerkId.
+
+    // ── Step 2: Get registration info via a temporary read ───────────────────
+    // We use ctx.runQuery to read the registration without modifying anything
+    const registration = await ctx.runQuery(internal.auth.getRegistrationForApproval, {
+      registrationId: args.registrationId,
+    });
+
+    if (!registration) throw new Error("Registration not found");
+    if (registration.status !== "pending") throw new Error("Already processed");
+
+    const { adminEmail, adminName } = registration;
+
+    // ── Step 3: Create Clerk user (no password — uses email code to sign in) ──
+    const clerkCreateRes = await fetch("https://api.clerk.com/v1/users", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${CLERK_SECRET_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email_address: [adminEmail],
+        first_name: adminName?.split(" ")[0] || adminEmail.split("@")[0],
+        last_name: adminName?.split(" ").slice(1).join(" ") || "",
+        skip_password_requirement: true,
+        skip_password_checks: true,
+      }),
+    });
+
+    if (!clerkCreateRes.ok) {
+      const errBody = await clerkCreateRes.json();
+      // If user already exists in Clerk, try to find them
+      const clerkErr = errBody?.errors?.[0];
+      if (clerkErr?.code !== "form_identifier_exists") {
+        throw new Error(`Clerk user creation failed: ${clerkErr?.message || JSON.stringify(errBody)}`);
+      }
+      // User already exists — get their ID
+      const existingRes = await fetch(
+        `https://api.clerk.com/v1/users?email_address=${encodeURIComponent(adminEmail)}`,
+        { headers: { Authorization: `Bearer ${CLERK_SECRET_KEY}` } }
+      );
+      const existingData = await existingRes.json();
+      const existingClerkId = existingData?.[0]?.id;
+      if (!existingClerkId) throw new Error("Clerk user exists but could not retrieve their ID");
+
+      // Run DB approval with existing clerk ID
+      const result = await ctx.runMutation(internal.auth.approveInstitutionInternal, {
+        registrationId: args.registrationId,
+        superAdminClerkId,
+        adminClerkId: existingClerkId,
+      });
+
+      await ctx.runMutation(internal.auth.createInstitutionAdminRecord, {
+        clerkId: existingClerkId,
+        email: adminEmail,
+        institutionId: result.institutionId,
+        superAdminClerkId,
+      });
+
+      // Send onboarding email without instant token (since user already existed, they know their credentials)
+      await sendApprovedEmail(adminEmail, adminName || "Admin", result.institutionName, null).catch(console.error);
+
+      return {
+        institutionId: result.institutionId.toString(),
+        adminEmail,
+        institutionName: result.institutionName,
+        signInUrl: null,
+        clerkId: existingClerkId,
+      };
+    }
+
+    const clerkUser = await clerkCreateRes.json();
+    const clerkId: string = clerkUser.id;
+
+    // ── Step 4: Approve institution and create Convex records ─────────────────
+    const result = await ctx.runMutation(internal.auth.approveInstitutionInternal, {
+      registrationId: args.registrationId,
+      superAdminClerkId,
+      adminClerkId: clerkId,
+    });
+
+    await ctx.runMutation(internal.auth.createInstitutionAdminRecord, {
+      clerkId,
+      email: adminEmail,
+      institutionId: result.institutionId,
+      superAdminClerkId,
+    });
+
+    // ── Step 5: Generate a 7-day magic sign-in token ──────────────────────────
+    let signInUrl: string | null = null;
+    try {
+      const tokenRes = await fetch("https://api.clerk.com/v1/sign_in_tokens", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${CLERK_SECRET_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: clerkId,
+          expires_in_seconds: 604800, // 7 days
+        }),
+      });
+
+      if (tokenRes.ok) {
+        const tokenData = await tokenRes.json();
+        signInUrl = tokenData.url ?? null;
+      }
+    } catch {
+      // Sign-in token generation is non-fatal — admin can still use email code
+    }
+
+    // Send onboarding email with instant sign-in URL if generated
+    await sendApprovedEmail(adminEmail, adminName || "Admin", result.institutionName, signInUrl).catch(console.error);
+
+    return {
+      institutionId: result.institutionId.toString(),
+      adminEmail,
+      institutionName: result.institutionName,
+      signInUrl,
+      clerkId,
+    };
+  },
+});
+
+/**
+ * Helper function to send email via Google Apps Script Web App
+ */
+async function sendApprovedEmail(
+  toEmail: string,
+  adminName: string,
+  institutionName: string,
+  signInUrl: string | null
+) {
+  const serviceUrl = process.env.EMAIL_SERVICE_URL;
+  const serviceKey = process.env.EMAIL_SERVICE_KEY;
+
+  if (!serviceUrl || !serviceKey) {
+    console.warn("[Email Service] EMAIL_SERVICE_URL or EMAIL_SERVICE_KEY not configured. Skipping email sending.");
+    return false;
+  }
+
+  const htmlBody = `
+<div style="font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background-color: #0b0f19; color: #f3f4f6; padding: 40px 20px; border-radius: 16px; max-width: 600px; margin: 0 auto; border: 1px solid #1f2937;">
+  <div style="text-align: center; margin-bottom: 32px;">
+    <h1 style="color: #f59e0b; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;">Nomba Split</h1>
+    <p style="color: #9ca3af; margin: 4px 0 0 0; font-size: 14px;">Institutional Onboarding Platform</p>
+  </div>
+  
+  <div style="background-color: #111827; padding: 32px; border-radius: 12px; border: 1px solid #374151;">
+    <h2 style="font-size: 20px; font-weight: 700; color: #ffffff; margin-top: 0; margin-bottom: 16px;">Welcome to Split!</h2>
+    <p style="font-size: 15px; color: #d1d5db; line-height: 1.6; margin-bottom: 24px;">
+      Hello ${adminName},<br/><br/>
+      Your institution, <strong style="color: #ffffff;">${institutionName}</strong>, has been successfully approved on our platform. Your administrator account is ready.
+    </p>
+    
+    ${signInUrl ? `
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${signInUrl}" style="background-color: #f59e0b; color: #000000; font-weight: 700; font-size: 15px; text-decoration: none; padding: 14px 32px; border-radius: 8px; display: inline-block;">
+          Sign In Instantly
+        </a>
+        <p style="font-size: 11px; color: #6b7280; margin-top: 12px; margin-bottom: 0;">
+          This link is valid for 7 days and can only be used once.
+        </p>
+      </div>
+    ` : ""}
+    
+    <div style="background-color: #1f2937; padding: 20px; border-radius: 8px; border: 1px solid #374151; margin-top: 24px;">
+      <h3 style="font-size: 14px; font-weight: 600; color: #ffffff; margin-top: 0; margin-bottom: 12px;">Standard Login Credentials</h3>
+      <p style="font-size: 13px; color: #9ca3af; margin: 0 0 8px 0; line-height: 1.5;">
+        You can always sign in using your registered email:
+      </p>
+      <div style="font-family: monospace; font-size: 14px; color: #f59e0b; background-color: #0b0f19; padding: 10px; border-radius: 6px; border: 1px solid #111827; display: inline-block;">
+        ${toEmail}
+      </div>
+      <p style="font-size: 13px; color: #9ca3af; margin: 12px 0 0 0; line-height: 1.5;">
+        Choose the <strong>"Use email verification code"</strong> option on the sign-in page to receive a secure code.
+      </p>
+    </div>
+  </div>
+  
+  <div style="text-align: center; margin-top: 32px; font-size: 12px; color: #4b5563;">
+    <p style="margin: 0;">© ${new Date().getFullYear()} Nomba Split. All rights reserved.</p>
+  </div>
+</div>
+  `;
+
+  try {
+    const response = await fetch(serviceUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to: toEmail,
+        subject: `Welcome to Nomba Split - ${institutionName} Approved!`,
+        body: htmlBody,
+        apiKey: serviceKey,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[Email Service] Failed to send email through Web App:", response.status, errorText);
+      return false;
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      console.error("[Email Service] Web App returned failure:", data.error);
+      return false;
+    }
+
+    console.log(`[Email Service] Successfully sent onboarding email to ${toEmail}`);
+    return true;
+  } catch (error) {
+    console.error("[Email Service] Network error sending email:", error);
+    return false;
+  }
+}
+
+/**
+ * Internal query: Read a registration for the approval action.
+ */
+export const getRegistrationForApproval = internalQuery({
+  args: { registrationId: v.id("institutionRegistrations") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("institutionRegistrations")
+      .filter((q: any) => q.eq(q.field("_id"), args.registrationId))
+      .first();
+  },
+});
