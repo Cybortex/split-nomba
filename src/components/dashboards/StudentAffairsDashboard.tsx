@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { WalletCard, TransactionList } from "@/components/WalletCard";
+import { GraduationCap } from "lucide-react";
 
 export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?: string }) {
   const myInst = useQuery(api.auth.getMyInstitution);
@@ -242,7 +243,7 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
             <div className="p-6 rounded-xl border border-border bg-surface">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-lg">🎓</span>
+                  <GraduationCap className="w-5 h-5 text-gold flex-shrink-0" />
                   <div>
                     <p className="font-semibold text-primary">SUG Wallet</p>
                     <p className="text-xs text-muted">

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Mail, AlertTriangle, Link, Info, User, Phone, Calendar, MapPin } from "lucide-react";
 
 type ApprovalResult = {
   institutionId: string;
@@ -51,13 +52,13 @@ function SignInLinkModal({
           {/* Email Delivery Status Alert */}
           {result.emailSent ? (
             <div className="p-3 rounded-lg border border-success/20 bg-success/5 text-xs text-success flex items-center gap-2">
-              <span>📧</span>
+              <Mail className="w-4 h-4 text-success flex-shrink-0" />
               <span>Onboarding email successfully sent to the administrator.</span>
             </div>
           ) : (
             <div className="p-3 rounded-lg border border-warning/20 bg-warning/5 text-xs text-warning space-y-1">
               <div className="flex items-center gap-2">
-                <span>⚠️</span>
+                <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0" />
                 <span className="font-semibold">Email Delivery Failed</span>
               </div>
               <p className="pl-6 text-muted leading-relaxed">
@@ -69,7 +70,7 @@ function SignInLinkModal({
 
           {/* Admin email */}
           <div className="flex items-center gap-3 p-3 rounded-lg bg-surface-secondary border border-border">
-            <span className="text-lg">✉️</span>
+            <Mail className="w-5 h-5 text-muted flex-shrink-0" />
             <div>
               <p className="text-xs text-muted">Admin Email</p>
               <p className="text-sm font-medium text-primary font-mono">{result.adminEmail}</p>
@@ -80,7 +81,8 @@ function SignInLinkModal({
           {result.signInUrl ? (
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-primary">🔗 First Sign-In Link</span>
+                <Link className="w-4 h-4 text-primary flex-shrink-0" />
+              <span className="text-sm font-semibold text-primary">First Sign-In Link</span>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-gold/10 text-gold font-medium">
                   Expires in 7 days
                 </span>
@@ -109,7 +111,10 @@ function SignInLinkModal({
             </div>
           ) : (
             <div className="p-4 rounded-xl border border-border bg-surface-secondary space-y-2">
-              <p className="text-sm font-semibold text-primary">📧 Sign-In Instructions</p>
+              <p className="text-sm font-semibold text-primary flex items-center gap-2">
+                <Mail className="w-4 h-4 text-primary flex-shrink-0" />
+                Sign-In Instructions
+              </p>
               <p className="text-xs text-muted leading-relaxed">
                 The admin account has been created. Since a magic link could not be generated,
                 share these instructions with the institution admin:
@@ -125,7 +130,8 @@ function SignInLinkModal({
 
           {/* Email code fallback info */}
           <div className="p-3 rounded-lg border border-border bg-surface-secondary text-xs text-muted">
-            <span className="text-secondary font-medium">ℹ️ After first login:</span> The admin can always sign in at{" "}
+            <Info className="w-3.5 h-3.5 text-secondary inline-flex flex-shrink-0" />
+            <span className="text-secondary font-medium"> After first login:</span> The admin can always sign in at{" "}
             <span className="text-gold font-mono">/sign-in</span> using their email and a verification code sent to their inbox.
           </div>
         </div>
@@ -226,21 +232,21 @@ export function AdminApprovals() {
                   <h3 className="text-lg font-semibold text-primary">{reg.name}</h3>
                   <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted">
                     <span className="flex items-center gap-1">
-                      <span className="text-xs">✉</span>
+                      <Mail className="w-3.5 h-3.5 text-muted flex-shrink-0" />
                       {reg.adminEmail}
                     </span>
                     <span className="flex items-center gap-1">
-                      <span className="text-xs">👤</span>
+                      <User className="w-3.5 h-3.5 text-muted flex-shrink-0" />
                       {reg.adminName}
                     </span>
                     {reg.phone && (
                       <span className="flex items-center gap-1">
-                        <span className="text-xs">📞</span>
+                        <Phone className="w-3.5 h-3.5 text-muted flex-shrink-0" />
                         {reg.phone}
                       </span>
                     )}
                     <span className="flex items-center gap-1">
-                      <span className="text-xs">📅</span>
+                      <Calendar className="w-3.5 h-3.5 text-muted flex-shrink-0" />
                       {new Date(reg._creationTime).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "long",
@@ -250,7 +256,7 @@ export function AdminApprovals() {
                   </div>
                   {reg.address && (
                     <p className="text-xs text-muted mt-2 flex items-center gap-1">
-                      <span>📍</span>
+                      <MapPin className="w-3.5 h-3.5 text-muted flex-shrink-0" />
                       {reg.address}
                     </p>
                   )}

@@ -1,5 +1,7 @@
 "use client";
 
+import { Lightbulb } from "lucide-react";
+
 export function StaffDashboard({ activeTab }: { activeTab?: string }) {
   // MOCKUP: Staff personal allowance dashboard
   // TODO: Connect to real backend queries when allowance/payroll system is built
@@ -121,8 +123,9 @@ export function StaffDashboard({ activeTab }: { activeTab?: string }) {
 
       {/* Info Banner */}
       <div className="p-4 rounded-xl bg-gold-subtle border border-gold/15">
-        <p className="text-xs text-gold-royal">
-          💡 This is a mockup dashboard. Connect to the institution&apos;s payroll/allowance system to display real payment data. Contact your Institution Admin to set up allowance disbursement.
+        <p className="text-xs text-gold-royal flex items-start gap-1.5">
+          <Lightbulb className="w-3.5 h-3.5 text-gold-royal flex-shrink-0 mt-0.5" />
+          <span>This is a mockup dashboard. Connect to the institution&apos;s payroll/allowance system to display real payment data. Contact your Institution Admin to set up allowance disbursement.</span>
         </p>
       </div>
     </div>

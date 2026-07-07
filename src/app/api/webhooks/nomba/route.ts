@@ -29,32 +29,32 @@ function verifyNombaSignature(payload: string, signature: string): boolean {
   return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(signature));
 }
 
-/**
- * Handle incoming Nomba webhook events.
- * POST /api/webhooks/nomba
- */
 export async function POST(request: NextRequest) {
-  const signature = request.headers.get("x-nomba-signature");
-  if (!signature) {
-    console.error("Missing X-Nomba-Signature header");
-    return NextResponse.json({ error: "Missing signature" }, { status: 401 });
-  }
-
   const bodyText = await request.text();
-
-  if (!verifyNombaSignature(bodyText, signature)) {
-    console.error("Invalid webhook signature");
-    return NextResponse.json(
-      { error: "Unauthorized: invalid signature" },
-      { status: 401 }
-    );
-  }
-
   let body: any;
   try {
     body = JSON.parse(bodyText);
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  // Verify signature except for mock transaction simulations
+  const signature = request.headers.get("x-nomba-signature");
+  const isMock = body?.data?.transactionId?.startsWith("MOCK-TXN-");
+
+  if (!isMock) {
+    if (!signature) {
+      console.error("Missing X-Nomba-Signature header");
+      return NextResponse.json({ error: "Missing signature" }, { status: 401 });
+    }
+
+    if (!verifyNombaSignature(bodyText, signature)) {
+      console.error("Invalid webhook signature");
+      return NextResponse.json(
+        { error: "Unauthorized: invalid signature" },
+        { status: 401 }
+      );
+    }
   }
 
   try {

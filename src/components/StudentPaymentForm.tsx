@@ -5,6 +5,7 @@ import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import { SignInButton } from "@clerk/nextjs";
+import { AlertTriangle } from "lucide-react";
 
 export function StudentPaymentForm() {
   const [matric, setMatric] = useState("");
@@ -125,8 +126,9 @@ export function StudentPaymentForm() {
       </button>
 
       <div className="mt-4 p-3 bg-gold-subtle border border-gold/15 rounded-lg">
-        <p className="text-xs text-gold-royal">
-          ⚠️ <strong>Security:</strong> The payment amount is calculated on the server, not sent from this form. This prevents amount tampering.
+        <p className="text-xs text-gold-royal flex items-start gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5 text-gold-royal flex-shrink-0 mt-0.5" />
+          <span><strong>Security:</strong> The payment amount is calculated on the server, not sent from this form. This prevents amount tampering.</span>
         </p>
       </div>
     </form>

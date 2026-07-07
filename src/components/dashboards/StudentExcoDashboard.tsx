@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { WalletCard, TransactionList } from "@/components/WalletCard";
+import { Coins } from "lucide-react";
 
 export function StudentExcoDashboard({ activeTab = "overview" }: { activeTab?: string }) {
   const currentUser = useQuery(api.auth.getCurrentUser);
@@ -175,7 +176,7 @@ export function StudentExcoDashboard({ activeTab = "overview" }: { activeTab?: s
               <h2 className="font-semibold text-primary">Initiate Withdrawal</h2>
               {assocWallet && (
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-surface-secondary border border-border">
-                  <span className="text-lg">💰</span>
+                  <Coins className="w-5 h-5 text-gold flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-primary">{assocWallet.name}</p>
                     <p className="text-xs text-muted">

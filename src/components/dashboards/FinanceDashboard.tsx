@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { BarChart3, Coins } from "lucide-react";
 
 type Tab = "overview" | "fees";
 
@@ -26,9 +27,9 @@ const WALLET_TYPES = [
 // TAB BAR
 // ============================================================================
 function TabBar({ activeTab, onTabChange }: { activeTab: Tab; onTabChange: (tab: Tab) => void }) {
-  const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: "overview", label: "Overview", icon: "📊" },
-    { key: "fees", label: "Fees", icon: "💰" },
+  const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
+    { key: "overview", label: "Overview", icon: <BarChart3 className="w-4 h-4" /> },
+    { key: "fees", label: "Fees", icon: <Coins className="w-4 h-4" /> },
   ];
 
   return (
@@ -37,7 +38,7 @@ function TabBar({ activeTab, onTabChange }: { activeTab: Tab; onTabChange: (tab:
         <button
           key={tab.key}
           onClick={() => onTabChange(tab.key)}
-          className={`px-4 py-2 text-sm font-medium rounded-lg border transition-all duration-200 ${
+          className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-all duration-200 ${
             activeTab === tab.key
               ? "bg-gold text-black border-gold"
               : "bg-transparent text-secondary border-border hover:bg-hover"

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Calendar } from "lucide-react";
+import { BarChart3, Users, School, GraduationCap, Briefcase, Calendar, Settings } from "lucide-react";
 
 type Tab = "overview" | "users" | "school-management" | "students" | "staff" | "sessions" | "settings";
 
@@ -38,14 +38,14 @@ const ASSIGNABLE_ROLES = [
 // TAB BUTTONS
 // ============================================================================
 function TabBar({ activeTab, onTabChange }: { activeTab: Tab; onTabChange: (tab: Tab) => void }) {
-  const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: "overview", label: "Overview", icon: "📊" },
-    { key: "users", label: "Users", icon: "👥" },
-    { key: "school-management", label: "School Management", icon: "🏫" },
-    { key: "students", label: "Students", icon: "🎓" },
-    { key: "staff", label: "Staff", icon: "👔" },
-    { key: "sessions", label: "Sessions", icon: "📅" },
-    { key: "settings", label: "Settings", icon: "⚙️" },
+  const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
+    { key: "overview", label: "Overview", icon: <BarChart3 className="w-4 h-4" /> },
+    { key: "users", label: "Users", icon: <Users className="w-4 h-4" /> },
+    { key: "school-management", label: "School Management", icon: <School className="w-4 h-4" /> },
+    { key: "students", label: "Students", icon: <GraduationCap className="w-4 h-4" /> },
+    { key: "staff", label: "Staff", icon: <Briefcase className="w-4 h-4" /> },
+    { key: "sessions", label: "Sessions", icon: <Calendar className="w-4 h-4" /> },
+    { key: "settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
   ];
 
   return (
@@ -54,7 +54,7 @@ function TabBar({ activeTab, onTabChange }: { activeTab: Tab; onTabChange: (tab:
         <button
           key={tab.key}
           onClick={() => onTabChange(tab.key)}
-          className={`px-4 py-2 text-sm font-medium rounded-lg border transition-all duration-200 ${
+          className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-all duration-200 ${
             activeTab === tab.key
               ? "bg-gold text-black border-gold"
               : "bg-transparent text-secondary border-border hover:bg-hover"

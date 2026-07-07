@@ -675,7 +675,7 @@ export const simulateSplitPayment = mutation({
 
     // Helper: credit a wallet
     const creditWallet = async (walletId: any, amount: number, reason: string) => {
-      const wallet = await ctx.db.get(walletId);
+      const wallet = (await ctx.db.get(walletId)) as any;
       if (!wallet) return;
       await ctx.db.patch(walletId, {
         availableBalance: (wallet.availableBalance || 0) + amount,

@@ -2,11 +2,12 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Landmark, User, CheckCircle, Coins } from "lucide-react";
 
 const STAT_CARDS = [
   {
     label: "Institutions",
-    icon: "🏛️",
+    icon: <Landmark className="w-6 h-6 text-gold" />,
     color: "text-gold",
     valueKey: "institutions" as const,
     subKey: "" as const,
@@ -14,7 +15,7 @@ const STAT_CARDS = [
   },
   {
     label: "Active Users",
-    icon: "👤",
+    icon: <User className="w-6 h-6 text-info" />,
     color: "text-info",
     valueKey: "users" as const,
     subKey: "totalUsers" as const,
@@ -22,7 +23,7 @@ const STAT_CARDS = [
   },
   {
     label: "Payments Processed",
-    icon: "✅",
+    icon: <CheckCircle className="w-6 h-6 text-success" />,
     color: "text-success",
     valueKey: "completedPayments" as const,
     subKey: "payments" as const,
@@ -30,7 +31,7 @@ const STAT_CARDS = [
   },
   {
     label: "Total Volume",
-    icon: "💰",
+    icon: <Coins className="w-6 h-6 text-gold" />,
     color: "text-gold",
     valueKey: "paymentVolume" as const,
     isCurrency: true,
@@ -85,7 +86,7 @@ export function AdminOverview() {
               className="p-6 rounded-xl border border-border bg-surface hover:border-gold-royal transition-all duration-200"
             >
               <div className="flex items-start justify-between mb-3">
-                <span className="text-2xl">{stat.icon}</span>
+                <span className="flex-shrink-0">{stat.icon}</span>
               </div>
               <p className={`text-2xl font-bold ${stat.color}`}>{displayValue}</p>
               <p className="text-sm text-muted mt-1">{stat.label}</p>

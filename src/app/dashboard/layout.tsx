@@ -6,47 +6,48 @@ import { api } from "@/convex/_generated/api";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { syncSuperAdminRole } from "@/lib/clerk-sync";
+import { BarChart3, Users, GraduationCap, Calendar, Settings, Coins, Landmark, Banknote, CreditCard, ScrollText, Handshake, Briefcase } from "lucide-react";
 
-const ROLE_NAV_ITEMS: Record<string, { key: string; label: string; icon: string }[]> = {
+const ROLE_NAV_ITEMS: Record<string, { key: string; label: string; icon: React.ReactNode }[]> = {
   INSTITUTION_ADMIN: [
-    { key: "overview", label: "Overview", icon: "📊" },
-    { key: "users", label: "Users", icon: "👥" },
-    { key: "students", label: "Students", icon: "🎓" },
-    { key: "staff", label: "Staff", icon: "👔" },
-    { key: "sessions", label: "Sessions", icon: "📅" },
-    { key: "settings", label: "Settings", icon: "⚙️" },
+    { key: "overview", label: "Overview", icon: <BarChart3 className="w-4 h-4" /> },
+    { key: "users", label: "Users", icon: <Users className="w-4 h-4" /> },
+    { key: "students", label: "Students", icon: <GraduationCap className="w-4 h-4" /> },
+    { key: "staff", label: "Staff", icon: <Briefcase className="w-4 h-4" /> },
+    { key: "sessions", label: "Sessions", icon: <Calendar className="w-4 h-4" /> },
+    { key: "settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
   ],
   FINANCE: [
-    { key: "overview", label: "Overview", icon: "📊" },
-    { key: "fees", label: "Fees & Rules", icon: "💰" },
+    { key: "overview", label: "Overview", icon: <BarChart3 className="w-4 h-4" /> },
+    { key: "fees", label: "Fees & Rules", icon: <Coins className="w-4 h-4" /> },
   ],
   STUDENT_AFFAIRS: [
-    { key: "overview", label: "Overview (SUG)", icon: "🏛️" },
-    { key: "associations", label: "Associations", icon: "🤝" },
-    { key: "advisors", label: "Staff Advisors", icon: "👨‍🏫" },
-    { key: "excos", label: "Student Excos", icon: "🎓" },
+    { key: "overview", label: "Overview (SUG)", icon: <Landmark className="w-4 h-4" /> },
+    { key: "associations", label: "Associations", icon: <Handshake className="w-4 h-4" /> },
+    { key: "advisors", label: "Staff Advisors", icon: <GraduationCap className="w-4 h-4" /> },
+    { key: "excos", label: "Student Excos", icon: <GraduationCap className="w-4 h-4" /> },
   ],
   DEAN: [
-    { key: "overview", label: "Faculty Wallet", icon: "🏛️" },
+    { key: "overview", label: "Faculty Wallet", icon: <Landmark className="w-4 h-4" /> },
   ],
   HOD: [
-    { key: "overview", label: "Dept Wallet", icon: "🏛️" },
+    { key: "overview", label: "Dept Wallet", icon: <Landmark className="w-4 h-4" /> },
   ],
   STAFF_ADVISOR: [
-    { key: "overview", label: "Overview", icon: "📊" },
-    { key: "withdrawals", label: "Withdrawals", icon: "💸" },
+    { key: "overview", label: "Overview", icon: <BarChart3 className="w-4 h-4" /> },
+    { key: "withdrawals", label: "Withdrawals", icon: <Banknote className="w-4 h-4" /> },
   ],
   STUDENT_EXCO: [
-    { key: "overview", label: "Overview", icon: "📊" },
-    { key: "withdrawals", label: "Withdrawals", icon: "💸" },
+    { key: "overview", label: "Overview", icon: <BarChart3 className="w-4 h-4" /> },
+    { key: "withdrawals", label: "Withdrawals", icon: <Banknote className="w-4 h-4" /> },
   ],
   STAFF: [
-    { key: "overview", label: "Overview", icon: "📊" },
+    { key: "overview", label: "Overview", icon: <BarChart3 className="w-4 h-4" /> },
   ],
   STUDENT: [
-    { key: "overview", label: "Overview", icon: "📊" },
-    { key: "pay", label: "Pay Dues", icon: "💳" },
-    { key: "history", label: "Payment History", icon: "📜" },
+    { key: "overview", label: "Overview", icon: <BarChart3 className="w-4 h-4" /> },
+    { key: "pay", label: "Pay Dues", icon: <CreditCard className="w-4 h-4" /> },
+    { key: "history", label: "Payment History", icon: <ScrollText className="w-4 h-4" /> },
   ],
 };
 
@@ -177,7 +178,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                   : "text-secondary hover:bg-hover hover:text-primary"
               }`}
             >
-              <span className={`text-base ${isActive ? "text-black" : "text-muted"}`}>
+              <span className={`flex-shrink-0 ${isActive ? "text-black" : "text-muted"}`}>
                 {item.icon}
               </span>
               {item.label}

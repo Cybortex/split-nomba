@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import { SignInButton } from "@clerk/nextjs";
+import { Scale } from "lucide-react";
 
 export default function WithdrawalsPage() {
   const { isSignedIn } = useUser();
@@ -180,9 +181,10 @@ export default function WithdrawalsPage() {
         )}
 
         <div className="p-4 rounded-xl bg-gold-subtle border border-gold/15">
-          <p className="text-xs text-gold-royal">
-            ⚖️ <strong>Consensus Model:</strong> STUDENT_EXCO initiates withdrawal. STAFF_ADVISOR approves. After approval, either party can execute.
-          </p>
+        <p className="text-xs text-gold-royal flex items-start gap-1.5">
+          <Scale className="w-3.5 h-3.5 text-gold-royal flex-shrink-0 mt-0.5" />
+          <span><strong>Consensus Model:</strong> STUDENT_EXCO initiates withdrawal. STAFF_ADVISOR approves. After approval, either party can execute.</span>
+        </p>
         </div>
       </div>
     </div>
