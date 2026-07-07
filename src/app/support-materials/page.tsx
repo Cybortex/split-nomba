@@ -1,116 +1,213 @@
 "use client";
 
 import React from "react";
-import { Download, PlayCircle, Code, ShieldCheck, Map, Smartphone, MessageSquare, Layout } from "lucide-react";
-import Link from "next/link";
+import { ShieldCheck, Server, Layers, Key, Zap, CheckCircle2, FileText, Lock } from "lucide-react";
 
 export default function SupportMaterials() {
-  const materials = [
+  const faqs = [
     {
-      title: "Pitch Deck (12 Slides)",
-      description: "Comprehensive 12-slide presentation covering the problem, market opportunity, solution, business model, and GTM strategy.",
-      icon: <Layout className="w-6 h-6 text-gold" />,
-      action: "View Outline",
+      q: "What is Split and what problem does it solve?",
+      a: "Split is a role-based, consensus-driven fee collection and disbursement platform designed for Nigerian tertiary institutions. It solves the fragmented collection of tuition, faculty, and departmental dues by providing a single payment point. Crucially, it brings transparency to institutional finances by ensuring funds are automatically split into appropriate virtual accounts and cannot be withdrawn without a strict approval chain."
     },
     {
-      title: "Demo Video",
-      description: "A 3-minute screen capture walkthrough showing the full lifecycle of a transaction from student payment to finance execution.",
-      icon: <PlayCircle className="w-6 h-6 text-info" />,
-      action: "Watch Video",
+      q: "How does the automated fee splitting work?",
+      a: "When an institution is configured, administrators define fee schedules for different student levels (e.g., Tuition, SUG Dues, Faculty Dues, Department Dues). When a student pays, Nomba processes the single transaction, and our backend instantly calculates the split according to the schedule. It then virtually allocates the exact amounts to the respective dedicated Providus Bank virtual accounts tied to each association or faculty."
     },
     {
-      title: "System Architecture",
-      description: "Diagram showing Next.js + Clerk + Convex + Nomba API + Providus Bank integration.",
-      icon: <Code className="w-6 h-6 text-success" />,
-      action: "View Diagram",
+      q: "What is the Withdrawal Consensus Mechanism?",
+      a: "To prevent fund mismanagement, no single person can withdraw funds. For departmental or faculty funds, a Student Executive must initiate a withdrawal request specifying the amount and reason. This request enters a 'Pending' state and requires explicit approval from an assigned Staff Advisor. Only after advisor approval can the Institution Finance Officer execute the actual disbursement."
     },
     {
-      title: "Security & Compliance Note",
-      description: "1-page document detailing HMAC webhook verification, role-based access control, and audit logs.",
-      icon: <ShieldCheck className="w-6 h-6 text-warning" />,
-      action: "Read Document",
+      q: "Can a Dean or HOD withdraw funds directly?",
+      a: "No. Deans and HODs have oversight and management capabilities (such as assigning the Staff Advisor), but the system enforcing strict separation of concerns means they cannot initiate or approve direct disbursements. They can monitor the financial health and transaction history of their respective domains."
     },
     {
-      title: "User Journey Maps",
-      description: "Visual flows of the Student Payment Journey and the Withdrawal Consensus Journey.",
-      icon: <Map className="w-6 h-6 text-primary" />,
-      action: "View Maps",
+      q: "How are roles independent of each other?",
+      a: "In Split, structural roles (Dean, HOD) are completely decoupled from association roles (Staff Advisor, Student Exco). This means if an institution changes a Dean, the Staff Advisor managing the faculty's funds remains intact unless explicitly changed by the new Dean. This guarantees continuity and prevents accidental exposure of funds during administrative transitions."
     },
     {
-      title: "Mobile Mockups",
-      description: "Premium visual presentations of the Split dashboard wrapped in mobile frames.",
-      icon: <Smartphone className="w-6 h-6 text-secondary" />,
-      action: "View Mockups",
-    },
-    {
-      title: "Financial Model",
-      description: "Spreadsheet showing Year 1-3 projections, SaaS revenue, and transaction fee splits.",
-      icon: <Download className="w-6 h-6 text-success" />,
-      action: "Download Sheet",
-    },
-    {
-      title: "Live Demo Credentials",
-      description: "A shareable list of 27 seeded accounts for judges to test all 9 roles.",
-      icon: <MessageSquare className="w-6 h-6 text-info" />,
-      action: "Get Credentials",
+      q: "What happens if a webhook event is missed?",
+      a: "Our system relies on real-time webhook events from Nomba to confirm transaction completion. However, we also implement idempotency checks based on transaction references to ensure that even if a webhook is retried or delivered late, no student is credited twice and no wallet balance is falsely inflated."
     }
   ];
 
   return (
-    <div className="min-h-screen bg-app pb-20">
+    <div className="min-h-screen bg-app pb-24 text-secondary">
       {/* Hero Section */}
-      <div className="bg-surface border-b border-border-subtle pt-20 pb-16 px-4">
+      <div className="bg-surface border-b border-border-subtle pt-24 pb-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-primary mb-6">
-            Support Materials for <span className="text-gold">Split</span>
+            Project Documentation <span className="text-gold">&</span> Support
           </h1>
-          <p className="text-lg md:text-xl text-secondary max-w-2xl mx-auto leading-relaxed">
-            Everything you need to pitch, submit, and demonstrate the Split platform for the Nomba Hackathon. 
-            All resources are designed to highlight our robust consensus mechanism and real-time fee splitting.
+          <p className="text-lg md:text-xl text-secondary max-w-3xl mx-auto leading-relaxed">
+            A comprehensive overview of the Split platform, detailing our architecture, security protocols, technical decisions, and operational workflow for the Nomba Hackathon.
           </p>
         </div>
       </div>
 
-      {/* Materials Grid */}
-      <div className="max-w-6xl mx-auto px-4 mt-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {materials.map((item, index) => (
-            <div 
-              key={index} 
-              className="p-6 rounded-2xl bg-surface-secondary border border-border hover:border-gold/30 transition-all duration-300 flex flex-col h-full group"
-            >
-              <div className="w-12 h-12 rounded-xl bg-app border border-border flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
-                {item.icon}
-              </div>
-              <h3 className="text-lg font-bold text-primary mb-2">{item.title}</h3>
-              <p className="text-sm text-secondary leading-relaxed mb-6 flex-grow">
-                {item.description}
-              </p>
-              <button className="w-full py-2.5 rounded-lg bg-surface border border-border text-sm font-semibold text-primary hover:bg-hover transition-colors">
-                {item.action}
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {/* Action Call */}
-        <div className="mt-16 p-8 rounded-2xl bg-gold/5 border border-gold/20 text-center max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-primary mb-4">Ready for Submission?</h2>
-          <p className="text-secondary mb-6">
-            Ensure your GitHub README is updated, your Demo Video is uploaded, and you have provided the live URL.
-          </p>
-          <div className="flex justify-center gap-4">
-            <Link 
-              href="/"
-              className="px-6 py-3 rounded-xl bg-surface border border-border text-sm font-bold text-primary hover:bg-hover transition-colors"
-            >
-              Back to Home
-            </Link>
-            <button className="px-6 py-3 rounded-xl bg-gold text-black text-sm font-bold hover:brightness-110 transition-all">
-              Download Submission Pack (.zip)
-            </button>
+      <div className="max-w-5xl mx-auto px-4 mt-16 space-y-24">
+        
+        {/* Section: What Split Does & How It Works */}
+        <section>
+          <div className="mb-10 text-center sm:text-left">
+            <h2 className="text-3xl font-bold text-primary mb-4 flex items-center justify-center sm:justify-start gap-3">
+              <Layers className="w-8 h-8 text-gold" />
+              What Split Does & Implementation
+            </h2>
+            <p className="text-lg leading-relaxed">
+              Split tackles the financial opacity prevalent in university ecosystems by providing a centralized platform for both fee collection and fund disbursement.
+            </p>
           </div>
-        </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="p-8 rounded-2xl bg-surface-secondary border border-border">
+              <h3 className="text-xl font-bold text-primary mb-4">Unified Collection</h3>
+              <p className="leading-relaxed mb-4">
+                Instead of students paying tuition on one portal, faculty dues to a POS vendor, and SUG dues to a bank teller, Split unifies these into a single checkout flow powered by Nomba.
+              </p>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-success shrink-0 mt-0.5" />
+                  <span>Dynamic fee calculation based on student level and department.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-success shrink-0 mt-0.5" />
+                  <span>Real-time generation of downloadable PDF receipts.</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="p-8 rounded-2xl bg-surface-secondary border border-border">
+              <h3 className="text-xl font-bold text-primary mb-4">Role-Based Governance</h3>
+              <p className="leading-relaxed mb-4">
+                Funds are immediately split into dedicated sub-wallets. The system implements a strict governance model to manage these funds securely.
+              </p>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-success shrink-0 mt-0.5" />
+                  <span><strong>Student Excos</strong> can initiate withdrawal requests.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-success shrink-0 mt-0.5" />
+                  <span><strong>Staff Advisors</strong> must review and approve requests.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-success shrink-0 mt-0.5" />
+                  <span><strong>Finance Officers</strong> execute the final disbursement.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Section: Tech Stack */}
+        <section>
+          <div className="mb-10 text-center sm:text-left">
+            <h2 className="text-3xl font-bold text-primary mb-4 flex items-center justify-center sm:justify-start gap-3">
+              <Server className="w-8 h-8 text-gold" />
+              Technology Stack
+            </h2>
+            <p className="text-lg leading-relaxed">
+              Our stack was chosen to prioritize real-time data sync, secure authentication, and seamless payment infrastructure.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="p-6 rounded-2xl bg-surface border border-border">
+              <h3 className="font-bold text-primary mb-2 text-lg">Next.js</h3>
+              <p className="text-sm leading-relaxed">
+                Chosen for its robust App Router, server-side rendering capabilities, and seamless integration with our backend. It allows us to deliver a fast, SEO-friendly, and highly responsive user interface.
+              </p>
+            </div>
+            <div className="p-6 rounded-2xl bg-surface border border-border">
+              <h3 className="font-bold text-primary mb-2 text-lg">Convex</h3>
+              <p className="text-sm leading-relaxed">
+                Acts as our real-time database and serverless backend. We chose Convex because it automatically pushes state updates to the UI, ensuring that when an advisor approves a request, the finance dashboard updates instantly without polling.
+              </p>
+            </div>
+            <div className="p-6 rounded-2xl bg-surface border border-border">
+              <h3 className="font-bold text-primary mb-2 text-lg">Clerk</h3>
+              <p className="text-sm leading-relaxed">
+                Manages our complex 9-tier role-based authentication system. We chose Clerk to offload session management and ensure that user identities and permissions are securely maintained across devices.
+              </p>
+            </div>
+            <div className="p-6 rounded-2xl bg-surface border border-border">
+              <h3 className="font-bold text-primary mb-2 text-lg">Nomba & Providus</h3>
+              <p className="text-sm leading-relaxed">
+                We utilized Nomba's payment gateway and API to generate dedicated Providus Bank virtual accounts for every entity. This integration handles the heavy lifting of payment processing and webhooks securely.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Section: Security Measures */}
+        <section>
+          <div className="mb-10 text-center sm:text-left">
+            <h2 className="text-3xl font-bold text-primary mb-4 flex items-center justify-center sm:justify-start gap-3">
+              <ShieldCheck className="w-8 h-8 text-gold" />
+              Security Measures
+            </h2>
+          </div>
+
+          <div className="bg-surface-secondary border border-border rounded-2xl p-8 space-y-6">
+            <div className="flex gap-4">
+              <Lock className="w-6 h-6 text-gold shrink-0 mt-1" />
+              <div>
+                <h4 className="font-bold text-primary text-lg mb-1">Webhook Signature Verification (HMAC)</h4>
+                <p className="leading-relaxed">
+                  To prevent spoofing or unauthorized ledger updates, all incoming webhooks from Nomba are verified using cryptographic HMAC signatures (`X-Nomba-Signature`). The system rejects any payload that was not genuinely signed by Nomba's servers.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+              <Key className="w-6 h-6 text-gold shrink-0 mt-1" />
+              <div>
+                <h4 className="font-bold text-primary text-lg mb-1">Strict Role Isolation</h4>
+                <p className="leading-relaxed">
+                  Data access is strictly compartmentalized. A Dean can only view their specific faculty's wallet; a student can only view their own receipts. Our backend queries enforce these permission checks before returning any data.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <FileText className="w-6 h-6 text-gold shrink-0 mt-1" />
+              <div>
+                <h4 className="font-bold text-primary text-lg mb-1">Immutable Audit Trails</h4>
+                <p className="leading-relaxed">
+                  Every significant action—whether assigning a new staff advisor, initiating a payment, or approving a withdrawal—is permanently logged in an Audit database with a timestamp and the acting user's ID to ensure total accountability.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+              <Zap className="w-6 h-6 text-gold shrink-0 mt-1" />
+              <div>
+                <h4 className="font-bold text-primary text-lg mb-1">Idempotent Transactions</h4>
+                <p className="leading-relaxed">
+                  Our webhook processor checks transaction references against the database before applying balances. This guarantees that duplicate webhook deliveries will never result in double-crediting a wallet.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section: Detailed FAQ */}
+        <section>
+          <div className="mb-10 text-center sm:text-left">
+            <h2 className="text-3xl font-bold text-primary mb-4">Frequently Asked Questions</h2>
+          </div>
+
+          <div className="space-y-6">
+            {faqs.map((faq, index) => (
+              <div key={index} className="p-6 rounded-2xl bg-surface border border-border">
+                <h4 className="text-lg font-bold text-primary mb-3">{faq.q}</h4>
+                <p className="leading-relaxed">{faq.a}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
       </div>
     </div>
   );
