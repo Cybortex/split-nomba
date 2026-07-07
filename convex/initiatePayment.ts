@@ -117,11 +117,11 @@ export const initiatePayment = action({
     }
 
     // 6. Call Nomba with totalToCharge (fee total + platform fee + transaction fee)
-    const merchantId = process.env.NOMBA_MERCHANT_ID;
-    const baseUrl = process.env.NOMBA_BASE_URL || "https://sandbox.nomba.com";
+    const merchantId = process.env.NOMBA_SUB_ACCOUNT_ID || process.env.NOMBA_MERCHANT_ID;
+    const baseUrl = process.env.NOMBA_BASE_URL || "https://api.nomba-sandbox.com";
 
     if (!merchantId) {
-      throw new Error("NOMBA_MERCHANT_ID is not configured in environment variables.");
+      throw new Error("NOMBA_MERCHANT_ID or NOMBA_SUB_ACCOUNT_ID is not configured in environment variables.");
     }
 
     let nombaData: any;

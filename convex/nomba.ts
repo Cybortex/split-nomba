@@ -12,7 +12,7 @@ export async function getNombaToken(): Promise<string> {
   const clientId = process.env.NOMBA_CLIENT_ID;
   const clientSecret = process.env.NOMBA_CLIENT_SECRET;
   const merchantId = process.env.NOMBA_MERCHANT_ID;
-  const baseUrl = process.env.NOMBA_BASE_URL || "https://sandbox.nomba.com";
+  const baseUrl = process.env.NOMBA_BASE_URL || "https://api.nomba-sandbox.com";
 
   if (!clientId || !clientSecret || !merchantId) {
     throw new Error(
@@ -69,8 +69,8 @@ export const createVirtualAccount = action({
     accountName: v.string(),
   },
   handler: async (ctx, args) => {
-    const merchantId = process.env.NOMBA_MERCHANT_ID!;
-    const baseUrl = process.env.NOMBA_BASE_URL || "https://sandbox.nomba.com";
+    const merchantId = process.env.NOMBA_SUB_ACCOUNT_ID || process.env.NOMBA_MERCHANT_ID!;
+    const baseUrl = process.env.NOMBA_BASE_URL || "https://api.nomba-sandbox.com";
     const token = await getNombaToken();
 
     console.log(`Creating virtual account: ${args.accountName} (Ref: ${args.accountRef})`);
@@ -117,8 +117,8 @@ export const lookupBankAccount = action({
     bankCode: v.string(),
   },
   handler: async (ctx, args) => {
-    const merchantId = process.env.NOMBA_MERCHANT_ID!;
-    const baseUrl = process.env.NOMBA_BASE_URL || "https://sandbox.nomba.com";
+    const merchantId = process.env.NOMBA_SUB_ACCOUNT_ID || process.env.NOMBA_MERCHANT_ID!;
+    const baseUrl = process.env.NOMBA_BASE_URL || "https://api.nomba-sandbox.com";
     const token = await getNombaToken();
 
     console.log(`Looking up account number: ${args.accountNumber} in bank: ${args.bankCode}`);
@@ -167,8 +167,8 @@ export const executeBankPayout = action({
     narration: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const merchantId = process.env.NOMBA_MERCHANT_ID!;
-    const baseUrl = process.env.NOMBA_BASE_URL || "https://sandbox.nomba.com";
+    const merchantId = process.env.NOMBA_SUB_ACCOUNT_ID || process.env.NOMBA_MERCHANT_ID!;
+    const baseUrl = process.env.NOMBA_BASE_URL || "https://api.nomba-sandbox.com";
     const token = await getNombaToken();
 
     console.log(
@@ -235,8 +235,8 @@ export const payoutPlatformFeeAction = action({
     const merchantTxRef = `PFEE-${args.paymentReference}-${Date.now().toString().slice(-4)}`;
 
     try {
-      const merchantId = process.env.NOMBA_MERCHANT_ID!;
-      const baseUrl = process.env.NOMBA_BASE_URL || "https://sandbox.nomba.com";
+      const merchantId = process.env.NOMBA_SUB_ACCOUNT_ID || process.env.NOMBA_MERCHANT_ID!;
+      const baseUrl = process.env.NOMBA_BASE_URL || "https://api.nomba-sandbox.com";
       const token = await getNombaToken();
 
       console.log(`Instantly paying out ₦100 platform fee to ${platformAccountName} (${platformAccountNumber})`);
