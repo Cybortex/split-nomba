@@ -5,19 +5,47 @@ import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { X, Menu } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, Menu, ChevronDown } from "lucide-react";
 
 export default function Navbar() {
   const { isSignedIn } = useAuth();
   const currentUser = useQuery(api.auth.getCurrentUser);
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const isSuperAdmin = currentUser?.roles?.includes("SUPER_ADMIN");
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Close on escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileMenuOpen(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Close on backdrop click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMobileMenuOpen(false);
+      }
+    };
+    if (mobileMenuOpen) {
+      document.addEventListener("mousedown", handleClick);
+    }
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [mobileMenuOpen]);
+
   return (
-    <nav className="sticky top-0 z-50 border-b border-border-subtle bg-app/95 backdrop-blur-2xl">
+    <nav className="sticky top-0 z-50 border-b border-border bg-app/90 backdrop-blur-2xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
@@ -29,49 +57,18 @@ export default function Navbar() {
               Split<span className="text-gold">.</span>
             </Link>
             {isSignedIn && (
-              <div className="hidden md:flex items-center gap-6">
+              <div className="hidden md:flex items-center gap-1">
                 {currentUser === undefined ? (
                   <div className="h-4 w-20 rounded bg-border animate-pulse" />
                 ) : isSuperAdmin ? (
-                  <>
-                    <Link
-                      href="/admin"
-                      className={`text-sm font-medium transition-all duration-200 ${
-                        pathname === "/admin" ? "text-gold" : "text-secondary hover:text-primary"
-                      }`}
-                    >
-                      Overview
-                    </Link>
-                    <Link
-                      href="/admin/approvals"
-                      className={`text-sm font-medium transition-all duration-200 ${
-                        pathname === "/admin/approvals" ? "text-gold" : "text-secondary hover:text-primary"
-                      }`}
-                    >
-                      Approvals
-                    </Link>
-                    <Link
-                      href="/admin/institutions"
-                      className={`text-sm font-medium transition-all duration-200 ${
-                        pathname === "/admin/institutions" ? "text-gold" : "text-secondary hover:text-primary"
-                      }`}
-                    >
-                      Institutions
-                    </Link>
-                    <Link
-                      href="/admin/audit"
-                      className={`text-sm font-medium transition-all duration-200 ${
-                        pathname === "/admin/audit" ? "text-gold" : "text-secondary hover:text-primary"
-                      }`}
-                    >
-                      Audit Log
-                    </Link>
-                  </>
+                  <NavLinks pathname={pathname} />
                 ) : (
                   <Link
                     href="/dashboard"
-                    className={`text-sm font-medium transition-all duration-200 ${
-                      pathname?.startsWith("/dashboard") ? "text-gold" : "text-secondary hover:text-primary"
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                      pathname?.startsWith("/dashboard") 
+                        ? "bg-gold/10 text-gold" 
+                        : "text-secondary hover:text-primary hover:bg-hover"
                     }`}
                   >
                     Dashboard
@@ -82,10 +79,9 @@ export default function Navbar() {
           </div>
 
           {/* Right */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {isSignedIn ? (
               <>
-                {/* Mobile menu toggle */}
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   className="md:hidden p-2 rounded-lg text-muted hover:bg-hover transition-colors duration-200"
@@ -100,17 +96,21 @@ export default function Navbar() {
                       userButtonPopoverCard: {
                         backgroundColor: "#121317",
                         border: "1px solid #313541",
+                        borderRadius: "16px",
+                        boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
                       },
                       userButtonPopoverActionItem: {
                         color: "#D5DBE5",
+                      },
+                      userButtonPopoverFooter: {
+                        display: "none",
                       },
                     },
                   }}
                 />
               </>
             ) : (
-              <div className="flex items-center gap-3">
-                {/* Mobile menu toggle - also show on mobile when not signed in */}
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   className="md:hidden p-2 rounded-lg text-muted hover:bg-hover transition-colors duration-200"
@@ -120,13 +120,13 @@ export default function Navbar() {
                 </button>
                 <Link
                   href="/register"
-                  className="hidden sm:inline-flex text-sm font-medium px-4 py-2 rounded-lg border border-border text-secondary hover:bg-hover transition-colors duration-200"
+                  className="hidden sm:inline-flex text-sm font-medium px-3 py-1.5 rounded-lg border border-border text-secondary hover:bg-hover transition-all duration-200"
                 >
-                  Register Institution
+                  Register
                 </Link>
                 <Link
                   href="/sign-in"
-                  className="text-sm font-semibold px-4 py-2 rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200"
+                  className="text-sm font-semibold px-4 py-1.5 rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200"
                 >
                   Sign In
                 </Link>
@@ -135,30 +135,30 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile menu dropdown */}
+        {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-border-subtle py-3 space-y-1 animate-fade-in">
-            {/* Navigation links for signed-in users */}
-            {isSignedIn && currentUser && (
+          <div 
+            ref={menuRef}
+            className="md:hidden border-t border-border-subtle py-2 pb-4 space-y-1 animate-slide-down"
+          >
+            <p className="px-3 py-2 text-xs font-medium text-muted-dark uppercase tracking-wider">
+              Navigation
+            </p>
+            {isSignedIn && currentUser ? (
+              isSuperAdmin ? (
+                <>
+                  <MobileNavLink href="/admin" label="Overview" active={pathname === "/admin"} />
+                  <MobileNavLink href="/admin/approvals" label="Approvals" active={pathname === "/admin/approvals"} />
+                  <MobileNavLink href="/admin/institutions" label="Institutions" active={pathname === "/admin/institutions"} />
+                  <MobileNavLink href="/admin/audit" label="Audit Log" active={pathname === "/admin/audit"} />
+                </>
+              ) : (
+                <MobileNavLink href="/dashboard" label="Dashboard" active={pathname?.startsWith("/dashboard") ?? false} />
+              )
+            ) : (
               <>
-                {isSuperAdmin ? (
-                  <>
-                    <MobileNavLink href="/admin" label="Overview" active={pathname === "/admin"} onClick={() => setMobileMenuOpen(false)} />
-                    <MobileNavLink href="/admin/approvals" label="Approvals" active={pathname === "/admin/approvals"} onClick={() => setMobileMenuOpen(false)} />
-                    <MobileNavLink href="/admin/institutions" label="Institutions" active={pathname === "/admin/institutions"} onClick={() => setMobileMenuOpen(false)} />
-                    <MobileNavLink href="/admin/audit" label="Audit Log" active={pathname === "/admin/audit"} onClick={() => setMobileMenuOpen(false)} />
-                  </>
-                ) : (
-                  <MobileNavLink href="/dashboard" label="Dashboard" active={pathname?.startsWith("/dashboard") ?? false} onClick={() => setMobileMenuOpen(false)} />
-                )}
-              </>
-            )}
-
-            {/* Links for non-signed-in users */}
-            {!isSignedIn && (
-              <>
-                <MobileNavLink href="/register" label="Register Institution" active={pathname === "/register"} onClick={() => setMobileMenuOpen(false)} />
-                <MobileNavLink href="/sign-in" label="Sign In" active={pathname === "/sign-in"} onClick={() => setMobileMenuOpen(false)} />
+                <MobileNavLink href="/register" label="Register Institution" active={pathname === "/register"} />
+                <MobileNavLink href="/sign-in" label="Sign In" active={pathname === "/sign-in"} />
               </>
             )}
           </div>
@@ -168,27 +168,56 @@ export default function Navbar() {
   );
 }
 
+/* ── Desktop Nav Links ── */
+function NavLinks({ pathname }: { pathname: string }) {
+  const links = [
+    { href: "/admin", label: "Overview" },
+    { href: "/admin/approvals", label: "Approvals" },
+    { href: "/admin/institutions", label: "Institutions" },
+    { href: "/admin/audit", label: "Audit Log" },
+  ];
+
+  return (
+    <div className="flex items-center gap-1">
+      {links.map((link) => (
+        <Link
+          key={link.href}
+          href={link.href}
+          className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+            pathname === link.href
+              ? "bg-gold/10 text-gold"
+              : "text-secondary hover:text-primary hover:bg-hover"
+          }`}
+        >
+          {link.label}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+/* ── Mobile Nav Link ── */
 function MobileNavLink({
   href,
   label,
   active,
-  onClick,
 }: {
   href: string;
   label: string;
   active: boolean;
-  onClick: () => void;
 }) {
   return (
     <Link
       href={href}
-      onClick={onClick}
-      className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
         active
           ? "bg-gold/10 text-gold"
           : "text-secondary hover:bg-hover hover:text-primary"
       }`}
     >
+      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+        active ? "bg-gold" : "bg-transparent"
+      }`} />
       {label}
     </Link>
   );

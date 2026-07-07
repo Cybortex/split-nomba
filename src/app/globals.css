@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+  /* ===== Existing Color Palette (Keep) ===== */
   /* Backgrounds */
   --color-app: #08090B;
   --color-surface: #0D0E12;
@@ -30,13 +31,46 @@
   --color-pending: #F59E0B;
   --color-info: #3B82F6;
 
+  /* ===== AirSens-Inspired Design Tokens ===== */
+  /* Corner Radius */
+  --radius-card: 16px;
+  --radius-button: 12px;
+  --radius-input: 12px;
+  --radius-modal: 20px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 6px 20px rgba(0, 0, 0, 0.4);
+  --shadow-modal: 0 12px 40px rgba(0, 0, 0, 0.5);
+  --shadow-button: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-sidebar: 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.4);
+
+  /* Spacing Scale — 8px base (AirSens) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
   /* Animations */
-  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-fade-in: fade-in 0.25s ease-out;
   --animate-slide-up: slide-up 0.3s ease-out;
   --animate-scale-in: scale-in 0.2s ease-out;
   --animate-pulse-gold: pulse-gold 2s infinite;
+  --animate-fade-in-fast: fade-in 0.15s ease-out;
 }
 
+/* ===== Keyframes ===== */
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -57,14 +91,31 @@
   50% { opacity: 0.6; }
 }
 
-/* Base styles */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Base Styles ===== */
 body {
   background-color: var(--color-app);
   color: var(--color-primary);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar */
+/* ===== Scrollbar ===== */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -83,30 +134,49 @@ body {
   background: #525866;
 }
 
-/* Selection */
+/* ===== Selection ===== */
 ::selection {
   background-color: rgba(255, 215, 0, 0.2);
   color: #FFFFFF;
 }
 
-/* Skeleton loader */
+/* ===== Skeleton Loader ===== */
 @utility skeleton {
   background: linear-gradient(90deg, #121317 25%, #1D2028 50%, #121317 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* Gold focus ring */
+/* ===== Focus Ring ===== */
 @utility focus-ring-gold {
   &:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px #FFD700;
   }
+}
+
+/* ===== Card Utility ===== */
+@utility card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  transition: all 0.2s ease-out;
+}
+
+@utility card-hover {
+  &:hover {
+    border-color: var(--color-gold-royal);
+    box-shadow: var(--shadow-card-hover);
+  }
+}
+
+/* ===== Glass Panel ===== */
+@utility glass {
+  background: rgba(13, 14, 18, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border-subtle);
 }
 
 /* ===== PRINT STYLES ===== */

@@ -5,6 +5,15 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "Split — Institutional Payment Routing",
@@ -23,15 +32,15 @@ export default function RootLayout({
     >
       <html
         lang="en"
-        className={`h-full antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       >
         <body className="min-h-full flex flex-col bg-app">
           <ConvexClientProvider>
             <Navbar />
             <main className="flex-1">{children}</main>
           </ConvexClientProvider>
-          <footer className="border-t border-border-subtle py-8">
-            <div className="max-w-7xl mx-auto px-4 text-center">
+          <footer className="border-t border-border-subtle py-6 sm:py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
               <p className="text-sm text-muted">
                 Split — Institutional Payment Routing Platform
               </p>

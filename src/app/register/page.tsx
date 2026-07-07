@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Check } from "lucide-react";
+import { Check, Building2, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -36,20 +37,21 @@ export default function RegisterPage() {
   if (success) {
     return (
       <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
-        <div className="max-w-md w-full p-6 sm:p-8 rounded-2xl border border-border bg-surface text-center">
+        <div className="max-w-md w-full card p-8 sm:p-10 text-center animate-scale-in">
           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 bg-success/10">
             <Check className="w-8 h-8 text-success" />
           </div>
           <h2 className="text-2xl font-bold mb-2 text-primary">Registration Submitted</h2>
-          <p className="mb-6 text-sm text-muted">
+          <p className="mb-8 text-sm text-muted leading-relaxed">
             Your institution registration has been submitted for review. The Super Admin will review and approve your account. You&apos;ll receive an email once approved.
           </p>
-          <a
+          <Link
             href="/"
-            className="inline-block px-6 py-2.5 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200"
+            className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold rounded-xl bg-gold text-black hover:brightness-110 transition-all duration-200"
           >
+            <ArrowLeft className="w-4 h-4" />
             Back to Home
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -58,19 +60,24 @@ export default function RegisterPage() {
   return (
     <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4 py-12">
       <div className="max-w-lg w-full">
+        {/* Header */}
         <div className="text-center mb-8">
+          <div className="w-12 h-12 rounded-2xl bg-gold/10 flex items-center justify-center mx-auto mb-4">
+            <Building2 className="w-6 h-6 text-gold" />
+          </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-primary">Register Your Institution</h1>
           <p className="mt-2 text-sm text-muted">
             Fill in the details below. A Super Admin will review and approve your registration.
           </p>
         </div>
 
+        {/* Form */}
         <form
           onSubmit={handleSubmit}
-          className="p-6 sm:p-8 rounded-2xl border border-border bg-surface space-y-5"
+          className="card p-6 sm:p-8 space-y-5"
         >
           {error && (
-            <div className="p-3 rounded-lg text-sm bg-error/10 text-error border border-error/20">
+            <div className="p-3 rounded-xl text-sm bg-error/10 text-error border border-error/20">
               {error}
             </div>
           )}
@@ -83,7 +90,7 @@ export default function RegisterPage() {
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
-              className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold focus:ring-1 focus:ring-gold/20"
             />
           </div>
 
@@ -95,7 +102,7 @@ export default function RegisterPage() {
               value={form.adminEmail}
               onChange={(e) => setForm({ ...form, adminEmail: e.target.value })}
               required
-              className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold focus:ring-1 focus:ring-gold/20"
             />
           </div>
 
@@ -107,36 +114,37 @@ export default function RegisterPage() {
               value={form.adminName}
               onChange={(e) => setForm({ ...form, adminName: e.target.value })}
               required
-              className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold focus:ring-1 focus:ring-gold/20"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-secondary">Phone (Optional)</label>
-            <input
-              type="tel"
-              placeholder="+234 800 000 0000"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-secondary">Address (Optional)</label>
-            <textarea
-              placeholder="Institution address"
-              value={form.address}
-              onChange={(e) => setForm({ ...form, address: e.target.value })}
-              rows={2}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 resize-none focus:border-gold"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1.5 text-secondary">Phone (Optional)</label>
+              <input
+                type="tel"
+                placeholder="+234 800 000 0000"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold focus:ring-1 focus:ring-gold/20"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1.5 text-secondary">Address (Optional)</label>
+              <textarea
+                placeholder="Institution address"
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+                rows={1}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 resize-none focus:border-gold focus:ring-1 focus:ring-gold/20"
+              />
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 text-sm font-semibold rounded-lg bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110"
+            className="w-full py-2.5 text-sm font-semibold rounded-xl bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110 shadow-button"
           >
             {loading ? "Submitting..." : "Submit Registration"}
           </button>

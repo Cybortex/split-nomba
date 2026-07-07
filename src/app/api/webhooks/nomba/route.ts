@@ -38,11 +38,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  // Verify signature except for mock transaction simulations
-  const signature = request.headers.get("x-nomba-signature");
-  const isMock = body?.data?.transactionId?.startsWith("MOCK-TXN-");
+  const { event, data } = body || {};
 
-  if (!isMock) {
+  // 1. Immediately accept validation pings and ignored events
+  if (event && event !== "transaction.completed") {
+    console.log(`Ignoring or validating event type: ${event}`);
+    return NextResponse.json({ success: true, message: "URL Validation Successful" });
+  }
+
+  // 2. Verify signature for actual transaction events
+  const signature = request.headers.get("x-nomba-signature");
+  const isMock = data?.transactionId?.startsWith("MOCK-TXN-");
+
+  if (!isMock && event === "transaction.completed") {
     if (!signature) {
       console.error("Missing X-Nomba-Signature header");
       return NextResponse.json({ error: "Missing signature" }, { status: 401 });
@@ -58,12 +66,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { event, data } = body;
-
-    if (event !== "transaction.completed") {
-      console.log(`Ignoring event type: ${event}`);
-      return NextResponse.json({ received: true });
-    }
 
     // ⚠️ IDEMPOTENCY CHECK
     const txnRef = data.reference || data.transactionId;
