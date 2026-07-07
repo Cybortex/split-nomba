@@ -10,6 +10,8 @@ type ApprovalResult = {
   institutionName: string;
   signInUrl: string | null;
   clerkId: string;
+  emailSent: boolean;
+  emailError?: string;
 };
 
 function SignInLinkModal({
@@ -46,6 +48,25 @@ function SignInLinkModal({
         </div>
 
         <div className="p-6 space-y-5">
+          {/* Email Delivery Status Alert */}
+          {result.emailSent ? (
+            <div className="p-3 rounded-lg border border-success/20 bg-success/5 text-xs text-success flex items-center gap-2">
+              <span>📧</span>
+              <span>Onboarding email successfully sent to the administrator.</span>
+            </div>
+          ) : (
+            <div className="p-3 rounded-lg border border-warning/20 bg-warning/5 text-xs text-warning space-y-1">
+              <div className="flex items-center gap-2">
+                <span>⚠️</span>
+                <span className="font-semibold">Email Delivery Failed</span>
+              </div>
+              <p className="pl-6 text-muted leading-relaxed">
+                Could not send the email automatically: <span className="font-mono text-xs text-error font-semibold">{result.emailError || "Unknown error"}</span>.
+                Please copy the link below and send it to them manually.
+              </p>
+            </div>
+          )}
+
           {/* Admin email */}
           <div className="flex items-center gap-3 p-3 rounded-lg bg-surface-secondary border border-border">
             <span className="text-lg">✉️</span>

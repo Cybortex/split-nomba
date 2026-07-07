@@ -62,7 +62,7 @@ export function AdminInstitutions() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-primary">Institutions</h1>
           <p className="text-sm mt-1 text-muted">
@@ -70,7 +70,7 @@ export function AdminInstitutions() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-none">
             <svg
               className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted"
               fill="none"
@@ -81,17 +81,17 @@ export function AdminInstitutions() {
             </svg>
             <input
               type="text"
-              placeholder="Search institutions..."
+              placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-64 pl-10 pr-4 py-2 rounded-lg border border-border bg-surface text-sm text-primary outline-none transition-all duration-200 focus:border-gold"
+              className="w-full sm:w-64 pl-10 pr-4 py-2 rounded-lg border border-border bg-surface text-sm text-primary outline-none transition-all duration-200 focus:border-gold"
             />
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200"
+            className="px-4 py-2 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200 flex-shrink-0"
           >
-            + New Institution
+            + New
           </button>
         </div>
       </div>

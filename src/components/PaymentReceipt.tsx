@@ -136,7 +136,7 @@ export function PaymentReceipt({ data }: { data: ReceiptData }) {
         {/* Student Details */}
         <div className="p-4 rounded-xl bg-surface-secondary mb-6">
           <h3 className="text-sm font-semibold text-gold mb-3">Student Details</h3>
-          <div className="grid grid-cols-2 gap-y-2.5 gap-x-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2.5 gap-x-4">
             <div>
               <p className="text-xs text-muted">Matric Number</p>
               <p className="text-sm font-mono font-medium text-primary">{payment.matric}</p>

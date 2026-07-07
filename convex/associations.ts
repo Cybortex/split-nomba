@@ -61,6 +61,9 @@ export const createAssociation = mutation({
     // Determine wallet type based on association type
     const walletType = args.type === "sug" ? "association" : args.type === "faculty" ? "faculty" : "department";
 
+    const accountNumber = "99" + Math.floor(10000000 + Math.random() * 90000000).toString();
+    const accountRef = `REF-VA-${args.type.toUpperCase()}-${args.slug.substring(0,6).toUpperCase()}-${Date.now().toString().slice(-4)}`;
+
     // Also create the wallet for this association
     const walletId = await ctx.db.insert("wallets", {
       institutionId: args.institutionId,
@@ -72,6 +75,10 @@ export const createAssociation = mutation({
       availableBalance: 0,
       minimumBalance: 0,
       transactionCount: 0,
+      bankName: "Providus Bank",
+      accountNumber,
+      accountName: `${args.name} Wallet`,
+      accountRef,
     });
 
     // Log audit
@@ -140,6 +147,9 @@ export const createSUG = mutation({
       createdAt: Date.now(),
     });
 
+    const accountNumber = "99" + Math.floor(10000000 + Math.random() * 90000000).toString();
+    const accountRef = `REF-VA-SUG-SUG-${Date.now().toString().slice(-4)}`;
+
     // Create SUG wallet
     const walletId = await ctx.db.insert("wallets", {
       institutionId: args.institutionId,
@@ -151,6 +161,10 @@ export const createSUG = mutation({
       availableBalance: 0,
       minimumBalance: 0,
       transactionCount: 0,
+      bankName: "Providus Bank",
+      accountNumber,
+      accountName: `${sugName} Wallet`,
+      accountRef,
     });
 
     await ctx.db.insert("auditLogs", {

@@ -3,7 +3,7 @@ import { SignIn } from "@clerk/nextjs";
 export default function SignInPage() {
   return (
     <div className="min-h-[calc(100vh-12rem)] flex items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-md space-y-6 px-2">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-primary">Sign In</h1>
           <p className="text-sm text-muted mt-1">

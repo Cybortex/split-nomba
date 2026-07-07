@@ -119,7 +119,7 @@ export function StudentExcoDashboard({ activeTab = "overview" }: { activeTab?: s
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-primary">Student Exco Dashboard</h1>
           <p className="text-sm text-muted mt-1">
@@ -223,8 +223,8 @@ export function StudentExcoDashboard({ activeTab = "overview" }: { activeTab?: s
                   key={req._id}
                   className="p-5 rounded-2xl border border-border bg-surface transition-all duration-200 hover:border-gold-royal"
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3">
                         <span className="text-lg font-bold text-gold font-mono">
                           ₦{req.amount.toLocaleString()}
@@ -248,7 +248,7 @@ export function StudentExcoDashboard({ activeTab = "overview" }: { activeTab?: s
                       <button
                         onClick={() => handleExecute(req._id)}
                         disabled={processing === req._id}
-                        className="px-4 py-2 text-sm font-semibold rounded-lg bg-success text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50"
+                        className="px-4 py-2 text-sm font-semibold rounded-lg bg-success text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50 flex-shrink-0"
                       >
                         {processing === req._id ? "..." : "Execute"}
                       </button>

@@ -221,7 +221,7 @@ export function StudentDashboard({ activeTab = "overview" }: { activeTab?: strin
           )}
 
           {/* Dues Summary Card */}
-          <div className="p-6 rounded-2xl border border-border bg-surface flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="p-6 rounded-2xl border border-border bg-surface flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-lg font-bold text-primary">Session Dues</h2>
               <p className="text-xs text-muted mt-1">Total dues configured for Level {feeOverview.student.level}</p>
@@ -366,7 +366,7 @@ export function StudentDashboard({ activeTab = "overview" }: { activeTab?: strin
                   key={payment.id}
                   className="p-4 rounded-xl border border-border bg-surface-secondary"
                 >
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                     <div>
                       <p className="text-sm font-medium text-primary font-mono">
                         ₦{payment.amount.toLocaleString()}
@@ -416,8 +416,12 @@ export function StudentDashboard({ activeTab = "overview" }: { activeTab?: strin
                   {/* Show initiated amount for pending */}
                   {payment.status === "pending" && (
                     <div className="mt-3 pt-3 border-t border-border-subtle">
-                      <p className="text-xs text-warning">
-                        ⏳ Awaiting payment confirmation...
+                      <p className="text-xs text-warning flex items-center gap-1.5">
+                        <svg className="animate-spin h-3.5 w-3.5 text-warning" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Awaiting payment confirmation...
                       </p>
                     </div>
                   )}

@@ -188,6 +188,9 @@ export const approveInstitution = mutation({
       createdAt: Date.now(),
     });
 
+    const accountNumber = "99" + Math.floor(10000000 + Math.random() * 90000000).toString();
+    const accountRef = `REF-VA-INST-${institutionId.toString().substring(0,6).toUpperCase()}-${Date.now().toString().slice(-4)}`;
+
     // Create institution wallet
     await ctx.db.insert("wallets", {
       institutionId: institutionId as any,
@@ -198,6 +201,10 @@ export const approveInstitution = mutation({
       availableBalance: 0,
       minimumBalance: 0,
       transactionCount: 0,
+      bankName: "Providus Bank",
+      accountNumber,
+      accountName: `${registration.name} (HQ)`,
+      accountRef,
     });
 
     await ctx.db.patch(args.registrationId, {
@@ -316,6 +323,9 @@ export const createInstitutionDirect = mutation({
       createdAt: Date.now(),
     });
 
+    const accountNumber = "99" + Math.floor(10000000 + Math.random() * 90000000).toString();
+    const accountRef = `REF-VA-INST-${institutionId.toString().substring(0,6).toUpperCase()}-${Date.now().toString().slice(-4)}`;
+
     // Create institution wallet
     await ctx.db.insert("wallets", {
       institutionId: institutionId as any,
@@ -326,6 +336,10 @@ export const createInstitutionDirect = mutation({
       availableBalance: 0,
       minimumBalance: 0,
       transactionCount: 0,
+      bankName: "Providus Bank",
+      accountNumber,
+      accountName: `${args.name} (HQ)`,
+      accountRef,
     });
 
     // Create INSTITUTION_ADMIN user
@@ -454,6 +468,11 @@ export const createInstitutionUser = mutation({
     roles: v.array(v.string()),
     permissions: v.array(v.string()),
     institutionId: v.id("institutions"),
+    facultyId: v.optional(v.id("faculties")),
+    departmentId: v.optional(v.id("departments")),
+    faculty: v.optional(v.string()),
+    department: v.optional(v.string()),
+    staffType: v.optional(v.union(v.literal("academic"), v.literal("non-academic"))),
   },
   handler: async (ctx, args) => {
     const admin = await requirePermission(ctx, "INSTITUTION_ADMIN");
@@ -499,6 +518,11 @@ export const createInstitutionUser = mutation({
       institutionId: args.institutionId,
       permissions: args.permissions,
       isActive: true,
+      facultyId: args.facultyId,
+      departmentId: args.departmentId,
+      faculty: args.faculty,
+      department: args.department,
+      staffType: args.staffType,
     });
 
     await ctx.db.insert("auditLogs", {
@@ -1043,6 +1067,8 @@ export const approveAndSetupInstitution = action({
     institutionName: string;
     signInUrl: string | null;
     clerkId: string;
+    emailSent: boolean;
+    emailError?: string;
   }> => {
     // Verify caller is authenticated and is a SUPER_ADMIN
     const identity = await ctx.auth.getUserIdentity();
@@ -1116,7 +1142,10 @@ export const approveAndSetupInstitution = action({
       });
 
       // Send onboarding email without instant token (since user already existed, they know their credentials)
-      await sendApprovedEmail(adminEmail, adminName || "Admin", result.institutionName, null).catch(console.error);
+      const emailStatus = await sendApprovedEmail(adminEmail, adminName || "Admin", result.institutionName, null).catch((e) => ({
+        success: false,
+        error: e.message || e,
+      }));
 
       return {
         institutionId: result.institutionId.toString(),
@@ -1124,6 +1153,8 @@ export const approveAndSetupInstitution = action({
         institutionName: result.institutionName,
         signInUrl: null,
         clerkId: existingClerkId,
+        emailSent: emailStatus.success,
+        emailError: emailStatus.error,
       };
     }
 
@@ -1156,6 +1187,7 @@ export const approveAndSetupInstitution = action({
         body: JSON.stringify({
           user_id: clerkId,
           expires_in_seconds: 604800, // 7 days
+          redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/`,
         }),
       });
 
@@ -1168,7 +1200,10 @@ export const approveAndSetupInstitution = action({
     }
 
     // Send onboarding email with instant sign-in URL if generated
-    await sendApprovedEmail(adminEmail, adminName || "Admin", result.institutionName, signInUrl).catch(console.error);
+    const emailStatus = await sendApprovedEmail(adminEmail, adminName || "Admin", result.institutionName, signInUrl).catch((e) => ({
+      success: false,
+      error: e.message || e,
+    }));
 
     return {
       institutionId: result.institutionId.toString(),
@@ -1176,6 +1211,8 @@ export const approveAndSetupInstitution = action({
       institutionName: result.institutionName,
       signInUrl,
       clerkId,
+      emailSent: emailStatus.success,
+      emailError: emailStatus.error,
     };
   },
 });
@@ -1188,13 +1225,14 @@ async function sendApprovedEmail(
   adminName: string,
   institutionName: string,
   signInUrl: string | null
-) {
+): Promise<{ success: boolean; error?: string }> {
   const serviceUrl = process.env.EMAIL_SERVICE_URL;
   const serviceKey = process.env.EMAIL_SERVICE_KEY;
 
   if (!serviceUrl || !serviceKey) {
-    console.warn("[Email Service] EMAIL_SERVICE_URL or EMAIL_SERVICE_KEY not configured. Skipping email sending.");
-    return false;
+    const err = "EMAIL_SERVICE_URL or EMAIL_SERVICE_KEY not configured. Skipping email sending.";
+    console.warn(`[Email Service] ${err}`);
+    return { success: false, error: err };
   }
 
   const htmlBody = `
@@ -1252,25 +1290,29 @@ async function sendApprovedEmail(
         body: htmlBody,
         apiKey: serviceKey,
       }),
+      redirect: "follow",
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("[Email Service] Failed to send email through Web App:", response.status, errorText);
-      return false;
+      const err = `Google Apps Script returned status ${response.status}: ${errorText}`;
+      console.error(`[Email Service] ${err}`);
+      return { success: false, error: err };
     }
 
     const data = await response.json();
     if (!data.success) {
-      console.error("[Email Service] Web App returned failure:", data.error);
-      return false;
+      const err = `Google Apps Script execution error: ${data.error}`;
+      console.error(`[Email Service] ${err}`);
+      return { success: false, error: err };
     }
 
     console.log(`[Email Service] Successfully sent onboarding email to ${toEmail}`);
-    return true;
-  } catch (error) {
-    console.error("[Email Service] Network error sending email:", error);
-    return false;
+    return { success: true };
+  } catch (error: any) {
+    const err = `Network error: ${error.message || error}`;
+    console.error(`[Email Service] ${err}`);
+    return { success: false, error: err };
   }
 }
 

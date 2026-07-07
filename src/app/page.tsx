@@ -4,13 +4,13 @@ export default function Home() {
   return (
     <div className="min-h-[calc(100vh-8rem)]">
       {/* Hero */}
-      <div className="max-w-5xl mx-auto px-4 pt-24 pb-16 text-center">
+      <div className="max-w-5xl mx-auto px-4 pt-16 sm:pt-24 pb-16 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium mb-8 border border-border bg-gold-soft text-gold-royal">
           <span className="w-2 h-2 rounded-full bg-gold" />
           Nomba Hackathon 2026
         </div>
 
-        <h1 className="text-5xl sm:text-7xl font-bold tracking-tight mb-6 leading-tight text-primary">
+        <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight text-primary">
           Route Every Payment
           <br />
           <span className="text-gold">Where It Belongs.</span>
@@ -74,7 +74,7 @@ export default function Home() {
           <h2 className="text-2xl font-bold mb-8 text-center text-primary">
             Platform Features
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             {[
               "10 Role RBAC", "Multi-Role Users", "Fee per Level",
               "Dept/Faculty/SUG Dues", "Nomba Integration",
@@ -92,7 +92,7 @@ export default function Home() {
         </div>
 
         {/* Role Hierarchy */}
-        <div className="rounded-2xl border border-border bg-surface p-8 text-left max-w-3xl mx-auto">
+        <div className="rounded-2xl border border-border bg-surface p-4 sm:p-8 text-left max-w-3xl mx-auto">
           <h2 className="text-xl font-bold mb-6 text-primary">Role Hierarchy</h2>
           <div className="space-y-1">
             {[
@@ -108,9 +108,9 @@ export default function Home() {
             ].map(([role, desc]) => (
               <div
                 key={role}
-                className="flex items-center gap-4 py-2.5 border-b border-border-subtle last:border-0"
+                className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-2.5 border-b border-border-subtle last:border-0"
               >
-                <span className="text-xs font-mono font-bold px-2.5 py-1 rounded min-w-[160px] bg-gold-soft text-gold">
+                <span className="text-xs font-mono font-bold px-2.5 py-1 rounded sm:min-w-[160px] w-fit bg-gold-soft text-gold">
                   {role}
                 </span>
                 <span className="text-sm text-secondary">{desc}</span>

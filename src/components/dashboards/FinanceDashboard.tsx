@@ -201,7 +201,7 @@ function FeesTab({ institutionId }: { institutionId: string }) {
       </div>
 
       {/* Level Selector */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         {LEVELS.map((level) => (
           <button
             key={level}

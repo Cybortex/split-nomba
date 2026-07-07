@@ -63,7 +63,7 @@ const ROLE_LABELS: Record<string, string> = {
   STUDENT: "Student",
 };
 
-function SidebarContent() {
+function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const currentUser = useQuery(api.auth.getCurrentUser);
   const activeRole = useQuery(api.auth.getMyActiveRole);
   const switchRole = useMutation(api.auth.switchActiveRole);
@@ -95,6 +95,7 @@ function SidebarContent() {
     const params = new URLSearchParams(searchParams);
     params.set("tab", key);
     router.push(`${pathname}?${params.toString()}`);
+    onNavigate?.();
   };
 
   const handleRoleSwitch = async (role: string) => {
@@ -103,13 +104,14 @@ function SidebarContent() {
       setDropdownOpen(false);
       // Redirect to overview tab on switch to avoid missing tabs
       router.push(`${pathname}?tab=overview`);
+      onNavigate?.();
     } catch (err) {
       console.error("Failed to switch role:", err);
     }
   };
 
   return (
-    <aside className="w-64 border-r border-border bg-surface/40 backdrop-blur-lg flex flex-col flex-shrink-0 min-h-screen">
+    <div className="flex flex-col flex-shrink-0 h-full">
       {/* Brand & Institution Info */}
       <div className="p-6 border-b border-border flex flex-col gap-1">
         <h1 className="text-lg font-bold text-primary truncate">
@@ -162,7 +164,7 @@ function SidebarContent() {
       </div>
 
       {/* Sidebar Nav */}
-      <nav className="flex-1 p-4 space-y-1.5">
+      <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
         {items.map((item) => {
           const isActive = activeTab === item.key;
           return (
@@ -183,7 +185,7 @@ function SidebarContent() {
           );
         })}
       </nav>
-    </aside>
+    </div>
   );
 }
 
@@ -192,6 +194,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user: clerkUser } = useUser();
   const currentUser = useQuery(api.auth.getCurrentUser);
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -240,14 +243,47 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen flex bg-app">
-      {/* Sidebar navigation */}
-      <Suspense fallback={<div className="w-64 border-r border-border p-4"><div className="skeleton h-10 w-full" /></div>}>
-        <SidebarContent />
-      </Suspense>
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - desktop: static sidebar, mobile: slide-over drawer */}
+      <div
+        className={`
+          fixed md:sticky top-16 md:top-16 z-50 h-[calc(100vh-4rem)]
+          w-64 border-r border-border bg-surface/40 backdrop-blur-lg
+          transition-transform duration-300 ease-in-out
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        `}
+      >
+        <Suspense fallback={<div className="p-4"><div className="skeleton h-10 w-full" /></div>}>
+          <SidebarContent onNavigate={() => setSidebarOpen(false)} />
+        </Suspense>
+      </div>
 
       {/* Main dashboard content area */}
-      <main className="flex-1 p-8 overflow-y-auto">
-        {children}
+      <main className="flex-1 min-w-0 overflow-y-auto">
+        {/* Mobile header bar with sidebar toggle */}
+        <div className="sticky top-16 z-30 md:hidden border-b border-border-subtle bg-app/95 backdrop-blur-lg px-4 py-3 flex items-center gap-3">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 rounded-lg text-muted hover:bg-hover transition-colors duration-200"
+            aria-label="Toggle sidebar"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <span className="text-sm font-medium text-primary">Dashboard Menu</span>
+        </div>
+
+        <div className="p-4 sm:p-6 lg:p-8">
+          {children}
+        </div>
       </main>
     </div>
   );

@@ -1,5 +1,18 @@
 "use client";
 
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { 
+  School, 
+  Library, 
+  Folder, 
+  Users, 
+  GraduationCap, 
+  Wallet as WalletIcon, 
+  ArrowDownToLine, 
+  Zap 
+} from "lucide-react";
+
 type Wallet = {
   _id: string;
   name: string;
@@ -8,6 +21,9 @@ type Wallet = {
   totalCollected: number;
   transactionCount: number;
   entityId: string;
+  bankName?: string;
+  accountNumber?: string;
+  accountName?: string;
 };
 
 type Transaction = {
@@ -22,31 +38,31 @@ type Transaction = {
 // TYPE CONFIG — badge colors per wallet type
 // ============================================================================
 
-const WALLET_TYPE_CONFIG: Record<string, { label: string; badgeClass: string; icon: string }> = {
+const WALLET_TYPE_CONFIG: Record<string, { label: string; badgeClass: string; icon: React.ReactNode }> = {
   institution: {
     label: "Institution Wallet",
     badgeClass: "bg-gold/10 text-gold border-gold/20",
-    icon: "🏛️",
+    icon: <School className="w-5 h-5 text-gold flex-shrink-0" />,
   },
   faculty: {
     label: "Faculty Wallet",
     badgeClass: "bg-success/10 text-success border-success/20",
-    icon: "📚",
+    icon: <Library className="w-5 h-5 text-success flex-shrink-0" />,
   },
   department: {
     label: "Department Wallet",
     badgeClass: "bg-info/10 text-info border-info/20",
-    icon: "📁",
+    icon: <Folder className="w-5 h-5 text-info flex-shrink-0" />,
   },
   association: {
     label: "Association Wallet",
     badgeClass: "bg-pending/10 text-pending border-pending/20",
-    icon: "🤝",
+    icon: <Users className="w-5 h-5 text-pending flex-shrink-0" />,
   },
   sug: {
     label: "SUG Wallet",
     badgeClass: "bg-gold/10 text-gold border-gold/20",
-    icon: "🎓",
+    icon: <GraduationCap className="w-5 h-5 text-gold flex-shrink-0" />,
   },
 };
 
@@ -61,17 +77,19 @@ interface WalletCardProps {
 }
 
 export function WalletCard({ wallet, access, subtitle }: WalletCardProps) {
+  const creditDirectly = useMutation(api.wallets.creditWalletDirectly);
+
   const config = WALLET_TYPE_CONFIG[wallet.type] || {
     label: wallet.type,
     badgeClass: "bg-gold/10 text-gold border-gold/20",
-    icon: "💰",
+    icon: <WalletIcon className="w-5 h-5 text-gold flex-shrink-0" />,
   };
 
   return (
     <div className="p-6 rounded-xl border border-border bg-surface">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="text-lg flex-shrink-0">{config.icon}</span>
+          <span className="flex-shrink-0 flex items-center justify-center">{config.icon}</span>
           <div className="min-w-0">
             <h2 className="font-semibold text-primary text-lg truncate">{wallet.name}</h2>
             {subtitle && (
@@ -79,7 +97,7 @@ export function WalletCard({ wallet, access, subtitle }: WalletCardProps) {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
           <span className={`text-xs px-2 py-0.5 rounded border ${config.badgeClass}`}>
             {config.label}
           </span>
@@ -96,7 +114,7 @@ export function WalletCard({ wallet, access, subtitle }: WalletCardProps) {
           )}
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <StatCard
           label="Available Balance"
           value={`₦${(wallet.availableBalance || 0).toLocaleString()}`}
@@ -113,6 +131,64 @@ export function WalletCard({ wallet, access, subtitle }: WalletCardProps) {
           color="text-info"
         />
       </div>
+
+      {wallet.accountNumber && wallet.bankName && (
+        <div className="mt-4 p-4 rounded-xl border border-border bg-surface-secondary space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold text-muted uppercase tracking-wider flex items-center gap-1.5">
+                <ArrowDownToLine className="w-3.5 h-3.5 text-muted" />
+                Dedicated Virtual Bank Account
+              </p>
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <span className="text-secondary"><strong className="text-primary font-medium">Bank:</strong> {wallet.bankName}</span>
+                <span className="text-secondary"><strong className="text-primary font-medium">Account Name:</strong> {wallet.accountName || wallet.name}</span>
+              </div>
+              <p className="text-lg font-bold text-primary mt-1 font-mono tracking-wide flex items-center gap-2">
+                {wallet.accountNumber}
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(wallet.accountNumber!);
+                    alert("Account number copied!");
+                  }}
+                  className="text-xs px-2 py-0.5 rounded bg-surface hover:bg-hover border border-border text-muted hover:text-primary transition-all font-sans font-normal"
+                >
+                  Copy
+                </button>
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                const amountStr = prompt(`Simulate direct transfer to ${wallet.name} (${wallet.bankName}):`, "50000");
+                if (!amountStr) return;
+                const amt = parseFloat(amountStr);
+                if (isNaN(amt) || amt <= 0) {
+                  alert("Please enter a valid transfer amount.");
+                  return;
+                }
+                try {
+                  await creditDirectly({
+                    walletId: wallet._id as any,
+                    amount: amt,
+                    paymentReference: `SIM-BANK-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`,
+                    reason: "direct_bank_transfer_simulation",
+                  });
+                  alert(`Successfully simulated a ₦${amt.toLocaleString()} bank transfer to this wallet!`);
+                } catch (err: any) {
+                  alert("Simulation failed: " + err.message);
+                }
+              }}
+              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all shadow-sm flex items-center gap-1.5 self-start sm:self-center"
+            >
+              <Zap className="w-3.5 h-3.5 text-black" fill="currentColor" />
+              Simulate Transfer
+            </button>
+          </div>
+          <p className="text-[10px] text-muted-foreground/80 italic">
+            You can simulate external bank transfers directly to this account number to bypass the main checkout split payments flow.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

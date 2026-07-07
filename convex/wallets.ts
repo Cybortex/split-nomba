@@ -310,6 +310,10 @@ export const createWallet = internalMutation({
     availableBalance: v.number(),
     transactionCount: v.number(),
     associationId: v.optional(v.id("associations")),
+    bankName: v.optional(v.string()),
+    accountNumber: v.optional(v.string()),
+    accountName: v.optional(v.string()),
+    accountRef: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("wallets", {
@@ -322,6 +326,10 @@ export const createWallet = internalMutation({
       availableBalance: args.availableBalance,
       minimumBalance: 0,
       transactionCount: args.transactionCount,
+      bankName: args.bankName,
+      accountNumber: args.accountNumber,
+      accountName: args.accountName,
+      accountRef: args.accountRef,
     });
   },
 });
@@ -340,6 +348,53 @@ export const getByEntityIdInternal = internalQuery({
           q.eq(q.field("institutionId"), args.institutionId as any)
         )
       )
+      .first();
+  },
+});
+
+/**
+ * Credit a wallet directly (used for direct bank transfer simulation and webhooks).
+ */
+export const creditWalletDirectly = mutation({
+  args: {
+    walletId: v.id("wallets"),
+    amount: v.number(),
+    paymentReference: v.string(),
+    reason: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const wallet = await ctx.db.get(args.walletId);
+    if (!wallet) throw new Error("Wallet not found");
+
+    await ctx.db.patch(args.walletId, {
+      availableBalance: (wallet.availableBalance || 0) + args.amount,
+      totalCollected: (wallet.totalCollected || 0) + args.amount,
+      transactionCount: (wallet.transactionCount || 0) + 1,
+    });
+
+    await ctx.db.insert("walletTransactions", {
+      walletId: args.walletId,
+      institutionId: wallet.institutionId,
+      paymentReference: args.paymentReference,
+      amount: args.amount,
+      direction: "credit",
+      reason: args.reason,
+      timestamp: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Get wallet by virtual account number.
+ */
+export const getWalletByAccountNumber = query({
+  args: { accountNumber: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("wallets")
+      .filter((q) => q.eq(q.field("accountNumber"), args.accountNumber))
       .first();
   },
 });

@@ -76,9 +76,37 @@ export default defineSchema({
     institutionId: v.optional(v.id("institutions")),
     permissions: v.array(v.string()),
     isActive: v.boolean(),
+    facultyId: v.optional(v.id("faculties")),
+    departmentId: v.optional(v.id("departments")),
+    faculty: v.optional(v.string()),
+    department: v.optional(v.string()),
+    staffType: v.optional(v.union(v.literal("academic"), v.literal("non-academic"))),
   })
     .index("by_clerkId", ["clerkId"])
     .index("by_institution", ["institutionId"]),
+
+  // ===== ACADEMIC STRUCTURE =====
+  faculties: defineTable({
+    institutionId: v.id("institutions"),
+    name: v.string(),
+    slug: v.string(),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_institution", ["institutionId"])
+    .index("by_slug", ["slug"]),
+
+  departments: defineTable({
+    institutionId: v.id("institutions"),
+    facultyId: v.id("faculties"),
+    name: v.string(),
+    slug: v.string(),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_institution", ["institutionId"])
+    .index("by_faculty", ["facultyId"])
+    .index("by_slug", ["slug"]),
 
   // ===== FEE CONFIGURATION (Per Level) =====
   feeConfig: defineTable({
@@ -164,6 +192,10 @@ export default defineSchema({
     availableBalance: v.number(),
     minimumBalance: v.number(),
     transactionCount: v.number(),
+    bankName: v.optional(v.string()),
+    accountNumber: v.optional(v.string()),
+    accountName: v.optional(v.string()),
+    accountRef: v.optional(v.string()),
   })
     .index("by_institution", ["institutionId"])
     .index("by_type", ["type"])

@@ -173,14 +173,14 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-primary">Student Affairs Dashboard</h1>
           <p className="text-sm text-muted mt-1">
             Manage associations, advisors, and executives for your institution.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-shrink-0">
           {activeTab === "overview" && (
             <button
               onClick={() => setShowCreateSUG(!showCreateSUG)}
@@ -292,7 +292,7 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
                   {createError}
                 </div>
               )}
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium mb-1.5 text-secondary">
                     Association Name

@@ -86,14 +86,14 @@ export default function WithdrawalsPage() {
   return (
     <div className="min-h-[calc(100vh-8rem)] py-8">
       <div className="max-w-4xl mx-auto px-4 space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-primary">Withdrawals</h1>
-            <p className="text-sm text-muted mt-1">Consensus-based withdrawal system. Exco initiates → Advisor approves → Executed.</p>
+            <p className="text-sm text-muted mt-1">Consensus-based withdrawal system. <span className="hidden sm:inline">Exco initiates → Advisor approves → Executed.</span></p>
           </div>
           {isExco && (
             <button onClick={() => setShowInitiate(!showInitiate)}
-              className="px-4 py-2 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200">
+              className="px-4 py-2 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200 flex-shrink-0">
               {showInitiate ? "Cancel" : "Initiate Withdrawal"}
             </button>
           )}
@@ -142,8 +142,8 @@ export default function WithdrawalsPage() {
           <div className="space-y-3">
             {requests.map((req: any) => (
               <div key={req._id} className="p-5 rounded-2xl border border-border bg-surface transition-all duration-200 hover:border-gold-royal">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3">
                       <span className="text-lg font-bold text-gold font-mono">₦{req.amount.toLocaleString()}</span>
                       <span className={`text-xs px-2 py-0.5 rounded font-medium ${
@@ -156,10 +156,10 @@ export default function WithdrawalsPage() {
                     </div>
                     <p className="text-sm text-secondary mt-1">{req.reason}</p>
                     <p className="text-xs text-muted mt-1">
-                      Wallet: {req.walletEntityId} · Requested {new Date(req._creationTime).toLocaleDateString()}
+                      Wallet: {req.walletEntityId} · {new Date(req._creationTime).toLocaleDateString()}
                     </p>
                   </div>
-                  <div className="flex gap-2 ml-4">
+                  <div className="flex gap-2 flex-shrink-0">
                     {req.status === "pending" && isAdvisor && (
                       <button onClick={() => handleApprove(req._id)} disabled={processing === req._id}
                         className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-info text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50">

@@ -34,7 +34,7 @@ export function HODDashboard({ activeTab }: { activeTab?: string }) {
 
   if (!entityId) {
     return (
-      <div className="p-12 rounded-xl border border-border bg-surface text-center">
+      <div className="p-6 sm:p-12 rounded-xl border border-border bg-surface text-center">
         <p className="text-muted">
           No department assigned. Contact your Institution Admin to set your department permissions.
         </p>
@@ -61,7 +61,7 @@ export function HODDashboard({ activeTab }: { activeTab?: string }) {
           />
         </>
       ) : (
-        <div className="p-12 rounded-xl border border-border bg-surface text-center">
+        <div className="p-6 sm:p-12 rounded-xl border border-border bg-surface text-center">
           <p className="text-muted">No wallet data available for your department yet.</p>
         </div>
       )}

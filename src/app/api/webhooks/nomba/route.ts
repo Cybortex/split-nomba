@@ -69,6 +69,31 @@ export async function POST(request: NextRequest) {
     const txnRef = data.reference || data.transactionId;
 
     const client = getConvexClient();
+
+    // Check if it's a direct virtual account transfer first
+    const virtualAccountNumber = data.virtualAccountNumber || data.accountNumber;
+    if (virtualAccountNumber) {
+      const wallet = await client.query(api.wallets.getWalletByAccountNumber, {
+        accountNumber: virtualAccountNumber,
+      });
+
+      if (wallet) {
+        console.log(`✓ Webhook matches virtual account: ${virtualAccountNumber}. Crediting wallet: ${wallet.name}`);
+        await client.mutation(api.wallets.creditWalletDirectly, {
+          walletId: wallet._id,
+          amount: data.amount,
+          paymentReference: data.transactionId || data.reference || `VA-${Date.now()}`,
+          reason: "direct_bank_transfer",
+        });
+
+        return NextResponse.json({
+          success: true,
+          reason: "direct_virtual_account_transfer_credited",
+          walletName: wallet.name,
+        });
+      }
+    }
+
     const existingTxn = await client.query(api.payments.getPaymentByReference, {
       reference: txnRef,
     });

@@ -77,7 +77,7 @@ export default function PayPage() {
   if (success) {
     return (
       <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
-        <div className="max-w-lg w-full p-8 rounded-2xl border border-border bg-surface">
+        <div className="max-w-lg w-full p-6 sm:p-8 rounded-2xl border border-border bg-surface">
           <div className="text-center mb-6">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-success/10">
               <svg className="w-8 h-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -131,7 +131,7 @@ export default function PayPage() {
     <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
       <div className="max-w-lg w-full">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary">Pay Your Dues</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-primary">Pay Your Dues</h1>
           <p className="mt-2 text-sm text-muted">
             Enter your matric number to see your fee breakdown and pay securely
           </p>
@@ -139,7 +139,7 @@ export default function PayPage() {
 
         <form
           onSubmit={handlePayment}
-          className="p-8 rounded-2xl border border-border bg-surface space-y-5"
+          className="p-6 sm:p-8 rounded-2xl border border-border bg-surface space-y-5"
         >
           {error && (
             <div className="p-3 rounded-lg text-sm bg-error/10 text-error border border-error/20">

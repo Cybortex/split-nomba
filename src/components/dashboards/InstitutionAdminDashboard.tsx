@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Calendar } from "lucide-react";
 
-type Tab = "overview" | "users" | "students" | "staff" | "sessions" | "settings";
+type Tab = "overview" | "users" | "school-management" | "students" | "staff" | "sessions" | "settings";
 
 // ============================================================================
 // ROLE LABELS (shared across tabs)
@@ -40,6 +41,7 @@ function TabBar({ activeTab, onTabChange }: { activeTab: Tab; onTabChange: (tab:
   const tabs: { key: Tab; label: string; icon: string }[] = [
     { key: "overview", label: "Overview", icon: "📊" },
     { key: "users", label: "Users", icon: "👥" },
+    { key: "school-management", label: "School Management", icon: "🏫" },
     { key: "students", label: "Students", icon: "🎓" },
     { key: "staff", label: "Staff", icon: "👔" },
     { key: "sessions", label: "Sessions", icon: "📅" },
@@ -158,6 +160,7 @@ function OverviewTab({ institutionId }: { institutionId: string }) {
 function UsersTab({ institutionId }: { institutionId: string }) {
   const currentUser = useQuery(api.auth.getCurrentUser);
   const users = useQuery(api.auth.listInstitutionUsers, { institutionId: institutionId as any });
+  const faculties = useQuery(api.structure.listFaculties, { institutionId: institutionId as any });
   const addRole = useMutation(api.auth.addUserRole);
   const removeRole = useMutation(api.auth.removeUserRole);
   const deactivate = useMutation(api.auth.deactivateUser);
@@ -168,13 +171,17 @@ function UsersTab({ institutionId }: { institutionId: string }) {
 
   // Add user modal state
   const [showAddUser, setShowAddUser] = useState(false);
-  const [newUser, setNewUser] = useState({ clerkId: "", email: "", role: "STUDENT" });
+  const [newUser, setNewUser] = useState({ email: "", role: "FINANCE" });
+  const [selectedFacultyId, setSelectedFacultyId] = useState("");
   const [addingUser, setAddingUser] = useState(false);
+  const [tempPassword, setTempPassword] = useState<string | null>(null);
   const createUser = useMutation(api.auth.createInstitutionUser);
+
+  const USERS_TAB_ASSIGNABLE_ROLES = ["FINANCE", "STUDENT_AFFAIRS", "DEAN"];
 
   const showMessage = (type: "success" | "error", text: string) => {
     setMessage({ type, text });
-    setTimeout(() => setMessage(null), 4000);
+    setTimeout(() => setMessage(null), 5000);
   };
 
   const handleAddRole = async (userId: string, role: string) => {
@@ -215,19 +222,49 @@ function UsersTab({ institutionId }: { institutionId: string }) {
   };
 
   const handleAddUser = async () => {
-    if (!newUser.clerkId || !newUser.email) return;
+    if (!newUser.email) return;
+    if (newUser.role === "DEAN" && !selectedFacultyId) {
+      showMessage("error", "Please select a faculty for the Dean");
+      return;
+    }
+
     setAddingUser(true);
+    setTempPassword(null);
     try {
+      // 1. Create Clerk user
+      const clerkRes = await fetch("/api/clerk/create-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newUser.email }),
+      });
+      const clerkData = await clerkRes.json();
+      if (!clerkRes.ok) {
+        throw new Error(clerkData.error || "Failed to create user in Clerk");
+      }
+
+      const { clerkId, temporaryPassword } = clerkData;
+
+      // Find faculty details if DEAN
+      const selectedFaculty = newUser.role === "DEAN"
+        ? faculties?.find((f: any) => f._id === selectedFacultyId)
+        : null;
+
+      // 2. Save in Convex database
       await createUser({
-        clerkId: newUser.clerkId,
+        clerkId,
         email: newUser.email,
         roles: [newUser.role],
-        permissions: [],
+        permissions: newUser.role === "DEAN" && selectedFaculty ? [`faculty-${selectedFaculty.slug}`] : [],
         institutionId: institutionId as any,
+        facultyId: newUser.role === "DEAN" ? (selectedFacultyId as any) : undefined,
+        faculty: newUser.role === "DEAN" && selectedFaculty ? selectedFaculty.name : undefined,
       });
+
+      setTempPassword(temporaryPassword);
       showMessage("success", `User ${newUser.email} created with role ${ROLE_LABELS[newUser.role]}`);
       setShowAddUser(false);
-      setNewUser({ clerkId: "", email: "", role: "STUDENT" });
+      setNewUser({ email: "", role: "FINANCE" });
+      setSelectedFacultyId("");
     } catch (err: any) {
       showMessage("error", err.message);
     } finally {
@@ -247,7 +284,10 @@ function UsersTab({ institutionId }: { institutionId: string }) {
           <p className="text-xs text-muted mt-0.5">{users.length} users in this institution</p>
         </div>
         <button
-          onClick={() => setShowAddUser(!showAddUser)}
+          onClick={() => {
+            setShowAddUser(!showAddUser);
+            setTempPassword(null);
+          }}
           className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200"
         >
           {showAddUser ? "Cancel" : "+ Add User"}
@@ -262,24 +302,30 @@ function UsersTab({ institutionId }: { institutionId: string }) {
         }`}>{message.text}</div>
       )}
 
+      {tempPassword && (
+        <div className="p-4 rounded-xl border border-success/30 bg-success/10 text-success space-y-1 animate-fade-in">
+          <p className="text-sm font-semibold">User Created Successfully in Clerk & Convex!</p>
+          <p className="text-xs">Provide these credentials to the user so they can log in and set their password:</p>
+          <div className="mt-2 p-2 rounded bg-surface-secondary border border-border flex items-center justify-between">
+            <span className="font-mono text-sm text-primary select-all">Password: {tempPassword}</span>
+            <button onClick={() => {
+              navigator.clipboard.writeText(tempPassword);
+              alert("Password copied to clipboard!");
+            }} className="text-xs px-2 py-1 rounded bg-gold text-black font-semibold hover:brightness-110">Copy</button>
+          </div>
+        </div>
+      )}
+
       {/* Add User Form */}
       {showAddUser && (
         <div className="p-5 rounded-xl border border-border bg-surface space-y-3">
           <h3 className="text-sm font-semibold text-primary">Create New User</h3>
           <p className="text-xs text-muted">
-            First, create the user in{" "}
-            <a href="https://dashboard.clerk.com" target="_blank" rel="noopener noreferrer" className="text-gold underline">Clerk Dashboard</a>{" "}
-            (email + password), then paste their Clerk ID below.
+            Enter the details below. The system will automatically create the user's account in Clerk and generate a temporary password.
           </p>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div>
-              <label className="block text-xs font-medium mb-1 text-secondary">Clerk ID</label>
-              <input type="text" placeholder="user_2xxx" value={newUser.clerkId}
-                onChange={(e) => setNewUser({ ...newUser, clerkId: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-primary text-sm font-mono outline-none focus:border-gold" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-1 text-secondary">Email</label>
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium mb-1 text-secondary">Email Address</label>
               <input type="email" placeholder="user@institution.edu" value={newUser.email}
                 onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                 className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold" />
@@ -287,15 +333,32 @@ function UsersTab({ institutionId }: { institutionId: string }) {
             <div>
               <label className="block text-xs font-medium mb-1 text-secondary">Role</label>
               <select value={newUser.role}
-                onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                onChange={(e) => {
+                  setNewUser({ ...newUser, role: e.target.value });
+                  setSelectedFacultyId("");
+                }}
                 className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold">
-                {ASSIGNABLE_ROLES.map((role) => (
+                {USERS_TAB_ASSIGNABLE_ROLES.map((role) => (
                   <option key={role} value={role}>{ROLE_LABELS[role]}</option>
                 ))}
               </select>
             </div>
+
+            {newUser.role === "DEAN" && (
+              <div className="sm:col-span-3 animate-fade-in">
+                <label className="block text-xs font-medium mb-1 text-secondary">Assign Faculty *</label>
+                <select value={selectedFacultyId}
+                  onChange={(e) => setSelectedFacultyId(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold">
+                  <option value="">-- Select Faculty --</option>
+                  {faculties?.map((f: any) => (
+                    <option key={f._id} value={f._id}>{f.name} ({f.slug})</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
-          <button onClick={handleAddUser} disabled={addingUser || !newUser.clerkId || !newUser.email}
+          <button onClick={handleAddUser} disabled={addingUser || !newUser.email || (newUser.role === "DEAN" && !selectedFacultyId)}
             className="px-4 py-2 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200 disabled:opacity-50">
             {addingUser ? "Creating..." : "Create User"}
           </button>
@@ -310,7 +373,7 @@ function UsersTab({ institutionId }: { institutionId: string }) {
         <div className="space-y-2">
           {users.map((user: any) => (
             <div key={user._id} className="p-4 rounded-xl border border-border bg-surface transition-all duration-200 hover:border-gold-royal">
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-gold/10 flex items-center justify-center flex-shrink-0">
@@ -318,7 +381,11 @@ function UsersTab({ institutionId }: { institutionId: string }) {
                     </div>
                     <div className="min-w-0">
                       <p className="font-medium text-primary truncate">{user.email}</p>
-                      <p className="text-xs text-muted font-mono truncate">ID: {user.clerkId.substring(0, 12)}...</p>
+                      <p className="text-xs text-muted font-mono truncate">
+                        ID: {user.clerkId.substring(0, 12)}...
+                        {user.faculty && ` | Faculty: ${user.faculty}`}
+                        {user.department && ` | Dept: ${user.department}`}
+                      </p>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 mt-3">
@@ -341,7 +408,7 @@ function UsersTab({ institutionId }: { institutionId: string }) {
                     {user.isActive && <span className="px-2 py-0.5 rounded text-xs bg-success/10 text-success">Active</span>}
                   </div>
                 </div>
-                <div className="flex gap-2 ml-4 flex-shrink-0">
+                <div className="flex gap-2 flex-shrink-0">
                   <button onClick={() => setExpandedUser(expandedUser === user._id ? null : user._id)}
                     className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-secondary hover:bg-hover transition-all">
                     {expandedUser === user._id ? "Close" : "Manage"}
@@ -357,9 +424,9 @@ function UsersTab({ institutionId }: { institutionId: string }) {
               </div>
               {expandedUser === user._id && (
                 <div className="mt-4 pt-4 border-t border-border-subtle">
-                  <p className="text-xs font-medium text-muted mb-2">Add Role</p>
+                  <p className="text-xs font-medium text-muted mb-2">Add Role (Only FINANCE, STUDENT_AFFAIRS, DEAN)</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {ASSIGNABLE_ROLES.filter((role) => !user.roles.includes(role)).map((role) => (
+                    {USERS_TAB_ASSIGNABLE_ROLES.filter((role) => !user.roles.includes(role)).map((role) => (
                       <button key={role} onClick={() => handleAddRole(user._id, role)}
                         disabled={processing === `add-${user._id}-${role}`}
                         className="px-2.5 py-1 text-xs font-medium rounded-lg border border-border text-secondary bg-surface-secondary hover:bg-hover disabled:opacity-50">
@@ -378,41 +445,281 @@ function UsersTab({ institutionId }: { institutionId: string }) {
 }
 
 // ============================================================================
-// STUDENTS TAB (NEW)
+// SCHOOL MANAGEMENT (FACULTIES & DEPARTMENTS) TAB
 // ============================================================================
-function StudentsTab({ institutionId }: { institutionId: string }) {
-  const students = useQuery(api.studentRecords.listStudents, { institutionId: institutionId as any });
-  const addStudent = useMutation(api.studentRecords.addStudentRecord);
-  const updateStatus = useMutation(api.studentRecords.updateStudentStatus);
+function SchoolManagementTab({ institutionId }: { institutionId: string }) {
+  const faculties = useQuery(api.structure.listFaculties, { institutionId: institutionId as any });
+  const departments = useQuery(api.structure.listDepartments, { institutionId: institutionId as any });
+  const createFaculty = useMutation(api.structure.createFaculty);
+  const createDepartment = useMutation(api.structure.createDepartment);
 
-  const [showAdd, setShowAdd] = useState(false);
-  const [adding, setAdding] = useState(false);
-  const [search, setSearch] = useState("");
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [form, setForm] = useState({ matric: "", faculty: "", department: "", level: "100", email: "", facultySlug: "", departmentSlug: "" });
+  const [showAddFaculty, setShowAddFaculty] = useState(false);
+  const [newFaculty, setNewFaculty] = useState({ name: "", slug: "" });
+  const [addingFaculty, setAddingFaculty] = useState(false);
+
+  const [addingDeptForFaculty, setAddingDeptForFaculty] = useState<string | null>(null);
+  const [newDept, setNewDept] = useState({ name: "", slug: "" });
+  const [addingDept, setAddingDept] = useState(false);
 
   const showMsg = (type: "success" | "error", text: string) => {
     setMessage({ type, text });
     setTimeout(() => setMessage(null), 4000);
   };
 
-  const handleAdd = async () => {
-    if (!form.matric || !form.faculty || !form.department || !form.email) return;
-    setAdding(true);
+  const handleAddFaculty = async () => {
+    if (!newFaculty.name.trim() || !newFaculty.slug.trim()) return;
+    setAddingFaculty(true);
     try {
+      await createFaculty({
+        institutionId: institutionId as any,
+        name: newFaculty.name.trim(),
+        slug: newFaculty.slug.trim().toUpperCase(),
+      });
+      showMsg("success", `Faculty "${newFaculty.name}" created!`);
+      setNewFaculty({ name: "", slug: "" });
+      setShowAddFaculty(false);
+    } catch (err: any) {
+      showMsg("error", err.message || "Failed to create faculty");
+    } finally {
+      setAddingFaculty(false);
+    }
+  };
+
+  const handleAddDept = async (facultyId: string) => {
+    if (!newDept.name.trim() || !newDept.slug.trim()) return;
+    setAddingDept(true);
+    try {
+      await createDepartment({
+        institutionId: institutionId as any,
+        facultyId: facultyId as any,
+        name: newDept.name.trim(),
+        slug: newDept.slug.trim().toUpperCase(),
+      });
+      showMsg("success", `Department "${newDept.name}" created!`);
+      setNewDept({ name: "", slug: "" });
+      setAddingDeptForFaculty(null);
+    } catch (err: any) {
+      showMsg("error", err.message || "Failed to create department");
+    } finally {
+      setAddingDept(false);
+    }
+  };
+
+  if (!faculties || !departments) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <div className="skeleton w-8 h-8 rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-semibold text-primary">School Management</h2>
+          <p className="text-xs text-muted mt-0.5">Manage the faculties and departments in this institution.</p>
+        </div>
+        <button
+          onClick={() => setShowAddFaculty(!showAddFaculty)}
+          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200"
+        >
+          {showAddFaculty ? "Cancel" : "+ Add Faculty"}
+        </button>
+      </div>
+
+      {message && (
+        <div className={`p-3 rounded-lg text-sm border ${
+          message.type === "success" ? "bg-success/10 text-success border-success/20" : "bg-error/10 text-error border-error/20"
+        }`}>{message.text}</div>
+      )}
+
+      {showAddFaculty && (
+        <div className="p-5 rounded-xl border border-border bg-surface space-y-3 max-w-xl animate-fade-in">
+          <h3 className="text-sm font-semibold text-primary">Add Faculty</h3>
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+            <div>
+              <label className="block text-xs font-medium mb-1 text-secondary">Faculty Name *</label>
+              <input type="text" placeholder="e.g. Science" value={newFaculty.name}
+                onChange={(e) => setNewFaculty({ ...newFaculty, name: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-sm outline-none focus:border-gold" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1 text-secondary">Faculty Code / Slug *</label>
+              <input type="text" placeholder="e.g. SCIENCE" value={newFaculty.slug}
+                onChange={(e) => setNewFaculty({ ...newFaculty, slug: e.target.value.toUpperCase() })}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-sm font-mono outline-none focus:border-gold" />
+            </div>
+          </div>
+          <button onClick={handleAddFaculty} disabled={addingFaculty || !newFaculty.name.trim() || !newFaculty.slug.trim()}
+            className="px-4 py-2 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all disabled:opacity-50">
+            {addingFaculty ? "Creating..." : "Create Faculty"}
+          </button>
+        </div>
+      )}
+
+      {faculties.length === 0 ? (
+        <div className="p-12 rounded-xl border border-border bg-surface text-center">
+          <p className="text-muted">No faculties created yet. Click "+ Add Faculty" to get started.</p>
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2">
+          {faculties.map((fac: any) => {
+            const facDepts = departments.filter((d: any) => d.facultyId === fac._id);
+            const isAddingDept = addingDeptForFaculty === fac._id;
+
+            return (
+              <div key={fac._id} className="p-5 rounded-xl border border-border bg-surface hover:border-gold-royal transition-all duration-200 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-4 border-b border-border-subtle pb-2">
+                    <div>
+                      <h3 className="font-semibold text-primary text-base">{fac.name}</h3>
+                      <span className="text-xs px-2 py-0.5 rounded bg-gold/15 text-gold-royal font-mono font-medium">{fac.slug}</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setAddingDeptForFaculty(isAddingDept ? null : fac._id);
+                        setNewDept({ name: "", slug: "" });
+                      }}
+                      className="text-xs px-2 py-1 border border-border rounded hover:bg-hover text-secondary transition-all"
+                    >
+                      {isAddingDept ? "Cancel" : "+ Add Dept"}
+                    </button>
+                  </div>
+
+                  {/* Add Department Inline Form */}
+                  {isAddingDept && (
+                    <div className="p-3 mb-3 rounded-lg border border-border bg-surface-secondary space-y-2 animate-fade-in">
+                      <p className="text-xs font-semibold text-primary">New Department</p>
+                      <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
+                        <input type="text" placeholder="Name (e.g. Computer Science)" value={newDept.name}
+                          onChange={(e) => setNewDept({ ...newDept, name: e.target.value })}
+                          className="px-2 py-1 rounded border border-border bg-surface text-xs outline-none focus:border-gold" />
+                        <input type="text" placeholder="Code (e.g. COMP-SCI)" value={newDept.slug}
+                          onChange={(e) => setNewDept({ ...newDept, slug: e.target.value.toUpperCase() })}
+                          className="px-2 py-1 rounded border border-border bg-surface text-xs font-mono outline-none focus:border-gold" />
+                      </div>
+                      <button onClick={() => handleAddDept(fac._id)} disabled={addingDept || !newDept.name.trim() || !newDept.slug.trim()}
+                        className="px-2.5 py-1 text-xs font-semibold rounded bg-gold text-black hover:brightness-110 disabled:opacity-50">
+                        {addingDept ? "Adding..." : "Add Department"}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Departments List */}
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted uppercase tracking-wider mb-2">Departments ({facDepts.length})</p>
+                    {facDepts.length === 0 ? (
+                      <p className="text-xs text-muted italic">No departments under this faculty yet.</p>
+                    ) : (
+                      <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
+                        {facDepts.map((dept: any) => (
+                          <div key={dept._id} className="flex items-center justify-between p-2 rounded bg-surface-secondary border border-border-subtle">
+                            <span className="text-xs font-medium text-primary">{dept.name}</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-secondary text-secondary border border-border font-mono">{dept.slug}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// STUDENTS TAB (NEW)
+// ============================================================================
+function StudentsTab({ institutionId }: { institutionId: string }) {
+  const students = useQuery(api.studentRecords.listStudents, { institutionId: institutionId as any });
+  const faculties = useQuery(api.structure.listFaculties, { institutionId: institutionId as any });
+  const departments = useQuery(api.structure.listDepartments, { institutionId: institutionId as any });
+
+  const addStudent = useMutation(api.studentRecords.addStudentRecord);
+  const createUser = useMutation(api.auth.createInstitutionUser);
+  const updateStatus = useMutation(api.studentRecords.updateStudentStatus);
+
+  const [showAdd, setShowAdd] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [search, setSearch] = useState("");
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  
+  const [form, setForm] = useState({ matric: "", level: "100", email: "" });
+  const [selectedFacultyId, setSelectedFacultyId] = useState("");
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
+  const [tempPassword, setTempPassword] = useState<string | null>(null);
+
+  const showMsg = (type: "success" | "error", text: string) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage(null), 5000);
+  };
+
+  const handleAdd = async () => {
+    if (!form.matric || !selectedFacultyId || !selectedDepartmentId || !form.email) return;
+    
+    setAdding(true);
+    setTempPassword(null);
+    try {
+      const facultyObj = faculties?.find((f: any) => f._id === selectedFacultyId);
+      const departmentObj = departments?.find((d: any) => d._id === selectedDepartmentId);
+
+      if (!facultyObj || !departmentObj) {
+        throw new Error("Selected faculty or department is invalid");
+      }
+
+      // 1. Create Clerk User (with matric number as password)
+      const clerkRes = await fetch("/api/clerk/create-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          email: form.email.trim(), 
+          password: form.matric.trim() 
+        }),
+      });
+      const clerkData = await clerkRes.json();
+      if (!clerkRes.ok) {
+        throw new Error(clerkData.error || "Failed to create student account in Clerk");
+      }
+
+      const { clerkId } = clerkData;
+
+      // 2. Create Student Record in Convex
       await addStudent({
         institutionId: institutionId as any,
-        matric: form.matric,
-        faculty: form.faculty,
-        department: form.department,
+        matric: form.matric.trim(),
+        faculty: facultyObj.name,
+        department: departmentObj.name,
         level: Number(form.level),
-        email: form.email,
-        facultySlug: form.facultySlug || undefined,
-        departmentSlug: form.departmentSlug || undefined,
+        email: form.email.trim(),
+        facultySlug: facultyObj.slug,
+        departmentSlug: departmentObj.slug,
       });
-      showMsg("success", `Student ${form.matric} added!`);
+
+      // 3. Create User Record in Convex
+      await createUser({
+        clerkId,
+        email: form.email.trim(),
+        roles: ["STUDENT"],
+        permissions: [form.matric.trim()],
+        institutionId: institutionId as any,
+        facultyId: selectedFacultyId as any,
+        faculty: facultyObj.name,
+        departmentId: selectedDepartmentId as any,
+        department: departmentObj.name,
+      });
+
+      setTempPassword(form.matric.trim());
+      showMsg("success", `Student ${form.matric} successfully added to database & Clerk!`);
       setShowAdd(false);
-      setForm({ matric: "", faculty: "", department: "", level: "100", email: "", facultySlug: "", departmentSlug: "" });
+      setForm({ matric: "", level: "100", email: "" });
+      setSelectedFacultyId("");
+      setSelectedDepartmentId("");
     } catch (err: any) {
       showMsg("error", err.message);
     } finally {
@@ -440,22 +747,27 @@ function StudentsTab({ institutionId }: { institutionId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="font-semibold text-primary">Student Records</h2>
           <p className="text-xs text-muted mt-0.5">{students?.length ?? 0} students</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-none">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input type="text" placeholder="Search students..." value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-48 pl-8 pr-3 py-1.5 rounded-lg border border-border bg-surface text-sm text-primary outline-none focus:border-gold" />
+              className="w-full sm:w-48 pl-8 pr-3 py-1.5 rounded-lg border border-border bg-surface text-sm text-primary outline-none focus:border-gold" />
           </div>
-          <button onClick={() => setShowAdd(!showAdd)}
-            className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all">
+          <button
+            onClick={() => {
+              setShowAdd(!showAdd);
+              setTempPassword(null);
+            }}
+            className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all"
+          >
             {showAdd ? "Cancel" : "+ Add Student"}
           </button>
         </div>
@@ -465,6 +777,20 @@ function StudentsTab({ institutionId }: { institutionId: string }) {
         <div className={`p-3 rounded-lg text-sm border ${
           message.type === "success" ? "bg-success/10 text-success border-success/20" : "bg-error/10 text-error border-error/20"
         }`}>{message.text}</div>
+      )}
+
+      {tempPassword && (
+        <div className="p-4 rounded-xl border border-success/30 bg-success/10 text-success space-y-1 animate-fade-in">
+          <p className="text-sm font-semibold">Student Registered in Clerk & Convex!</p>
+          <p className="text-xs">Student can now log in using their email and matric number as the temporary password.</p>
+          <div className="mt-2 p-2 rounded bg-surface-secondary border border-border flex items-center justify-between">
+            <span className="font-mono text-sm text-primary select-all">Matric Password: {tempPassword}</span>
+            <button onClick={() => {
+              navigator.clipboard.writeText(tempPassword);
+              alert("Matric password copied!");
+            }} className="text-xs px-2 py-1 rounded bg-gold text-black font-semibold hover:brightness-110">Copy</button>
+          </div>
+        </div>
       )}
 
       {showAdd && (
@@ -486,29 +812,27 @@ function StudentsTab({ institutionId }: { institutionId: string }) {
             </div>
             <div>
               <label className="block text-xs font-medium mb-1 text-secondary">Faculty *</label>
-              <input type="text" placeholder="Science" value={form.faculty}
-                onChange={(e) => setForm({ ...form, faculty: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-sm outline-none focus:border-gold" />
+              <select value={selectedFacultyId} onChange={(e) => {
+                setSelectedFacultyId(e.target.value);
+                setSelectedDepartmentId("");
+              }}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-sm outline-none focus:border-gold">
+                <option value="">-- Select Faculty --</option>
+                {faculties?.map((f: any) => (
+                  <option key={f._id} value={f._id}>{f.name}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-xs font-medium mb-1 text-secondary">Department *</label>
-              <input type="text" placeholder="Computer Science" value={form.department}
-                onChange={(e) => setForm({ ...form, department: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-sm outline-none focus:border-gold" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-1 text-secondary">Faculty Slug</label>
-              <input type="text" placeholder="SCIENCE" value={form.facultySlug}
-                onChange={(e) => setForm({ ...form, facultySlug: e.target.value.toUpperCase() })}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-sm font-mono outline-none focus:border-gold" />
-              <p className="text-xs text-muted mt-0.5">Must match the association slug exactly. Used for payment routing.</p>
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-1 text-secondary">Department Slug</label>
-              <input type="text" placeholder="COMP-SCI" value={form.departmentSlug}
-                onChange={(e) => setForm({ ...form, departmentSlug: e.target.value.toUpperCase() })}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-sm font-mono outline-none focus:border-gold" />
-              <p className="text-xs text-muted mt-0.5">Must match the association slug exactly. Used for payment routing.</p>
+              <select value={selectedDepartmentId} onChange={(e) => setSelectedDepartmentId(e.target.value)}
+                disabled={!selectedFacultyId}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-sm outline-none focus:border-gold disabled:opacity-50">
+                <option value="">-- Select Department --</option>
+                {departments?.filter((d: any) => d.facultyId === selectedFacultyId).map((d: any) => (
+                  <option key={d._id} value={d._id}>{d.name}</option>
+                ))}
+              </select>
             </div>
             <div className="sm:col-span-2">
               <label className="block text-xs font-medium mb-1 text-secondary">Email *</label>
@@ -517,7 +841,7 @@ function StudentsTab({ institutionId }: { institutionId: string }) {
                 className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-sm outline-none focus:border-gold" />
             </div>
           </div>
-          <button onClick={handleAdd} disabled={adding || !form.matric || !form.faculty || !form.department || !form.email}
+          <button onClick={handleAdd} disabled={adding || !form.matric || !selectedFacultyId || !selectedDepartmentId || !form.email}
             className="px-4 py-2 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 disabled:opacity-50">
             {adding ? "Adding..." : "Add Student"}
           </button>
@@ -590,8 +914,78 @@ function StaffTab({ institutionId }: { institutionId: string }) {
     institutionId: institutionId as any,
     roles: ["STAFF"],
   });
+  const faculties = useQuery(api.structure.listFaculties, { institutionId: institutionId as any });
+  const departments = useQuery(api.structure.listDepartments, { institutionId: institutionId as any });
+  const createUser = useMutation(api.auth.createInstitutionUser);
 
   const [search, setSearch] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [email, setEmail] = useState("");
+  const [staffType, setStaffType] = useState<"academic" | "non-academic">("academic");
+  const [selectedFacultyId, setSelectedFacultyId] = useState("");
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
+  const [tempPassword, setTempPassword] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const showMsg = (type: "success" | "error", text: string) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage(null), 5000);
+  };
+
+  const handleAddStaff = async () => {
+    if (!email) return;
+    if (staffType === "academic" && (!selectedFacultyId || !selectedDepartmentId)) {
+      showMsg("error", "Please select both a faculty and department for academic staff");
+      return;
+    }
+
+    setAdding(true);
+    setTempPassword(null);
+    try {
+      // 1. Create in Clerk
+      const clerkRes = await fetch("/api/clerk/create-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const clerkData = await clerkRes.json();
+      if (!clerkRes.ok) {
+        throw new Error(clerkData.error || "Failed to create staff account in Clerk");
+      }
+
+      const { clerkId, temporaryPassword } = clerkData;
+
+      const facultyObj = staffType === "academic" ? faculties?.find((f: any) => f._id === selectedFacultyId) : null;
+      const departmentObj = staffType === "academic" ? departments?.find((d: any) => d._id === selectedDepartmentId) : null;
+
+      // 2. Create User record in Convex
+      await createUser({
+        clerkId,
+        email: email.trim(),
+        roles: ["STAFF"],
+        permissions: [],
+        institutionId: institutionId as any,
+        facultyId: facultyObj ? (selectedFacultyId as any) : undefined,
+        faculty: facultyObj ? facultyObj.name : undefined,
+        departmentId: departmentObj ? (selectedDepartmentId as any) : undefined,
+        department: departmentObj ? departmentObj.name : undefined,
+        staffType,
+      });
+
+      setTempPassword(temporaryPassword);
+      showMsg("success", `Staff member ${email} created successfully!`);
+      setEmail("");
+      setStaffType("academic");
+      setSelectedFacultyId("");
+      setSelectedDepartmentId("");
+      setShowAdd(false);
+    } catch (err: any) {
+      showMsg("error", err.message);
+    } finally {
+      setAdding(false);
+    }
+  };
 
   const filtered = search
     ? staffUsers?.filter((u: any) => u.email.toLowerCase().includes(search.toLowerCase()))
@@ -599,20 +993,122 @@ function StaffTab({ institutionId }: { institutionId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="font-semibold text-primary">Staff Members</h2>
           <p className="text-xs text-muted mt-0.5">{staffUsers?.length ?? 0} staff members</p>
         </div>
-        <div className="relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input type="text" placeholder="Search staff..." value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-48 pl-8 pr-3 py-1.5 rounded-lg border border-border bg-surface text-sm text-primary outline-none focus:border-gold" />
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 sm:flex-none">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input type="text" placeholder="Search staff..." value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full sm:w-48 pl-8 pr-3 py-1.5 rounded-lg border border-border bg-surface text-sm text-primary outline-none focus:border-gold" />
+          </div>
+          <button
+            onClick={() => {
+              setShowAdd(!showAdd);
+              setTempPassword(null);
+            }}
+            className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all"
+          >
+            {showAdd ? "Cancel" : "+ Add Staff"}
+          </button>
         </div>
       </div>
+
+      {message && (
+        <div className={`p-3 rounded-lg text-sm border ${
+          message.type === "success" ? "bg-success/10 text-success border-success/20" : "bg-error/10 text-error border-error/20"
+        }`}>{message.text}</div>
+      )}
+
+      {tempPassword && (
+        <div className="p-4 rounded-xl border border-success/30 bg-success/10 text-success space-y-1 animate-fade-in">
+          <p className="text-sm font-semibold">Staff Registered in Clerk & Convex!</p>
+          <p className="text-xs">Provide these credentials to the user so they can log in and set their password:</p>
+          <div className="mt-2 p-2 rounded bg-surface-secondary border border-border flex items-center justify-between">
+            <span className="font-mono text-sm text-primary select-all">Password: {tempPassword}</span>
+            <button onClick={() => {
+              navigator.clipboard.writeText(tempPassword);
+              alert("Password copied!");
+            }} className="text-xs px-2 py-1 rounded bg-gold text-black font-semibold hover:brightness-110">Copy</button>
+          </div>
+        </div>
+      )}
+
+      {showAdd && (
+        <div className="p-5 rounded-xl border border-border bg-surface space-y-3">
+          <h3 className="text-sm font-semibold text-primary">Add Staff User</h3>
+          <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-medium mb-1 text-secondary">Email Address *</label>
+                <input type="email" placeholder="staff@institution.edu" value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-sm outline-none focus:border-gold" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1 text-secondary">Staff Type *</label>
+                <div className="flex gap-4 mt-2">
+                  <label className="flex items-center gap-2 cursor-pointer text-sm text-primary">
+                    <input type="radio" name="staffType" checked={staffType === "academic"}
+                      onChange={() => {
+                        setStaffType("academic");
+                      }} />
+                    Academic
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm text-primary">
+                    <input type="radio" name="staffType" checked={staffType === "non-academic"}
+                      onChange={() => {
+                        setStaffType("non-academic");
+                        setSelectedFacultyId("");
+                        setSelectedDepartmentId("");
+                      }} />
+                    Non-Academic
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {staffType === "academic" && (
+              <div className="grid gap-3 sm:grid-cols-2 animate-fade-in">
+                <div>
+                  <label className="block text-xs font-medium mb-1 text-secondary">Faculty *</label>
+                  <select value={selectedFacultyId} onChange={(e) => {
+                    setSelectedFacultyId(e.target.value);
+                    setSelectedDepartmentId("");
+                  }}
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-sm outline-none focus:border-gold">
+                    <option value="">-- Select Faculty --</option>
+                    {faculties?.map((f: any) => (
+                      <option key={f._id} value={f._id}>{f.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1 text-secondary">Department *</label>
+                  <select value={selectedDepartmentId} onChange={(e) => setSelectedDepartmentId(e.target.value)}
+                    disabled={!selectedFacultyId}
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-sm outline-none focus:border-gold disabled:opacity-50">
+                    <option value="">-- Select Department --</option>
+                    {departments?.filter((d: any) => d.facultyId === selectedFacultyId).map((d: any) => (
+                      <option key={d._id} value={d._id}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            <button onClick={handleAddStaff} disabled={adding || !email || (staffType === "academic" && (!selectedFacultyId || !selectedDepartmentId))}
+              className="px-4 py-2 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 disabled:opacity-50">
+              {adding ? "Adding..." : "Add Staff"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {!staffUsers ? (
         <div className="flex items-center justify-center h-32"><div className="skeleton w-8 h-8 rounded-full" /></div>
@@ -632,6 +1128,14 @@ function StaffTab({ institutionId }: { institutionId: string }) {
                         role === "STAFF" ? "bg-surface-secondary text-secondary" : "bg-gold/10 text-gold-royal"
                       }`}>{ROLE_LABELS[role] || role}</span>
                     ))}
+                    <span className="text-xs px-2 py-0.5 rounded font-medium bg-surface-secondary text-muted">
+                      {user.staffType === "non-academic" ? "Non-Academic" : "Academic"}
+                    </span>
+                    {user.faculty && (
+                      <span className="text-xs px-2 py-0.5 rounded font-medium bg-gold/10 text-gold truncate">
+                        {user.faculty} {user.department && ` | ${user.department}`}
+                      </span>
+                    )}
                     <span className={`text-xs px-2 py-0.5 rounded font-medium ${
                       user.isActive ? "bg-success/10 text-success" : "bg-error/10 text-error"
                     }`}>{user.isActive ? "Active" : "Inactive"}</span>
@@ -643,7 +1147,7 @@ function StaffTab({ institutionId }: { institutionId: string }) {
         </div>
       ) : (
         <div className="p-12 rounded-xl border border-border bg-surface text-center">
-          <p className="text-muted">{search ? "No staff match your search." : "No staff members yet. Assign the STAFF role to users in the Users tab."}</p>
+          <p className="text-muted">{search ? "No staff match your search." : "No staff members yet. Click '+ Add Staff' to register one."}</p>
         </div>
       )}
     </div>
@@ -717,7 +1221,9 @@ function SessionsTab({ institutionId }: { institutionId: string }) {
       {activeSession ? (
         <div className="p-4 rounded-xl border border-gold/30 bg-gradient-to-r from-gold/10 to-gold/5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-lg">📅</span>
+            <span className="flex-shrink-0 flex items-center justify-center p-2 rounded-lg bg-gold/10 text-gold">
+              <Calendar className="w-5 h-5 text-gold" />
+            </span>
             <div>
               <p className="text-sm font-semibold text-primary">{activeSession.name}</p>
               <p className="text-xs text-muted">{formatDate(activeSession.startDate)} — {formatDate(activeSession.endDate)}</p>
@@ -741,7 +1247,7 @@ function SessionsTab({ institutionId }: { institutionId: string }) {
                 onChange={(e) => setNewSession({ ...newSession, name: e.target.value })}
                 className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-sm outline-none focus:border-gold" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium mb-1 text-secondary">Start Date</label>
                 <input type="date" value={newSession.startDate}
@@ -870,8 +1376,7 @@ function SettingsTab({ institutionId }: { institutionId: string }) {
           <input type="text" value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             className="w-full px-3 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold" />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
+        </div>            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium mb-1.5 text-secondary">Phone</label>
             <input type="text" placeholder="+234 800 000 0000" value={form.phone}
@@ -945,6 +1450,7 @@ export function InstitutionAdminDashboard({
 
       {activeTab === "overview" && <OverviewTab institutionId={effectiveInstId} />}
       {activeTab === "users" && <UsersTab institutionId={effectiveInstId} />}
+      {activeTab === "school-management" && <SchoolManagementTab institutionId={effectiveInstId} />}
       {activeTab === "students" && <StudentsTab institutionId={effectiveInstId} />}
       {activeTab === "staff" && <StaffTab institutionId={effectiveInstId} />}
       {activeTab === "sessions" && <SessionsTab institutionId={effectiveInstId} />}

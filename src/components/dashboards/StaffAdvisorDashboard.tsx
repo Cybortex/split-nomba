@@ -138,7 +138,7 @@ export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: 
       {activeTab === "withdrawals" && (
         <>
           {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="p-6 rounded-xl border border-border bg-surface">
               <p className="text-sm text-muted mb-1">Pending Approval</p>
               <p className="text-2xl font-bold text-pending">{pendingRequests.length}</p>
@@ -157,8 +157,8 @@ export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: 
               </div>
               <div className="divide-y divide-border-subtle">
                 {pendingRequests.map((req: any) => (
-                  <div key={req._id} className="px-6 py-4 flex items-center justify-between hover:bg-hover transition-colors duration-150">
-                    <div>
+                  <div key={req._id} className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-hover transition-colors duration-150">
+                    <div className="flex-1 min-w-0">
                       <span className="text-lg font-bold text-gold font-mono">₦{req.amount.toLocaleString()}</span>
                       <p className="text-sm text-secondary mt-1">{req.reason}</p>
                       <p className="text-xs text-muted mt-0.5">
@@ -168,7 +168,7 @@ export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: 
                     <button
                       onClick={() => handleApprove(req._id)}
                       disabled={processing === req._id}
-                      className="px-4 py-2 text-sm font-semibold rounded-lg bg-info text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50"
+                      className="px-4 py-2 text-sm font-semibold rounded-lg bg-info text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50 flex-shrink-0"
                     >
                       {processing === req._id ? "..." : "Approve"}
                     </button>
@@ -186,8 +186,8 @@ export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: 
               </div>
               <div className="divide-y divide-border-subtle">
                 {approvedRequests.map((req: any) => (
-                  <div key={req._id} className="px-6 py-4 flex items-center justify-between hover:bg-hover transition-colors duration-150">
-                    <div>
+                  <div key={req._id} className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-hover transition-colors duration-150">
+                    <div className="flex-1 min-w-0">
                       <span className="text-lg font-bold text-info font-mono">₦{req.amount.toLocaleString()}</span>
                       <p className="text-sm text-secondary mt-1">{req.reason}</p>
                       <p className="text-xs text-muted mt-0.5">
@@ -197,7 +197,7 @@ export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: 
                     <button
                       onClick={() => handleExecute(req._id)}
                       disabled={processing === req._id}
-                      className="px-4 py-2 text-sm font-semibold rounded-lg bg-success text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50"
+                      className="px-4 py-2 text-sm font-semibold rounded-lg bg-success text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50 flex-shrink-0"
                     >
                       {processing === req._id ? "..." : "Execute"}
                     </button>
