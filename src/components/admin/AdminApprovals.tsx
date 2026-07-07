@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Mail, AlertTriangle, Link, Info, User, Phone, Calendar, MapPin } from "lucide-react";
+import { Mail, AlertTriangle, Link, Info, User, Phone, Calendar, MapPin, CheckCircle } from "lucide-react";
 
 type ApprovalResult = {
   institutionId: string;
@@ -36,9 +36,7 @@ function SignInLinkModal({
         {/* Header */}
         <div className="flex items-center gap-3 p-6 border-b border-border bg-success/5">
           <div className="w-10 h-10 rounded-full bg-success/15 flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <CheckCircle className="w-5 h-5 text-success" />
           </div>
           <div>
             <h2 className="font-bold text-primary">Institution Approved!</h2>
@@ -213,9 +211,7 @@ export function AdminApprovals() {
       {pendingRegistrations.length === 0 ? (
         <div className="p-12 rounded-2xl border border-border bg-surface text-center">
           <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <CheckCircle className="w-8 h-8 text-success" />
           </div>
           <h2 className="text-lg font-semibold text-primary mb-1">All Clear!</h2>
           <p className="text-sm text-muted">No pending registrations to review.</p>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Check } from "lucide-react";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -37,9 +38,7 @@ export default function RegisterPage() {
       <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
         <div className="max-w-md w-full p-6 sm:p-8 rounded-2xl border border-border bg-surface text-center">
           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 bg-success/10">
-            <svg className="w-8 h-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+            <Check className="w-8 h-8 text-success" />
           </div>
           <h2 className="text-2xl font-bold mb-2 text-primary">Registration Submitted</h2>
           <p className="mb-6 text-sm text-muted">

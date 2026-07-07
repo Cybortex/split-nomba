@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Search } from "lucide-react";
 
 const ACTION_FILTERS = [
   { label: "All", value: "" },
@@ -65,14 +66,7 @@ export function AdminAudit() {
           ))}
         </div>
         <div className="relative flex-1 max-w-full sm:max-w-xs">
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted" />
           <input
             type="text"
             placeholder="Search events..."

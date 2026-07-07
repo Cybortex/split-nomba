@@ -122,9 +122,7 @@ export function AdminOverview() {
       {pendingRegistrations.length === 0 && (
         <div className="rounded-xl border border-border bg-surface p-6 text-center">
           <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-3">
-            <svg className="w-6 h-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <CheckCircle className="w-6 h-6 text-success" />
           </div>
           <p className="text-sm text-muted">No pending approvals. All institutions have been reviewed.</p>
         </div>

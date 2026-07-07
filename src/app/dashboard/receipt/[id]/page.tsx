@@ -5,6 +5,7 @@ import { api } from "@/convex/_generated/api";
 import { useParams } from "next/navigation";
 import { PaymentReceipt } from "@/components/PaymentReceipt";
 import Link from "next/link";
+import { X } from "lucide-react";
 
 export default function ReceiptPage() {
   const params = useParams();
@@ -41,9 +42,7 @@ export default function ReceiptPage() {
       <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
         <div className="max-w-md w-full p-8 rounded-2xl border border-border bg-surface text-center">
           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-error/10">
-            <svg className="w-8 h-8 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-8 h-8 text-error" />
           </div>
           <h2 className="text-xl font-semibold mb-2 text-primary">Receipt Not Found</h2>
           <p className="text-sm mb-6 text-muted">This payment receipt could not be found.</p>

@@ -6,7 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { syncSuperAdminRole } from "@/lib/clerk-sync";
-import { BarChart3, Users, GraduationCap, Calendar, Settings, Coins, Landmark, Banknote, CreditCard, ScrollText, Handshake, Briefcase } from "lucide-react";
+import { BarChart3, Users, GraduationCap, Calendar, Settings, Coins, Landmark, Banknote, CreditCard, ScrollText, Handshake, Briefcase, ChevronDown, Menu } from "lucide-react";
 
 const ROLE_NAV_ITEMS: Record<string, { key: string; label: string; icon: React.ReactNode }[]> = {
   INSTITUTION_ADMIN: [
@@ -131,9 +131,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-surface-secondary border border-border text-sm font-semibold text-primary hover:border-gold-royal transition-all duration-200"
             >
               <span className="truncate">{ROLE_LABELS[activeRole] || activeRole}</span>
-              <svg className={`w-4 h-4 text-muted transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              <ChevronDown className={`w-4 h-4 text-muted transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`} />
             </button>
 
             {dropdownOpen && (
@@ -275,9 +273,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             className="p-2 rounded-lg text-muted hover:bg-hover transition-colors duration-200"
             aria-label="Toggle sidebar"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <Menu className="w-5 h-5" />
           </button>
           <span className="text-sm font-medium text-primary">Dashboard Menu</span>
         </div>

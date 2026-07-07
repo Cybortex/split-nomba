@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
+import { Lock, Check, AlertTriangle } from "lucide-react";
 
 export default function PayPage() {
   const [matric, setMatric] = useState("");
@@ -57,9 +58,7 @@ export default function PayPage() {
       <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
         <div className="max-w-md w-full p-8 rounded-2xl border border-border bg-surface text-center">
           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-gold/10">
-            <svg className="w-8 h-8 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+            <Lock className="w-8 h-8 text-gold" />
           </div>
           <h2 className="text-xl font-semibold mb-2 text-primary">Sign in to Pay</h2>
           <p className="text-sm mb-6 text-muted">You need to sign in before making a payment.</p>
@@ -80,9 +79,7 @@ export default function PayPage() {
         <div className="max-w-lg w-full p-6 sm:p-8 rounded-2xl border border-border bg-surface">
           <div className="text-center mb-6">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-success/10">
-              <svg className="w-8 h-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+              <Check className="w-8 h-8 text-success" />
             </div>
             <h2 className="text-2xl font-bold text-primary">Redirecting to Nomba...</h2>
             <p className="text-sm mt-2 text-muted">
@@ -177,8 +174,9 @@ export default function PayPage() {
           </button>
 
           <div className="p-3 rounded-lg bg-gold-subtle">
-            <p className="text-xs text-gold-royal">
-              ⚠ Security: Payment amount is calculated on the server. The frontend cannot modify it.
+            <p className="text-xs text-gold-royal flex items-start gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-gold-royal flex-shrink-0 mt-0.5" />
+              <span>Security: Payment amount is calculated on the server. The frontend cannot modify it.</span>
             </p>
           </div>
         </form>

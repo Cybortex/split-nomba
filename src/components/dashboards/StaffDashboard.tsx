@@ -1,6 +1,6 @@
 "use client";
 
-import { Lightbulb } from "lucide-react";
+import { Lightbulb, CircleDollarSign, Clock, CreditCard, Check } from "lucide-react";
 
 export function StaffDashboard({ activeTab }: { activeTab?: string }) {
   // MOCKUP: Staff personal allowance dashboard
@@ -33,9 +33,7 @@ export function StaffDashboard({ activeTab }: { activeTab?: string }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div className="p-6 rounded-xl border border-border bg-surface">
           <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center mb-3">
-            <svg className="w-5 h-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <CircleDollarSign className="w-5 h-5 text-success" />
           </div>
           <p className="text-sm text-muted mb-1">Total Received</p>
           <p className="text-2xl font-bold text-success">
@@ -45,9 +43,7 @@ export function StaffDashboard({ activeTab }: { activeTab?: string }) {
         </div>
         <div className="p-6 rounded-xl border border-border bg-surface">
           <div className="w-10 h-10 rounded-lg bg-pending/10 flex items-center justify-center mb-3">
-            <svg className="w-5 h-5 text-pending" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <Clock className="w-5 h-5 text-pending" />
           </div>
           <p className="text-sm text-muted mb-1">Next Payment</p>
           <p className="text-2xl font-bold text-pending">₦150,000</p>
@@ -55,9 +51,7 @@ export function StaffDashboard({ activeTab }: { activeTab?: string }) {
         </div>
         <div className="p-6 rounded-xl border border-border bg-surface">
           <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center mb-3">
-            <svg className="w-5 h-5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-            </svg>
+            <CreditCard className="w-5 h-5 text-info" />
           </div>
           <p className="text-sm text-muted mb-1">Nomba Account</p>
           <p className="text-2xl font-bold text-info">Linked</p>
@@ -79,9 +73,7 @@ export function StaffDashboard({ activeTab }: { activeTab?: string }) {
             >
               <div className="flex items-center gap-4">
                 <div className="w-9 h-9 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-4 h-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <Check className="w-4 h-4 text-success" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-primary">{allowance.description}</p>
@@ -106,9 +98,7 @@ export function StaffDashboard({ activeTab }: { activeTab?: string }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
-              <svg className="w-5 h-5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-              </svg>
+              <CreditCard className="w-5 h-5 text-gold" />
             </div>
             <div>
               <p className="text-sm font-medium text-primary">Nomba Account</p>
