@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { WalletCard, TransactionList } from "@/components/WalletCard";
+import { AssociationManager } from "@/components/admin/AssociationManager";
 
 export function HODDashboard({ activeTab }: { activeTab?: string }) {
   const currentUser = useQuery(api.auth.getCurrentUser);
@@ -54,6 +55,15 @@ export function HODDashboard({ activeTab }: { activeTab?: string }) {
       {deptWallet ? (
         <>
           <WalletCard wallet={deptWallet} />
+          {institutionId && (
+            <div className="pt-2">
+              <AssociationManager
+                entityId={entityId}
+                institutionId={institutionId}
+                role="HOD"
+              />
+            </div>
+          )}
           <TransactionList
             transactions={transactions || []}
             title="Recent Transactions"

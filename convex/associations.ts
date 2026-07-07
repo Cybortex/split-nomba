@@ -188,7 +188,7 @@ export const createSUG = mutation({
 });
 
 /**
- * Assign a Staff Advisor to an association (STUDENT_AFFAIRS or DEAN).
+ * Assign a Staff Advisor to an association (STUDENT_AFFAIRS, DEAN, HOD).
  */
 export const assignStaffAdvisor = mutation({
   args: {
@@ -203,9 +203,31 @@ export const assignStaffAdvisor = mutation({
 
     if (!association) throw new Error("Association not found");
 
-    const user = await requirePermission(ctx, "STUDENT_AFFAIRS", {
-      institutionId: association.institutionId as any,
-    });
+    // Authorize caller: STUDENT_AFFAIRS, or DEAN for their faculty, or HOD for their department
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthorized");
+    const user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("clerkId"), identity.subject))
+      .first();
+    if (!user) throw new Error("User not found");
+
+    let isAuthorized = false;
+    if (user.roles.includes("STUDENT_AFFAIRS")) {
+      isAuthorized = true;
+    } else if (user.roles.includes("DEAN") && association.type === "faculty") {
+      if (association.facultyId && user.facultyId && association.facultyId === user.facultyId.toString()) {
+        isAuthorized = true;
+      }
+    } else if (user.roles.includes("HOD") && association.type === "department") {
+      if (association.departmentId && user.departmentId && association.departmentId === user.departmentId.toString()) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      throw new Error("You do not have permission to assign a Staff Advisor to this association");
+    }
 
     // Verify the staff advisor user exists
     const advisorUser = await ctx.db
@@ -247,7 +269,7 @@ export const assignStaffAdvisor = mutation({
 });
 
 /**
- * Assign a Student Exco to an association (STUDENT_AFFAIRS or DEAN).
+ * Assign a Student Exco to an association (STUDENT_AFFAIRS, DEAN, HOD, STAFF_ADVISOR).
  */
 export const assignStudentExco = mutation({
   args: {
@@ -262,9 +284,35 @@ export const assignStudentExco = mutation({
 
     if (!association) throw new Error("Association not found");
 
-    const user = await requirePermission(ctx, "STUDENT_AFFAIRS", {
-      institutionId: association.institutionId as any,
-    });
+    // Authorize caller: STUDENT_AFFAIRS, DEAN, HOD, or the assigned STAFF_ADVISOR
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthorized");
+    const user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("clerkId"), identity.subject))
+      .first();
+    if (!user) throw new Error("User not found");
+
+    let isAuthorized = false;
+    if (user.roles.includes("STUDENT_AFFAIRS")) {
+      isAuthorized = true;
+    } else if (user.roles.includes("DEAN") && association.type === "faculty") {
+      if (association.facultyId && user.facultyId && association.facultyId === user.facultyId.toString()) {
+        isAuthorized = true;
+      }
+    } else if (user.roles.includes("HOD") && association.type === "department") {
+      if (association.departmentId && user.departmentId && association.departmentId === user.departmentId.toString()) {
+        isAuthorized = true;
+      }
+    } else if (user.roles.includes("STAFF_ADVISOR")) {
+      if (association.staffAdvisorClerkId === user.clerkId) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      throw new Error("You do not have permission to assign a Student Exco to this association");
+    }
 
     // Verify user exists with role STUDENT_EXCO
     const excoUser = await ctx.db
@@ -306,7 +354,7 @@ export const assignStudentExco = mutation({
 });
 
 /**
- * Remove a Student Exco from an association (STUDENT_AFFAIRS).
+ * Remove a Student Exco from an association (STUDENT_AFFAIRS, DEAN, HOD, STAFF_ADVISOR).
  */
 export const removeStudentExco = mutation({
   args: {
@@ -321,9 +369,35 @@ export const removeStudentExco = mutation({
 
     if (!association) throw new Error("Association not found");
 
-    const user = await requirePermission(ctx, "STUDENT_AFFAIRS", {
-      institutionId: association.institutionId as any,
-    });
+    // Authorize caller: STUDENT_AFFAIRS, DEAN, HOD, or the assigned STAFF_ADVISOR
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthorized");
+    const user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("clerkId"), identity.subject))
+      .first();
+    if (!user) throw new Error("User not found");
+
+    let isAuthorized = false;
+    if (user.roles.includes("STUDENT_AFFAIRS")) {
+      isAuthorized = true;
+    } else if (user.roles.includes("DEAN") && association.type === "faculty") {
+      if (association.facultyId && user.facultyId && association.facultyId === user.facultyId.toString()) {
+        isAuthorized = true;
+      }
+    } else if (user.roles.includes("HOD") && association.type === "department") {
+      if (association.departmentId && user.departmentId && association.departmentId === user.departmentId.toString()) {
+        isAuthorized = true;
+      }
+    } else if (user.roles.includes("STAFF_ADVISOR")) {
+      if (association.staffAdvisorClerkId === user.clerkId) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      throw new Error("You do not have permission to remove a Student Exco from this association");
+    }
 
     await ctx.db.patch(args.associationId, {
       studentExcoClerkIds: association.studentExcoClerkIds.filter(
@@ -381,7 +455,6 @@ export const listAssociations = query({
 export const getAssociationByEntityId = query({
   args: { entityId: v.string(), institutionId: v.id("institutions") },
   handler: async (ctx, args) => {
-    // Allow broader access for association members
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
@@ -404,13 +477,14 @@ export const getAssociationByEntityId = query({
 
     if (!association) return null;
 
-    // Only return if user has permission
+    // Allow wider scopes
     if (
       user.roles.includes("SUPER_ADMIN") ||
       user.roles.includes("INSTITUTION_ADMIN") ||
       user.roles.includes("FINANCE") ||
       user.roles.includes("STUDENT_AFFAIRS") ||
       user.roles.includes("DEAN") ||
+      user.roles.includes("HOD") ||
       (user.roles.includes("STAFF_ADVISOR") &&
         association.staffAdvisorClerkId === user.clerkId) ||
       (user.roles.includes("STUDENT_EXCO") &&
@@ -420,5 +494,69 @@ export const getAssociationByEntityId = query({
     }
 
     return null;
+  },
+});
+
+/**
+ * List staff advisors who are eligible to be assigned to this association.
+ */
+export const listEligibleStaffAdvisors = query({
+  args: { associationId: v.id("associations") },
+  handler: async (ctx, args) => {
+    const association = await ctx.db.get(args.associationId);
+    if (!association) return [];
+
+    const allUsers = await ctx.db
+      .query("users")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("institutionId"), association.institutionId),
+          q.eq(q.field("isActive"), true)
+        )
+      )
+      .collect();
+
+    return allUsers.filter((u) => {
+      if (!u.roles.includes("STAFF_ADVISOR")) return false;
+      if (association.type === "faculty" && association.facultyId) {
+        return u.facultyId?.toString() === association.facultyId.toString();
+      }
+      if (association.type === "department" && association.departmentId) {
+        return u.departmentId?.toString() === association.departmentId.toString();
+      }
+      return true;
+    });
+  },
+});
+
+/**
+ * List student excos who are eligible to be assigned to this association.
+ */
+export const listEligibleStudentExcos = query({
+  args: { associationId: v.id("associations") },
+  handler: async (ctx, args) => {
+    const association = await ctx.db.get(args.associationId);
+    if (!association) return [];
+
+    const allUsers = await ctx.db
+      .query("users")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("institutionId"), association.institutionId),
+          q.eq(q.field("isActive"), true)
+        )
+      )
+      .collect();
+
+    return allUsers.filter((u) => {
+      if (!u.roles.includes("STUDENT_EXCO")) return false;
+      if (association.type === "faculty" && association.facultyId) {
+        return u.facultyId?.toString() === association.facultyId.toString();
+      }
+      if (association.type === "department" && association.departmentId) {
+        return u.departmentId?.toString() === association.departmentId.toString();
+      }
+      return true;
+    });
   },
 });

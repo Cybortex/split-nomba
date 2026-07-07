@@ -69,6 +69,7 @@ export default defineSchema({
   users: defineTable({
     clerkId: v.string(),
     email: v.string(),
+    name: v.optional(v.string()),
     roles: v.array(v.string()),
     activeRole: v.optional(v.string()),
     // institutionId is REQUIRED for all non-SUPER_ADMIN users.
@@ -123,6 +124,7 @@ export default defineSchema({
   studentRecords: defineTable({
     institutionId: v.id("institutions"),
     matric: v.string(),
+    name: v.optional(v.string()),
     faculty: v.string(),
     department: v.string(),
     facultySlug: v.optional(v.string()),

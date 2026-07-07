@@ -22,6 +22,7 @@ interface ReceiptData {
     faculty: string;
     department: string;
     level: number;
+    name?: string;
   } | null;
   institution: { name: string } | null;
   feeBreakdown?: {
@@ -119,6 +120,7 @@ export function PaymentReceipt({ data }: { data: ReceiptData }) {
           <h1 className="text-xl font-bold text-primary mb-1">
             Payment Receipt
           </h1>
+          <p className="text-xs font-mono text-muted mb-2">Receipt No: {payment.reference}</p>
           {institution && (
             <p className="text-sm text-muted">{institution.name}</p>
           )}
@@ -179,6 +181,10 @@ export function PaymentReceipt({ data }: { data: ReceiptData }) {
         <div className="p-4 rounded-xl bg-surface-secondary mb-6">
           <h3 className="text-sm font-semibold text-gold mb-3">Student Details</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2.5 gap-x-4">
+            <div>
+              <p className="text-xs text-muted">Student Name</p>
+              <p className="text-sm font-medium text-primary">{student?.name || "N/A"}</p>
+            </div>
             <div>
               <p className="text-xs text-muted">Matric Number</p>
               <p className="text-sm font-mono font-medium text-primary">{payment.matric}</p>

@@ -57,7 +57,7 @@ export default function Home() {
             ].map((step) => (
               <div
                 key={step.num}
-                className="p-6 rounded-xl border border-border bg-surface text-left transition-all duration-200 hover:scale-[1.02] hover:border-gold-royal"
+                className="p-6 rounded-xl border border-border bg-surface text-left transition-all duration-200 sm:hover:scale-[1.02] hover:border-gold-royal"
               >
                 <span className="text-sm font-mono mb-3 block text-gold">
                   {step.num}

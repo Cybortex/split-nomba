@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { WalletCard, TransactionList } from "@/components/WalletCard";
 import { Users } from "lucide-react";
+import { AssociationManager } from "@/components/admin/AssociationManager";
 
 export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: string }) {
   const currentUser = useQuery(api.auth.getCurrentUser);
@@ -113,6 +114,15 @@ export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: 
                 access="view"
                 subtitle={`${association.type} Association Wallet`}
               />
+              {institutionId && (
+                <div className="pt-2">
+                  <AssociationManager
+                    entityId={entityId}
+                    institutionId={institutionId}
+                    role="STAFF_ADVISOR"
+                  />
+                </div>
+              )}
               {/* Transactions */}
               {transactions && transactions.length > 0 ? (
                 <TransactionList
@@ -128,7 +138,7 @@ export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: 
             </>
           ) : (
             <div className="p-12 rounded-xl border border-border bg-surface text-center">
-              <p className="text-muted">No wallet data available for this association yet.</p>
+              <p className="text-muted">No wallet data available for your association yet.</p>
             </div>
           )}
         </>

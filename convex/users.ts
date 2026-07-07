@@ -137,3 +137,16 @@ export const getMyProfile = query({
     };
   },
 });
+
+/**
+ * Get user by their Clerk ID.
+ */
+export const getUserByClerkId = query({
+  args: { clerkId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("clerkId"), args.clerkId))
+      .first();
+  },
+});

@@ -146,27 +146,28 @@ export const resetInstitutions = mutation({
  */
 export const seedDemoInstitution = mutation({
   args: {
-    admin: v.object({ clerkId: v.string(), email: v.string() }),
-    finance: v.object({ clerkId: v.string(), email: v.string() }),
-    studentAffairs: v.object({ clerkId: v.string(), email: v.string() }),
-    sugExco: v.object({ clerkId: v.string(), email: v.string(), matric: v.string() }),
+    admin: v.object({ clerkId: v.string(), email: v.string(), name: v.string() }),
+    finance: v.object({ clerkId: v.string(), email: v.string(), name: v.string() }),
+    studentAffairs: v.object({ clerkId: v.string(), email: v.string(), name: v.string() }),
+    sugExco: v.object({ clerkId: v.string(), email: v.string(), matric: v.string(), name: v.string() }),
 
     faculty1: v.object({
       name: v.string(),
       slug: v.string(),
-      dean: v.object({ clerkId: v.string(), email: v.string() }),
-      advisor: v.object({ clerkId: v.string(), email: v.string() }),
-      exco: v.object({ clerkId: v.string(), email: v.string(), matric: v.string() }),
+      dean: v.object({ clerkId: v.string(), email: v.string(), name: v.string() }),
+      advisor: v.object({ clerkId: v.string(), email: v.string(), name: v.string() }),
+      exco: v.object({ clerkId: v.string(), email: v.string(), matric: v.string(), name: v.string() }),
       depts: v.array(v.object({
         name: v.string(),
         slug: v.string(),
-        hod: v.object({ clerkId: v.string(), email: v.string() }),
-        advisor: v.object({ clerkId: v.string(), email: v.string() }),
-        exco: v.optional(v.object({ clerkId: v.string(), email: v.string(), matric: v.string() })),
+        hod: v.object({ clerkId: v.string(), email: v.string(), name: v.string() }),
+        advisor: v.object({ clerkId: v.string(), email: v.string(), name: v.string() }),
+        exco: v.optional(v.object({ clerkId: v.string(), email: v.string(), matric: v.string(), name: v.string() })),
         students: v.array(v.object({
           clerkId: v.string(),
           email: v.string(),
           matric: v.string(),
+          name: v.string(),
         })),
       })),
     }),
@@ -174,19 +175,20 @@ export const seedDemoInstitution = mutation({
     faculty2: v.object({
       name: v.string(),
       slug: v.string(),
-      dean: v.object({ clerkId: v.string(), email: v.string() }),
-      advisor: v.object({ clerkId: v.string(), email: v.string() }),
-      exco: v.object({ clerkId: v.string(), email: v.string(), matric: v.string() }),
+      dean: v.object({ clerkId: v.string(), email: v.string(), name: v.string() }),
+      advisor: v.object({ clerkId: v.string(), email: v.string(), name: v.string() }),
+      exco: v.object({ clerkId: v.string(), email: v.string(), matric: v.string(), name: v.string() }),
       depts: v.array(v.object({
         name: v.string(),
         slug: v.string(),
-        hod: v.object({ clerkId: v.string(), email: v.string() }),
-        advisor: v.object({ clerkId: v.string(), email: v.string() }),
-        exco: v.optional(v.object({ clerkId: v.string(), email: v.string(), matric: v.string() })),
+        hod: v.object({ clerkId: v.string(), email: v.string(), name: v.string() }),
+        advisor: v.object({ clerkId: v.string(), email: v.string(), name: v.string() }),
+        exco: v.optional(v.object({ clerkId: v.string(), email: v.string(), matric: v.string(), name: v.string() })),
         students: v.array(v.object({
           clerkId: v.string(),
           email: v.string(),
           matric: v.string(),
+          name: v.string(),
         })),
       })),
     }),
@@ -259,6 +261,7 @@ export const seedDemoInstitution = mutation({
     await ctx.db.insert("users", {
       clerkId: args.admin.clerkId,
       email: args.admin.email,
+      name: args.admin.name,
       roles: ["INSTITUTION_ADMIN"],
       activeRole: "INSTITUTION_ADMIN",
       institutionId,
@@ -269,6 +272,7 @@ export const seedDemoInstitution = mutation({
     await ctx.db.insert("users", {
       clerkId: args.finance.clerkId,
       email: args.finance.email,
+      name: args.finance.name,
       roles: ["FINANCE"],
       activeRole: "FINANCE",
       institutionId,
@@ -279,6 +283,7 @@ export const seedDemoInstitution = mutation({
     await ctx.db.insert("users", {
       clerkId: args.studentAffairs.clerkId,
       email: args.studentAffairs.email,
+      name: args.studentAffairs.name,
       roles: ["STUDENT_AFFAIRS"],
       activeRole: "STUDENT_AFFAIRS",
       institutionId,
@@ -330,6 +335,7 @@ export const seedDemoInstitution = mutation({
       await ctx.db.insert("users", {
         clerkId: facultyData.dean.clerkId,
         email: facultyData.dean.email,
+        name: facultyData.dean.name,
         roles: ["DEAN"],
         activeRole: "DEAN",
         institutionId,
@@ -343,6 +349,7 @@ export const seedDemoInstitution = mutation({
       await ctx.db.insert("users", {
         clerkId: facultyData.advisor.clerkId,
         email: facultyData.advisor.email,
+        name: facultyData.advisor.name,
         roles: ["STAFF_ADVISOR"],
         activeRole: "STAFF_ADVISOR",
         institutionId,
@@ -357,6 +364,7 @@ export const seedDemoInstitution = mutation({
       await ctx.db.insert("users", {
         clerkId: facultyData.exco.clerkId,
         email: facultyData.exco.email,
+        name: facultyData.exco.name,
         roles: ["STUDENT", "STUDENT_EXCO"],
         activeRole: "STUDENT",
         institutionId,
@@ -370,6 +378,7 @@ export const seedDemoInstitution = mutation({
       await ctx.db.insert("studentRecords", {
         institutionId,
         matric: facultyData.exco.matric,
+        name: facultyData.exco.name,
         email: facultyData.exco.email,
         faculty: facultyData.name,
         facultySlug: facultyData.slug,
@@ -424,6 +433,7 @@ export const seedDemoInstitution = mutation({
         await ctx.db.insert("users", {
           clerkId: deptData.hod.clerkId,
           email: deptData.hod.email,
+          name: deptData.hod.name,
           roles: ["HOD"],
           activeRole: "HOD",
           institutionId,
@@ -439,6 +449,7 @@ export const seedDemoInstitution = mutation({
         await ctx.db.insert("users", {
           clerkId: deptData.advisor.clerkId,
           email: deptData.advisor.email,
+          name: deptData.advisor.name,
           roles: ["STAFF_ADVISOR"],
           activeRole: "STAFF_ADVISOR",
           institutionId,
@@ -456,6 +467,7 @@ export const seedDemoInstitution = mutation({
           await ctx.db.insert("users", {
             clerkId: deptData.exco.clerkId,
             email: deptData.exco.email,
+            name: deptData.exco.name,
             roles: ["STUDENT", "STUDENT_EXCO"],
             activeRole: "STUDENT",
             institutionId,
@@ -470,6 +482,7 @@ export const seedDemoInstitution = mutation({
           await ctx.db.insert("studentRecords", {
             institutionId,
             matric: deptData.exco.matric,
+            name: deptData.exco.name,
             email: deptData.exco.email,
             faculty: facultyData.name,
             facultySlug: facultyData.slug,
@@ -485,6 +498,7 @@ export const seedDemoInstitution = mutation({
           await ctx.db.insert("users", {
             clerkId: stud.clerkId,
             email: stud.email,
+            name: stud.name,
             roles: ["STUDENT"],
             activeRole: "STUDENT",
             institutionId,
@@ -499,6 +513,7 @@ export const seedDemoInstitution = mutation({
           await ctx.db.insert("studentRecords", {
             institutionId,
             matric: stud.matric,
+            name: stud.name,
             email: stud.email,
             faculty: facultyData.name,
             facultySlug: facultyData.slug,
@@ -519,6 +534,7 @@ export const seedDemoInstitution = mutation({
     await ctx.db.insert("users", {
       clerkId: args.sugExco.clerkId,
       email: args.sugExco.email,
+      name: args.sugExco.name,
       roles: ["STUDENT", "STUDENT_EXCO"],
       activeRole: "STUDENT",
       institutionId,
@@ -529,6 +545,7 @@ export const seedDemoInstitution = mutation({
     await ctx.db.insert("studentRecords", {
       institutionId,
       matric: args.sugExco.matric,
+      name: args.sugExco.name,
       email: args.sugExco.email,
       faculty: args.faculty1.name,
       facultySlug: args.faculty1.slug,

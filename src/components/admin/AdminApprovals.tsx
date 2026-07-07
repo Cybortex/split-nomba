@@ -223,8 +223,8 @@ export function AdminApprovals() {
               key={reg._id}
               className="p-6 rounded-2xl border border-border bg-surface hover:border-gold-royal transition-all duration-200"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
                   <h3 className="text-lg font-semibold text-primary">{reg.name}</h3>
                   <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted">
                     <span className="flex items-center gap-1">
@@ -259,11 +259,11 @@ export function AdminApprovals() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex gap-2 ml-4 flex-shrink-0">
+                <div className="flex flex-col sm:flex-row gap-2 sm:ml-4 flex-shrink-0">
                   <button
                     onClick={() => handleApprove(reg._id)}
                     disabled={processingReg === reg._id}
-                    className="px-5 py-2 text-sm font-semibold rounded-lg bg-success text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50 flex items-center gap-2"
+                    className="w-full sm:w-auto px-5 py-2 text-sm font-semibold rounded-lg bg-success text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {processingReg === reg._id ? (
                       <>
@@ -277,7 +277,7 @@ export function AdminApprovals() {
                   <button
                     onClick={() => handleReject(reg._id, reg.name)}
                     disabled={processingReg === reg._id}
-                    className="px-5 py-2 text-sm font-medium rounded-lg border border-border text-secondary hover:bg-error/10 hover:text-error hover:border-error/30 transition-all duration-200 disabled:opacity-50"
+                    className="w-full sm:w-auto px-5 py-2 text-sm font-medium rounded-lg border border-border text-secondary hover:bg-error/10 hover:text-error hover:border-error/30 transition-all duration-200 disabled:opacity-50"
                   >
                     Reject
                   </button>

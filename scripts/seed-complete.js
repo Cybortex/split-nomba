@@ -202,37 +202,37 @@ async function run() {
   const client = new ConvexHttpClient(convexUrl);
 
   const payload = {
-    admin: { clerkId: admin.clerkId, email: admin.email },
-    finance: { clerkId: finance.clerkId, email: finance.email },
-    studentAffairs: { clerkId: studentAffairs.clerkId, email: studentAffairs.email },
-    sugExco: { clerkId: sugExco.clerkId, email: sugExco.email, matric: sugExco.matric },
+    admin: { clerkId: admin.clerkId, email: admin.email, name: "Prof. Abdulrasheed (Admin)" },
+    finance: { clerkId: finance.clerkId, email: finance.email, name: "Mr. Emeka Kalu (Finance)" },
+    studentAffairs: { clerkId: studentAffairs.clerkId, email: studentAffairs.email, name: "Dr. Sarah Yusuf (Student Affairs)" },
+    sugExco: { clerkId: sugExco.clerkId, email: sugExco.email, matric: sugExco.matric, name: "Comrade Chinedu Okoro" },
 
     faculty1: {
       name: "Faculty of Science",
       slug: "SCIENCE",
-      dean: { clerkId: f1Dean.clerkId, email: f1Dean.email },
-      advisor: { clerkId: f1Advisor.clerkId, email: f1Advisor.email },
-      exco: { clerkId: f1Exco.clerkId, email: f1Exco.email, matric: f1Exco.matric },
+      dean: { clerkId: f1Dean.clerkId, email: f1Dean.email, name: "Prof. Florence David (Dean)" },
+      advisor: { clerkId: f1Advisor.clerkId, email: f1Advisor.email, name: "Dr. James Alabi (Advisor)" },
+      exco: { clerkId: f1Exco.clerkId, email: f1Exco.email, matric: f1Exco.matric, name: "Samuel Obi (Faculty Exco)" },
       depts: [
         {
           name: "Computer Science",
           slug: "COMP-SCI",
-          hod: { clerkId: d11Hod.clerkId, email: d11Hod.email },
-          advisor: { clerkId: d11Advisor.clerkId, email: d11Advisor.email },
-          exco: { clerkId: d11Exco.clerkId, email: d11Exco.email, matric: d11Exco.matric },
+          hod: { clerkId: d11Hod.clerkId, email: d11Hod.email, name: "Dr. Bala Mohammed (HOD)" },
+          advisor: { clerkId: d11Advisor.clerkId, email: d11Advisor.email, name: "Dr. Grace John (Advisor)" },
+          exco: { clerkId: d11Exco.clerkId, email: d11Exco.email, matric: d11Exco.matric, name: "Tunde Ajayi (Dept Exco)" },
           students: [
-            { clerkId: d11Stud1.clerkId, email: d11Stud1.email, matric: "FUT/2022/CSC/001" },
-            { clerkId: d11Stud2.clerkId, email: d11Stud2.email, matric: "FUT/2022/CSC/002" }
+            { clerkId: d11Stud1.clerkId, email: d11Stud1.email, matric: "FUT/2022/CSC/001", name: "John Doe" },
+            { clerkId: d11Stud2.clerkId, email: d11Stud2.email, matric: "FUT/2022/CSC/002", name: "Jane Smith" }
           ]
         },
         {
           name: "Mathematics",
           slug: "MATHS",
-          hod: { clerkId: d12Hod.clerkId, email: d12Hod.email },
-          advisor: { clerkId: d12Advisor.clerkId, email: d12Advisor.email },
+          hod: { clerkId: d12Hod.clerkId, email: d12Hod.email, name: "Prof. Isaac Newton (HOD)" },
+          advisor: { clerkId: d12Advisor.clerkId, email: d12Advisor.email, name: "Dr. Alan Turing (Advisor)" },
           students: [
-            { clerkId: d12Stud1.clerkId, email: d12Stud1.email, matric: "FUT/2022/MTH/001" },
-            { clerkId: d12Stud2.clerkId, email: d12Stud2.email, matric: "FUT/2022/MTH/002" }
+            { clerkId: d12Stud1.clerkId, email: d12Stud1.email, matric: "FUT/2022/MTH/001", name: "Alice Green" },
+            { clerkId: d12Stud2.clerkId, email: d12Stud2.email, matric: "FUT/2022/MTH/002", name: "Bob Brown" }
           ]
         }
       ]
@@ -241,28 +241,28 @@ async function run() {
     faculty2: {
       name: "Faculty of Engineering",
       slug: "ENGINEERING",
-      dean: { clerkId: f2Dean.clerkId, email: f2Dean.email },
-      advisor: { clerkId: f2Advisor.clerkId, email: f2Advisor.email },
-      exco: { clerkId: f2Exco.clerkId, email: f2Exco.email, matric: f2Exco.matric },
+      dean: { clerkId: f2Dean.clerkId, email: f2Dean.email, name: "Prof. Victor Benson (Dean)" },
+      advisor: { clerkId: f2Advisor.clerkId, email: f2Advisor.email, name: "Dr. Thomas Edison (Advisor)" },
+      exco: { clerkId: f2Exco.clerkId, email: f2Exco.email, matric: f2Exco.matric, name: "David Kojo (Faculty Exco)" },
       depts: [
         {
           name: "Electrical Engineering",
           slug: "ELECT-ENG",
-          hod: { clerkId: d21Hod.clerkId, email: d21Hod.email },
-          advisor: { clerkId: d21Advisor.clerkId, email: d21Advisor.email },
+          hod: { clerkId: d21Hod.clerkId, email: d21Hod.email, name: "Dr. Nikola Tesla (HOD)" },
+          advisor: { clerkId: d21Advisor.clerkId, email: d21Advisor.email, name: "Dr. Marie Curie (Advisor)" },
           students: [
-            { clerkId: d21Stud1.clerkId, email: d21Stud1.email, matric: "FUT/2022/EEE/001" },
-            { clerkId: d21Stud2.clerkId, email: d21Stud2.email, matric: "FUT/2022/EEE/002" }
+            { clerkId: d21Stud1.clerkId, email: d21Stud1.email, matric: "FUT/2022/EEE/001", name: "Charlie White" },
+            { clerkId: d21Stud2.clerkId, email: d21Stud2.email, matric: "FUT/2022/EEE/002", name: "Diana Black" }
           ]
         },
         {
           name: "Mechanical Engineering",
           slug: "MECH-ENG",
-          hod: { clerkId: d22Hod.clerkId, email: d22Hod.email },
-          advisor: { clerkId: d22Advisor.clerkId, email: d22Advisor.email },
+          hod: { clerkId: d22Hod.clerkId, email: d22Hod.email, name: "Dr. Henry Ford (HOD)" },
+          advisor: { clerkId: d22Advisor.clerkId, email: d22Advisor.email, name: "Dr. James Watt (Advisor)" },
           students: [
-            { clerkId: d22Stud1.clerkId, email: d22Stud1.email, matric: "FUT/2022/MEG/001" },
-            { clerkId: d22Stud2.clerkId, email: d22Stud2.email, matric: "FUT/2022/MEG/002" }
+            { clerkId: d22Stud1.clerkId, email: d22Stud1.email, matric: "FUT/2022/MEG/001", name: "Ethan Hunt" },
+            { clerkId: d22Stud2.clerkId, email: d22Stud2.email, matric: "FUT/2022/MEG/002", name: "Fiona Gallagher" }
           ]
         }
       ]

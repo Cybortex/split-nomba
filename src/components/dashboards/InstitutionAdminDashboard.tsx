@@ -49,19 +49,19 @@ function TabBar({ activeTab, onTabChange }: { activeTab: Tab; onTabChange: (tab:
   ];
 
   return (
-    <div className="flex flex-wrap gap-2 mb-6">
+    <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-6">
       {tabs.map((tab) => (
         <button
           key={tab.key}
           onClick={() => onTabChange(tab.key)}
-          className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-all duration-200 ${
+          className={`inline-flex items-center px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg border transition-all duration-200 ${
             activeTab === tab.key
               ? "bg-gold text-black border-gold"
               : "bg-transparent text-secondary border-border hover:bg-hover"
           }`}
         >
-          <span className="mr-1.5">{tab.icon}</span>
-          {tab.label}
+          <span className="mr-1 sm:mr-1.5">{tab.icon}</span>
+          <span className="truncate max-w-[100px] sm:max-w-none">{tab.label}</span>
         </button>
       ))}
     </div>
