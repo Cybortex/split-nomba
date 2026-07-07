@@ -6,7 +6,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { X, Menu, ChevronDown } from "lucide-react";
+import { X, Menu } from "lucide-react";
 
 export default function Navbar() {
   const { isSignedIn } = useAuth();
@@ -52,9 +52,19 @@ export default function Navbar() {
           <div className="flex items-center gap-8">
             <Link
               href="/"
-              className="text-xl font-bold tracking-tight text-primary"
+              className="flex items-center gap-2 text-xl font-bold tracking-tight text-primary group"
             >
-              Split<span className="text-gold">.</span>
+              <Image
+                src="/logo.png"
+                alt="Split Logo"
+                width={32}
+                height={32}
+                className="w-8 h-8 object-contain transition-transform duration-300 group-hover:scale-110"
+                priority
+              />
+              <span>
+                Split<span className="text-gold">.</span>
+              </span>
             </Link>
             {isSignedIn && (
               <div className="hidden md:flex items-center gap-1">

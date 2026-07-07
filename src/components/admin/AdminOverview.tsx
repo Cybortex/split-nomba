@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Landmark, User, CheckCircle, Coins } from "lucide-react";
+import { StatCard } from "@/components/ui/StatCard";
 
 const STAT_CARDS = [
   {
@@ -91,19 +92,16 @@ export function AdminOverview() {
             : stat.suffix;
 
           return (
-            <div
+            <StatCard
               key={stat.label}
-              className="card p-5 transition-all duration-200 hover:border-gold-royal hover:shadow-card-hover"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <span className="flex-shrink-0 p-2 rounded-xl bg-surface-secondary">
-                  {stat.icon}
-                </span>
-              </div>
-              <p className={`text-2xl font-bold ${stat.color}`}>{displayValue}</p>
-              <p className="text-sm text-muted mt-1">{stat.label}</p>
-              <p className="text-xs text-muted-dark mt-0.5">{subValue}</p>
-            </div>
+              label={stat.label}
+              value={displayValue}
+              valueColor={stat.color}
+              icon={stat.icon}
+              subtitle={subValue}
+              iconVariant="top-right"
+              className="hover:border-gold-royal hover:shadow-card-hover"
+            />
           );
         })}
       </div>

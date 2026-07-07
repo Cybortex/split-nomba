@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { WalletCard, TransactionList } from "@/components/WalletCard";
-import { Users } from "lucide-react";
+import { Users, Clock, CheckCircle } from "lucide-react";
 import { AssociationManager } from "@/components/admin/AssociationManager";
+import { StatCard } from "@/components/ui/StatCard";
 
 export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: string }) {
   const currentUser = useQuery(api.auth.getCurrentUser);
@@ -59,7 +60,7 @@ export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: 
 
   if (!entityId || !association) {
     return (
-      <div className="p-12 rounded-xl border border-border bg-surface text-center">
+      <div className="card p-8 sm:p-12 text-center">
         <div className="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center mx-auto mb-4">
           <Users className="w-8 h-8 text-gold" />
         </div>
@@ -131,36 +132,40 @@ export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: 
                   title="Wallet Transactions"
                 />
               ) : (
-                <div className="p-12 rounded-xl border border-border bg-surface text-center">
+                <div className="card p-8 sm:p-12 text-center">
                   <p className="text-muted">No wallet transactions for this association yet.</p>
                 </div>
               )}
             </>
-          ) : (
-            <div className="p-12 rounded-xl border border-border bg-surface text-center">
-              <p className="text-muted">No wallet data available for your association yet.</p>
-            </div>
-          )}
+      ) : (
+        <div className="card p-8 sm:p-12 text-center">
+          <p className="text-muted">No wallet data available for your association yet.</p>
+        </div>
+      )}
         </>
       )}
 
       {activeTab === "withdrawals" && (
         <>
           {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div className="p-6 rounded-xl border border-border bg-surface">
-              <p className="text-sm text-muted mb-1">Pending Approval</p>
-              <p className="text-2xl font-bold text-pending">{pendingRequests.length}</p>
-            </div>
-            <div className="p-6 rounded-xl border border-border bg-surface">
-              <p className="text-sm text-muted mb-1">Approved (Ready to Execute)</p>
-              <p className="text-2xl font-bold text-info">{approvedRequests.length}</p>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <StatCard
+              label="Pending Approval"
+              value={pendingRequests.length}
+              valueColor="text-pending"
+              icon={<Clock />}
+            />
+            <StatCard
+              label="Approved (Ready to Execute)"
+              value={approvedRequests.length}
+              valueColor="text-info"
+              icon={<CheckCircle />}
+            />
           </div>
 
           {/* Pending Requests */}
           {pendingRequests.length > 0 && (
-            <div className="rounded-xl border border-border bg-surface overflow-hidden">
+            <div className="card overflow-hidden">
               <div className="px-6 py-4 border-b border-border">
                 <h2 className="font-semibold text-primary">Pending Approval</h2>
               </div>
@@ -177,7 +182,7 @@ export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: 
                     <button
                       onClick={() => handleApprove(req._id)}
                       disabled={processing === req._id}
-                      className="px-4 py-2 text-sm font-semibold rounded-lg bg-info text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50 flex-shrink-0"
+                      className="px-4 py-2 text-sm font-semibold rounded-xl bg-info text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50 flex-shrink-0 shadow-button"
                     >
                       {processing === req._id ? "..." : "Approve"}
                     </button>
@@ -189,7 +194,7 @@ export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: 
 
           {/* Approved - Ready to Execute */}
           {approvedRequests.length > 0 && (
-            <div className="rounded-xl border border-border bg-surface overflow-hidden">
+            <div className="card overflow-hidden">
               <div className="px-6 py-4 border-b border-border">
                 <h2 className="font-semibold text-primary">Ready to Execute</h2>
               </div>
@@ -206,7 +211,7 @@ export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: 
                     <button
                       onClick={() => handleExecute(req._id)}
                       disabled={processing === req._id}
-                      className="px-4 py-2 text-sm font-semibold rounded-lg bg-success text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50 flex-shrink-0"
+                      className="px-4 py-2 text-sm font-semibold rounded-xl bg-success text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50 flex-shrink-0 shadow-button"
                     >
                       {processing === req._id ? "..." : "Execute"}
                     </button>
@@ -217,7 +222,7 @@ export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: 
           )}
 
           {pendingRequests.length === 0 && approvedRequests.length === 0 && (
-            <div className="p-12 rounded-xl border border-border bg-surface text-center">
+            <div className="card p-8 sm:p-12 text-center">
               <p className="text-muted">No pending or approved withdrawal requests for this association.</p>
             </div>
           )}

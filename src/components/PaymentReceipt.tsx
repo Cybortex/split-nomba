@@ -1,6 +1,7 @@
 "use client";
 
 import { Printer } from "lucide-react";
+import Image from "next/image";
 
 interface ReceiptData {
   payment: {
@@ -119,6 +120,13 @@ export function PaymentReceipt({ data }: { data: ReceiptData }) {
         {/* Header */}
         <div className="text-center border-b border-border-subtle pb-6 mb-6">
           <div className="inline-flex items-center gap-2 mb-4">
+            <Image
+              src="/logo.png"
+              alt="Split Logo"
+              width={28}
+              height={28}
+              className="w-7 h-7 object-contain"
+            />
             <span className="text-2xl font-bold tracking-tight text-primary">
               Split<span className="text-gold">.</span>
             </span>

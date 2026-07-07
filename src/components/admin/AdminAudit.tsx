@@ -55,9 +55,9 @@ export function AdminAudit() {
             <button
               key={filter.value}
               onClick={() => setStatusFilter(filter.value)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-200 ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-xl border transition-all duration-200 ${
                 statusFilter === filter.value
-                  ? "bg-gold text-black border-gold"
+                  ? "bg-gold text-black border-gold shadow-button"
                   : "bg-transparent text-secondary border-border hover:bg-hover"
               }`}
             >
@@ -72,13 +72,13 @@ export function AdminAudit() {
             placeholder="Search events..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-border bg-surface text-sm text-primary outline-none transition-all duration-200 focus:border-gold"
+            className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-border bg-surface text-sm text-primary outline-none transition-all duration-200 focus:border-gold focus:ring-1 focus:ring-gold/20"
           />
         </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="p-12 rounded-2xl border border-border bg-surface text-center">
+        <div className="card p-12 text-center">
           <p className="text-muted">
             {search || statusFilter
               ? "No events match your filters."
@@ -94,7 +94,7 @@ export function AdminAudit() {
           )}
         </div>
       ) : (
-        <div className="rounded-xl border border-border bg-surface overflow-hidden">
+        <div className="card overflow-hidden">
           <div className="divide-y divide-border-subtle max-h-[70vh] overflow-y-auto">
             {filtered.map((log: any) => (
               <div

@@ -24,14 +24,16 @@ export function AuditLogViewer({ institutionId }: { institutionId?: string }) {
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-surface overflow-hidden">
-      <div className="p-6 border-b border-border">
+    <div className="card overflow-hidden">
+      <div className="p-5 sm:p-6 border-b border-border">
         <h2 className="text-lg font-semibold text-primary">Immutable Audit Trail</h2>
         <p className="text-sm text-muted mt-1">All sensitive actions are logged here. Logs cannot be edited or deleted — append only.</p>
       </div>
 
       {logs.length === 0 ? (
-        <div className="p-12 text-center text-muted">No audit logs yet. Actions will appear here as they happen.</div>
+        <div className="p-12 text-center">
+          <p className="text-muted text-sm">No audit logs yet. Actions will appear here as they happen.</p>
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -51,7 +53,7 @@ export function AuditLogViewer({ institutionId }: { institutionId?: string }) {
                     {new Date(log.timestamp).toLocaleString()}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${getActionColor(log.action)}`}>
+                    <span className={`inline-block px-2 py-0.5 rounded-md text-xs font-medium ${getActionColor(log.action)}`}>
                       {log.action}
                     </span>
                   </td>

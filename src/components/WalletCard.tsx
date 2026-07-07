@@ -86,10 +86,12 @@ export function WalletCard({ wallet, access, subtitle }: WalletCardProps) {
   };
 
   return (
-    <div className="p-6 rounded-xl border border-border bg-surface">
+    <div className="card p-5 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="flex-shrink-0 flex items-center justify-center">{config.icon}</span>
+          <span className="flex-shrink-0 flex items-center justify-center p-2 rounded-xl bg-surface-secondary">
+            {config.icon}
+          </span>
           <div className="min-w-0">
             <h2 className="font-semibold text-primary text-lg truncate">{wallet.name}</h2>
             {subtitle && (
@@ -133,7 +135,7 @@ export function WalletCard({ wallet, access, subtitle }: WalletCardProps) {
       </div>
 
       {wallet.accountNumber && wallet.bankName && (
-        <div className="mt-4 p-4 rounded-xl border border-border bg-surface-secondary space-y-2">
+        <div className="mt-4 p-4 rounded-xl border border-border bg-surface-secondary">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-bold text-muted uppercase tracking-wider flex items-center gap-1.5">
@@ -178,13 +180,13 @@ export function WalletCard({ wallet, access, subtitle }: WalletCardProps) {
                   alert("Simulation failed: " + err.message);
                 }
               }}
-              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all shadow-sm flex items-center gap-1.5 self-start sm:self-center"
+              className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-gold text-black hover:brightness-110 transition-all shadow-button flex items-center gap-1.5 self-start sm:self-center"
             >
               <Zap className="w-3.5 h-3.5 text-black" fill="currentColor" />
               Simulate Transfer
             </button>
           </div>
-          <p className="text-[10px] text-muted-foreground/80 italic">
+          <p className="text-[10px] text-muted-foreground/80 italic mt-2">
             You can simulate external bank transfers directly to this account number to bypass the main checkout split payments flow.
           </p>
         </div>

@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { BarChart3, Users, School, GraduationCap, Briefcase, Calendar, Settings, Search } from "lucide-react";
+import { BarChart3, Users, School, GraduationCap, Briefcase, Calendar, Settings, Search, Wallet, TrendingUp, Activity } from "lucide-react";
+import { StatCard } from "@/components/ui/StatCard";
 
 type Tab = "overview" | "users" | "school-management" | "students" | "staff" | "sessions" | "settings";
 
@@ -88,13 +89,6 @@ function OverviewTab({ institutionId }: { institutionId: string }) {
   const totalTransactions = wallets.reduce((sum: number, w: any) => sum + w.transactionCount, 0);
   const totalStudents = students?.length ?? 0;
 
-  const stats = [
-    { label: "Total Collected", value: `₦${totalCollected.toLocaleString()}`, color: "text-gold" },
-    { label: "Available Balance", value: `₦${totalBalance.toLocaleString()}`, color: "text-success" },
-    { label: "Transactions", value: totalTransactions.toLocaleString(), color: "text-info" },
-    { label: "Active Students", value: totalStudents.toLocaleString(), color: "text-pending" },
-  ];
-
   const walletTypeGroups = [
     { type: "institution", label: "Institution", gradient: "from-gold/10 to-gold/5" },
     { type: "faculty", label: "Faculty", gradient: "from-success/10 to-success/5" },
@@ -105,19 +99,38 @@ function OverviewTab({ institutionId }: { institutionId: string }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="p-6 rounded-xl border border-border bg-surface">
-            <p className="text-sm text-muted mb-1">{stat.label}</p>
-            <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-          </div>
-        ))}
+        <StatCard
+          label="Total Collected"
+          value={`₦${totalCollected.toLocaleString()}`}
+          valueColor="text-gold"
+          icon={<Wallet />}
+          subtitle="Across all wallets"
+        />
+        <StatCard
+          label="Available Balance"
+          value={`₦${totalBalance.toLocaleString()}`}
+          valueColor="text-success"
+          icon={<TrendingUp />}
+        />
+        <StatCard
+          label="Transactions"
+          value={totalTransactions.toLocaleString()}
+          valueColor="text-info"
+          icon={<Activity />}
+        />
+        <StatCard
+          label="Active Students"
+          value={totalStudents.toLocaleString()}
+          valueColor="text-pending"
+          icon={<Users />}
+        />
       </div>
 
       {walletTypeGroups.map(({ type, label, gradient }) => {
         const typeWallets = wallets.filter((w: any) => w.type === type);
         if (typeWallets.length === 0) return null;
         return (
-          <div key={type} className={`rounded-xl border border-border bg-gradient-to-br ${gradient} p-6`}>
+          <div key={type} className={`card p-5 sm:p-6 bg-gradient-to-br ${gradient}`}>
             <h3 className="font-semibold text-primary mb-4">{label} Wallets</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -146,7 +159,7 @@ function OverviewTab({ institutionId }: { institutionId: string }) {
       })}
 
       {wallets.length === 0 && (
-        <div className="p-12 rounded-xl border border-border bg-surface text-center">
+        <div className="card p-12 text-center">
           <p className="text-muted">No wallets created yet. Import an institution structure to get started.</p>
         </div>
       )}

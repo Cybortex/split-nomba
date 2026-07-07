@@ -53,7 +53,7 @@ export function AssociationManager({
 
   if (association === undefined) {
     return (
-      <div className="flex items-center justify-center p-6 border border-border bg-surface rounded-2xl">
+      <div className="card flex items-center justify-center p-6">
         <Loader2 className="w-6 h-6 text-gold animate-spin mr-2" />
         <span className="text-sm text-secondary">Loading association settings...</span>
       </div>
@@ -120,7 +120,7 @@ export function AssociationManager({
   };
 
   return (
-    <div className="border border-border bg-surface rounded-2xl overflow-hidden shadow-sm">
+    <div className="card overflow-hidden">
       {/* Header */}
       <div className="p-5 border-b border-border-subtle bg-surface-secondary flex items-center justify-between">
         <div>
@@ -141,13 +141,13 @@ export function AssociationManager({
       <div className="p-6 space-y-6">
         {/* Alerts */}
         {error && (
-          <div className="p-3 rounded-lg bg-error/10 border border-error/20 text-error text-xs">
-            ❌ {error}
+          <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs">
+            {error}
           </div>
         )}
         {success && (
-          <div className="p-3 rounded-lg bg-success/10 border border-success/20 text-success text-xs">
-            ✅ {success}
+          <div className="p-3 rounded-xl bg-success/10 border border-success/20 text-success text-xs">
+            {success}
           </div>
         )}
 
@@ -155,8 +155,8 @@ export function AssociationManager({
         {(role === "DEAN" || role === "HOD") && (
           <div className="space-y-4">
             {/* Current Advisor Card */}
-            <div className="p-4 rounded-xl border border-border-subtle bg-surface-secondary flex items-start gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gold/10 text-gold flex items-center justify-center shrink-0">
+            <div className="p-4 rounded-xl border border-border bg-surface-secondary flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gold/10 text-gold flex items-center justify-center shrink-0">
                 <UserCheck className="w-5 h-5" />
               </div>
               <div className="space-y-1">
@@ -186,7 +186,7 @@ export function AssociationManager({
                 <select
                   value={selectedUser}
                   onChange={(e) => setSelectedUser(e.target.value)}
-                  className="w-full text-sm rounded-lg border border-border bg-app px-3 py-2 text-primary focus:outline-none focus:border-gold"
+                  className="w-full text-sm rounded-xl border border-border bg-surface-secondary px-3 py-2 text-primary outline-none focus:border-gold focus:ring-1 focus:ring-gold/20"
                   disabled={loading}
                 >
                   <option value="">-- Select Advisor Staff member --</option>
@@ -199,7 +199,7 @@ export function AssociationManager({
                 <button
                   type="submit"
                   disabled={loading || !selectedUser}
-                  className="px-4 py-2 text-xs font-bold rounded-lg bg-gold text-black hover:brightness-110 disabled:opacity-50 transition-all shrink-0 flex items-center justify-center gap-1.5"
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-gold text-black hover:brightness-110 disabled:opacity-50 transition-all shrink-0 flex items-center justify-center gap-1.5 shadow-button"
                 >
                   {loading ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -232,8 +232,8 @@ export function AssociationManager({
                   ))}
                 </div>
               ) : (
-                <div className="p-4 rounded-xl border border-dashed border-border text-center text-xs text-muted">
-                  No Student Executives assigned yet.
+                <div className="rounded-xl border border-dashed border-border p-4 text-center">
+                  <p className="text-xs text-muted">No Student Executives assigned yet.</p>
                 </div>
               )}
             </div>
@@ -247,7 +247,7 @@ export function AssociationManager({
                 <select
                   value={selectedUser}
                   onChange={(e) => setSelectedUser(e.target.value)}
-                  className="w-full text-sm rounded-lg border border-border bg-app px-3 py-2 text-primary focus:outline-none focus:border-gold"
+                  className="w-full text-sm rounded-xl border border-border bg-surface-secondary px-3 py-2 text-primary outline-none focus:border-gold focus:ring-1 focus:ring-gold/20"
                   disabled={loading}
                 >
                   <option value="">-- Select Student Exco --</option>
@@ -262,7 +262,7 @@ export function AssociationManager({
                 <button
                   type="submit"
                   disabled={loading || !selectedUser}
-                  className="px-4 py-2 text-xs font-bold rounded-lg bg-gold text-black hover:brightness-110 disabled:opacity-50 transition-all shrink-0 flex items-center justify-center gap-1.5"
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-gold text-black hover:brightness-110 disabled:opacity-50 transition-all shrink-0 flex items-center justify-center gap-1.5 shadow-button"
                 >
                   {loading ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />

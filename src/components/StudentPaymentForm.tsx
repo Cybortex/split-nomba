@@ -44,14 +44,14 @@ export function StudentPaymentForm() {
 
   if (!isSignedIn) {
     return (
-      <div className="max-w-md mx-auto p-6 sm:p-8 rounded-xl border border-border bg-surface text-center">
+      <div className="max-w-md mx-auto card p-6 sm:p-8 text-center">
         <div className="w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
           <Lock className="w-8 h-8 text-gold" />
         </div>
         <h2 className="text-xl font-semibold text-primary mb-2">Sign in to Pay</h2>
         <p className="text-muted mb-6">You need to sign in before making a payment.</p>
         <SignInButton mode="modal">
-          <button className="px-6 py-2.5 bg-gold text-black font-medium rounded-lg hover:brightness-110 transition-all duration-200">Sign In</button>
+          <button className="px-6 py-2.5 bg-gold text-black font-medium rounded-xl hover:brightness-110 transition-all duration-200 shadow-button">Sign In</button>
         </SignInButton>
       </div>
     );
@@ -59,7 +59,7 @@ export function StudentPaymentForm() {
 
   if (success) {
     return (
-      <div className="max-w-md mx-auto p-6 sm:p-8 rounded-xl border border-border bg-surface text-center">
+      <div className="max-w-md mx-auto card p-6 sm:p-8 text-center">
         <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
           <Check className="w-8 h-8 text-success" />
         </div>
@@ -67,7 +67,7 @@ export function StudentPaymentForm() {
         <p className="text-muted mb-4">
           You will pay <span className="font-bold text-success">₦{success.amount.toLocaleString()}</span> to complete your registration.
         </p>
-        <a href={success.authorisationUrl} className="inline-block px-6 py-2.5 bg-gold text-black font-medium rounded-lg hover:brightness-110 transition-all duration-200">
+        <a href={success.authorisationUrl} className="inline-block px-6 py-2.5 bg-gold text-black font-medium rounded-xl hover:brightness-110 transition-all duration-200 shadow-button">
           Continue to Payment
         </a>
       </div>
@@ -75,12 +75,12 @@ export function StudentPaymentForm() {
   }
 
   return (
-    <form onSubmit={handlePayment} className="max-w-md mx-auto p-6 sm:p-8 rounded-xl border border-border bg-surface">
+    <form onSubmit={handlePayment} className="max-w-md mx-auto card p-6 sm:p-8">
       <h2 className="text-2xl font-bold text-primary mb-1">Pay Your Dues</h2>
       <p className="text-sm text-muted mb-6">Enter your matric number to proceed with payment</p>
 
       {error && (
-        <div className="bg-error/10 border border-error/20 text-error p-3 rounded-lg mb-4 text-sm">{error}</div>
+        <div className="bg-error/10 border border-error/20 text-error p-3 rounded-xl mb-4 text-sm">{error}</div>
       )}
 
       <div className="mb-4">
@@ -91,13 +91,13 @@ export function StudentPaymentForm() {
           value={matric}
           onChange={(e) => setMatric(e.target.value.toUpperCase())}
           disabled={loading}
-          className="w-full px-3 py-2.5 border border-border bg-surface-secondary rounded-lg focus:border-gold outline-none transition-all duration-200 disabled:opacity-50 text-primary text-sm"
+          className="w-full px-3 py-2.5 border border-border bg-surface-secondary rounded-xl focus:border-gold focus:ring-1 focus:ring-gold/20 outline-none transition-all duration-200 disabled:opacity-50 text-primary text-sm"
           required
         />
         <p className="text-xs text-muted mt-1">Format: FUT/YYYY/DDD/### (e.g., FUT/2022/CSC/001)</p>
       </div>
 
-      <div className="bg-gold-subtle p-4 rounded-lg mb-6 text-center">
+      <div className="bg-gold-subtle border border-gold/15 p-4 rounded-xl mb-6 text-center">
         <p className="text-muted text-sm">Amount to Pay</p>
         <p className="text-3xl font-bold text-gold">₦75,000</p>
         <p className="text-xs text-muted mt-1">Calculated server-side — frontend cannot modify</p>
@@ -106,7 +106,7 @@ export function StudentPaymentForm() {
       <button
         type="submit"
         disabled={loading || !matric}
-        className="w-full bg-gold text-black py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all duration-200"
+        className="w-full bg-gold text-black py-3 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all duration-200 shadow-button"
       >
         {loading ? (
           <span className="flex items-center justify-center gap-2">
@@ -118,7 +118,7 @@ export function StudentPaymentForm() {
         )}
       </button>
 
-      <div className="mt-4 p-3 bg-gold-subtle border border-gold/15 rounded-lg">
+      <div className="mt-4 p-3 bg-gold-subtle border border-gold/15 rounded-xl">
         <p className="text-xs text-gold-royal flex items-start gap-1.5">
           <AlertTriangle className="w-3.5 h-3.5 text-gold-royal flex-shrink-0 mt-0.5" />
           <span><strong>Security:</strong> The payment amount is calculated on the server, not sent from this form. This prevents amount tampering.</span>

@@ -78,12 +78,12 @@ export function AdminInstitutions() {
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-64 pl-10 pr-4 py-2 rounded-lg border border-border bg-surface text-sm text-primary outline-none transition-all duration-200 focus:border-gold"
+              className="w-full sm:w-64 pl-10 pr-4 py-2 rounded-xl border border-border bg-surface text-sm text-primary outline-none transition-all duration-200 focus:border-gold focus:ring-1 focus:ring-gold/20"
             />
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200 flex-shrink-0"
+            className="px-4 py-2 text-sm font-semibold rounded-xl bg-gold text-black hover:brightness-110 transition-all duration-200 flex-shrink-0 shadow-button"
           >
             + New
           </button>
@@ -101,7 +101,7 @@ export function AdminInstitutions() {
       )}
 
       {filtered.length === 0 ? (
-        <div className="p-12 rounded-2xl border border-border bg-surface text-center">
+        <div className="card p-12 text-center">
           {search ? (
             <div>
               <p className="text-muted">No institutions match "{search}".</p>
@@ -117,7 +117,7 @@ export function AdminInstitutions() {
               <p className="text-muted">No institutions yet.</p>
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="mt-3 px-4 py-2 text-sm font-medium rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200"
+                className="mt-3 px-4 py-2 text-sm font-semibold rounded-xl bg-gold text-black hover:brightness-110 transition-all duration-200 shadow-button"
               >
                 Create your first institution
               </button>
@@ -125,7 +125,7 @@ export function AdminInstitutions() {
           )}
         </div>
       ) : (
-        <div className="rounded-xl border border-border bg-surface overflow-hidden">
+        <div className="card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -191,7 +191,7 @@ export function AdminInstitutions() {
       {/* Create Institution Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-lg mx-4 rounded-2xl border border-border bg-surface shadow-2xl">
+          <div className="w-full max-w-lg mx-4 card p-0 overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-border">
               <div>
                 <h2 className="text-lg font-bold text-primary">Create Institution</h2>
@@ -201,7 +201,7 @@ export function AdminInstitutions() {
               </div>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="p-1.5 rounded-lg text-muted hover:bg-hover transition-all duration-200"
+                className="p-1.5 rounded-xl text-muted hover:bg-hover transition-all duration-200"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -218,7 +218,7 @@ export function AdminInstitutions() {
                   placeholder="e.g., University of Lagos"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
+                  className="w-full px-3 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold focus:ring-1 focus:ring-gold/20"
                 />
               </div>
 
@@ -248,7 +248,7 @@ export function AdminInstitutions() {
                       placeholder="user_2xxxxxxxxxxxxxxxxxxxxxx"
                       value={form.adminClerkId}
                       onChange={(e) => setForm({ ...form, adminClerkId: e.target.value })}
-                      className="w-full px-3 py-2.5 rounded-lg border border-border bg-surface text-primary text-sm font-mono text-xs outline-none transition-all duration-200 focus:border-gold"
+                      className="w-full px-3 py-2.5 rounded-xl border border-border bg-surface text-primary text-sm font-mono text-xs outline-none transition-all duration-200 focus:border-gold focus:ring-1 focus:ring-gold/20"
                     />
                   </div>
                   <div>
@@ -260,7 +260,7 @@ export function AdminInstitutions() {
                       placeholder="admin@institution.edu.ng"
                       value={form.adminEmail}
                       onChange={(e) => setForm({ ...form, adminEmail: e.target.value })}
-                      className="w-full px-3 py-2.5 rounded-lg border border-border bg-surface text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
+                      className="w-full px-3 py-2.5 rounded-xl border border-border bg-surface text-primary text-sm outline-none transition-all duration-200 focus:border-gold focus:ring-1 focus:ring-gold/20"
                     />
                   </div>
                 </div>
@@ -270,14 +270,14 @@ export function AdminInstitutions() {
             <div className="flex items-center justify-end gap-3 p-6 border-t border-border">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2.5 text-sm font-medium rounded-lg border border-border text-secondary hover:bg-hover transition-all duration-200"
+                className="px-4 py-2.5 text-sm font-medium rounded-xl border border-border text-secondary hover:bg-hover transition-all duration-200"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreate}
                 disabled={creating || !form.name || !form.adminClerkId || !form.adminEmail}
-                className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110"
+                className="px-5 py-2.5 text-sm font-semibold rounded-xl bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110 shadow-button"
               >
                 {creating ? (
                   <span className="flex items-center gap-2">

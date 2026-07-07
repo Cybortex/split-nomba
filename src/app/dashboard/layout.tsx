@@ -216,6 +216,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user: clerkUser } = useUser();
   const currentUser = useQuery(api.auth.getCurrentUser);
   const router = useRouter();
+  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -244,7 +245,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Close sidebar on route change
   useEffect(() => {
     setSidebarOpen(false);
-  }, [router]);
+  }, [pathname]);
 
   if (!isLoaded || currentUser === undefined) {
     return (

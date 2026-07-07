@@ -108,7 +108,7 @@ export function StudentExcoDashboard({ activeTab = "overview" }: { activeTab?: s
 
   if (!entityId || !association) {
     return (
-      <div className="p-12 rounded-xl border border-border bg-surface text-center">
+      <div className="card p-8 sm:p-12 text-center">
         <div className="w-16 h-16 rounded-full bg-info/10 flex items-center justify-center mx-auto mb-4">
           <Users className="w-8 h-8 text-info" />
         </div>
@@ -189,9 +189,8 @@ export function StudentExcoDashboard({ activeTab = "overview" }: { activeTab?: s
         </div>
         {activeTab === "withdrawals" && (
           <button
-            onClick={() => setShowInitiate(!showInitiate)}
-            className="px-4 py-2 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200"
-          >
+            onClick={() => setShowInitiate(!showInitiate)}                className="px-4 py-2 text-sm font-semibold rounded-xl bg-gold text-black hover:brightness-110 transition-all duration-200 shadow-button"
+            >
             {showInitiate ? "Cancel" : "New Withdrawal"}
           </button>
         )}
@@ -219,11 +218,11 @@ export function StudentExcoDashboard({ activeTab = "overview" }: { activeTab?: s
                 emptyMessage="No transactions for this wallet yet."
               />
             </>
-          ) : (
-            <div className="p-12 rounded-xl border border-border bg-surface text-center">
-              <p className="text-muted">No wallet data available yet.</p>
-            </div>
-          )}
+      ) : (
+        <div className="card p-8 sm:p-12 text-center">
+          <p className="text-muted">No wallet data available yet.</p>
+        </div>
+      )}
         </>
       )}
 
@@ -231,10 +230,10 @@ export function StudentExcoDashboard({ activeTab = "overview" }: { activeTab?: s
         <>
           {/* Initiate Withdrawal Form */}
           {showInitiate && (
-            <div className="p-6 rounded-2xl border border-border bg-surface space-y-4">
+            <div className="card p-5 sm:p-6 space-y-4">
               <h2 className="font-semibold text-primary">Initiate Withdrawal</h2>
               {assocWallet && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-surface-secondary border border-border">
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-surface-secondary border border-border">
                   <Coins className="w-5 h-5 text-gold flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-primary">{assocWallet.name}</p>
@@ -250,7 +249,7 @@ export function StudentExcoDashboard({ activeTab = "overview" }: { activeTab?: s
                   <select
                     value={bankCode}
                     onChange={(e) => setBankCode(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
                   >
                     <option value="">Select a Bank</option>
                     {NIGERIAN_BANKS.map((b) => (
@@ -268,26 +267,26 @@ export function StudentExcoDashboard({ activeTab = "overview" }: { activeTab?: s
                     placeholder="e.g., 0123456789"
                     value={accountNumber}
                     onChange={(e) => setAccountNumber(e.target.value.replace(/[^0-9]/g, ""))}
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
                   />
                 </div>
               </div>
 
               {/* Verification name resolution card */}
               {verifying && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-surface-secondary border border-border text-xs text-muted">
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-surface-secondary border border-border text-xs text-muted">
                   <span className="animate-spin rounded-full h-3 w-3 border-2 border-gold border-t-transparent" />
                   Resolving recipient account name...
                 </div>
               )}
               {recipientAccountName && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-success/5 border border-success/15 text-xs text-success">
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-success/5 border border-success/15 text-xs text-success">
                   <ShieldCheck className="w-4 h-4 text-success flex-shrink-0" />
                   <span>Verified Name: <strong className="font-mono uppercase">{recipientAccountName}</strong></span>
                 </div>
               )}
               {verificationError && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-error/5 border border-error/15 text-xs text-error">
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-error/5 border border-error/15 text-xs text-error">
                   <AlertCircle className="w-4 h-4 text-error flex-shrink-0" />
                   <span>{verificationError}</span>
                 </div>
@@ -301,7 +300,7 @@ export function StudentExcoDashboard({ activeTab = "overview" }: { activeTab?: s
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   max={assocWallet?.availableBalance || 0}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
                 />
               </div>
               <div>
@@ -311,13 +310,13 @@ export function StudentExcoDashboard({ activeTab = "overview" }: { activeTab?: s
                   value={reason}
                   rows={2}
                   onChange={(e) => setReason(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none resize-none focus:border-gold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none resize-none focus:border-gold"
                 />
               </div>
               <button
                 onClick={handleInitiate}
                 disabled={processing === "initiate" || !assocWallet || !amount || !reason || (accountNumber.length > 0 && !recipientAccountName)}
-                className="px-6 py-2.5 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200 disabled:opacity-50 font-medium"
+                className="px-6 py-2.5 text-sm font-semibold rounded-xl bg-gold text-black hover:brightness-110 transition-all duration-200 disabled:opacity-50 shadow-button"
               >
                 {processing === "initiate" ? "Initiating..." : "Submit for Approval"}
               </button>
@@ -330,7 +329,7 @@ export function StudentExcoDashboard({ activeTab = "overview" }: { activeTab?: s
               {myRequests.map((req: any) => (
                 <div
                   key={req._id}
-                  className="p-5 rounded-2xl border border-border bg-surface transition-all duration-200 hover:border-gold-royal"
+                  className="card p-5 transition-all duration-200 hover:border-gold-royal hover:shadow-card-hover"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex-1 min-w-0">
@@ -379,7 +378,7 @@ export function StudentExcoDashboard({ activeTab = "overview" }: { activeTab?: s
               ))}
             </div>
           ) : (
-            <div className="p-12 rounded-xl border border-border bg-surface text-center">
+            <div className="card p-8 sm:p-12 text-center">
               <p className="text-muted">No withdrawal requests yet. Initiate one to get started.</p>
             </div>
           )}

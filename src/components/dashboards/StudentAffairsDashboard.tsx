@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { WalletCard, TransactionList } from "@/components/WalletCard";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Building2, Users, UserCog, UserCheck } from "lucide-react";
+import { StatCard } from "@/components/ui/StatCard";
 
 export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?: string }) {
   const myInst = useQuery(api.auth.getMyInstitution);
@@ -184,16 +185,14 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
         <div className="flex gap-2 flex-shrink-0">
           {activeTab === "overview" && (
             <button
-              onClick={() => setShowCreateSUG(!showCreateSUG)}
-              className="px-4 py-2 text-sm font-semibold rounded-lg border border-gold text-gold hover:bg-gold/5 transition-all duration-200"
-            >
-              {showCreateSUG ? "Cancel" : "Create SUG"}
+              onClick={() => setShowCreateSUG(!showCreateSUG)}className="px-4 py-2 text-sm font-semibold rounded-xl border border-gold text-gold hover:bg-gold/5 transition-all duration-200">
+            {showCreateSUG ? "Cancel" : "Create SUG"}
             </button>
           )}
           {activeTab === "associations" && (
             <button
               onClick={() => setShowCreate(!showCreate)}
-              className="px-4 py-2 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200"
+              className="px-4 py-2 text-sm font-semibold rounded-xl bg-gold text-black hover:brightness-110 transition-all duration-200 shadow-button"
             >
               {showCreate ? "Cancel" : "Create Association"}
             </button>
@@ -205,27 +204,30 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
         <div className="space-y-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="p-5 rounded-xl border border-border bg-surface">
-              <p className="text-xs text-muted mb-1">Total Associations</p>
-              <p className="text-2xl font-bold text-gold">{totalAssociations}</p>
-            </div>
-            <div className="p-5 rounded-xl border border-border bg-surface">
-              <p className="text-xs text-muted mb-1">With Advisors</p>
-              <p className="text-2xl font-bold text-success">
-                {assignedAdvisors}
-                <span className="text-sm text-muted ml-1 font-normal">/ {totalAssociations}</span>
-              </p>
-            </div>
-            <div className="p-5 rounded-xl border border-border bg-surface">
-              <p className="text-xs text-muted mb-1">Total Exco Members</p>
-              <p className="text-2xl font-bold text-info">{totalExcoSlots}</p>
-            </div>
-            <div className="p-5 rounded-xl border border-border bg-surface">
-              <p className="text-xs text-muted mb-1">Available Advisors</p>
-              <p className="text-2xl font-bold text-pending">
-                {advisors.length}
-              </p>
-            </div>
+            <StatCard
+              label="Total Associations"
+              value={totalAssociations}
+              valueColor="text-gold"
+              icon={<Building2 />}
+            />
+            <StatCard
+              label="With Advisors"
+              value={`${assignedAdvisors} / ${totalAssociations}`}
+              valueColor="text-success"
+              icon={<UserCheck />}
+            />
+            <StatCard
+              label="Total Exco Members"
+              value={totalExcoSlots}
+              valueColor="text-info"
+              icon={<UserCog />}
+            />
+            <StatCard
+              label="Available Advisors"
+              value={advisors.length}
+              valueColor="text-pending"
+              icon={<Users />}
+            />
           </div>
 
           {/* SUG Wallet Section */}
@@ -240,10 +242,12 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
               />
             </div>
           ) : (
-            <div className="p-6 rounded-xl border border-border bg-surface">
+            <div className="card p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <GraduationCap className="w-5 h-5 text-gold flex-shrink-0" />
+                  <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
+                    <GraduationCap className="w-5 h-5 text-gold" />
+                  </div>
                   <div>
                     <p className="font-semibold text-primary">SUG Wallet</p>
                     <p className="text-xs text-muted">
@@ -259,10 +263,10 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
 
           {/* Create SUG Form */}
           {showCreateSUG && (
-            <div className="p-6 rounded-2xl border border-border bg-surface space-y-4">
+            <div className="card p-5 sm:p-6 space-y-4">
               <h2 className="font-semibold text-primary">Create SUG Association</h2>
               {createError && (
-                <div className="p-3 rounded-lg text-sm bg-error/10 text-error border border-error/20">
+                <div className="p-3 rounded-xl text-sm bg-error/10 text-error border border-error/20">
                   {createError}
                 </div>
               )}
@@ -273,7 +277,7 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
               <button
                 onClick={handleCreateSUG}
                 disabled={creatingSUG}
-                className="px-6 py-2.5 text-sm font-semibold rounded-lg bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110"
+                className="px-6 py-2.5 text-sm font-semibold rounded-xl bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110 shadow-button"
               >
                 {creatingSUG ? "Creating..." : "Create SUG"}
               </button>
@@ -286,10 +290,10 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
         <div className="space-y-6">
           {/* Create Association Form */}
           {showCreate && (
-            <div className="p-6 rounded-2xl border border-border bg-surface space-y-4">
+            <div className="card p-5 sm:p-6 space-y-4">
               <h2 className="font-semibold text-primary">New Association</h2>
               {createError && (
-                <div className="p-3 rounded-lg text-sm bg-error/10 text-error border border-error/20">
+                <div className="p-3 rounded-xl text-sm bg-error/10 text-error border border-error/20">
                   {createError}
                 </div>
               )}
@@ -305,7 +309,7 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
                     onChange={(e) =>
                       setAssocForm({ ...assocForm, name: e.target.value })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
                   />
                 </div>
                 <div>
@@ -319,7 +323,7 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
                     onChange={(e) =>
                       setAssocForm({ ...assocForm, slug: e.target.value.toUpperCase() })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
                   />
                   <p className="text-xs text-muted mt-1">
                     Unique slug used for payment routing. E.g., &quot;SCIENCE&quot; for Faculty of Science.
@@ -334,7 +338,7 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
                     onChange={(e) =>
                       setAssocForm({ ...assocForm, type: e.target.value as any })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
                   >
                     <option value="department">Department-level</option>
                     <option value="faculty">Faculty-level</option>
@@ -344,7 +348,7 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
               <button
                 onClick={handleCreate}
                 disabled={creating || !assocForm.name || !assocForm.slug}
-                className="px-6 py-2.5 text-sm font-semibold rounded-lg bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110"
+                className="px-6 py-2.5 text-sm font-semibold rounded-xl bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110 shadow-button"
               >
                 {creating ? "Creating..." : "Create Association"}
               </button>
@@ -357,7 +361,7 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
               {associations.map((assoc: any) => (
                 <div
                   key={assoc._id}
-                  className="p-5 rounded-xl border border-border bg-surface transition-all duration-200 hover:border-gold-royal"
+                  className="card p-5 transition-all duration-200 hover:border-gold-royal hover:shadow-card-hover"
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -386,7 +390,7 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
               ))}
             </div>
           ) : (
-            <div className="p-12 rounded-xl border border-border bg-surface text-center">
+            <div className="card p-8 sm:p-12 text-center">
               <p className="text-muted">No associations created yet.</p>
             </div>
           )}
@@ -636,7 +640,7 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
               })}
             </div>
           ) : (
-            <div className="p-12 rounded-2xl border border-border bg-surface text-center">
+            <div className="card p-8 sm:p-12 text-center">
               <p className="text-muted">No associations available.</p>
             </div>
           )}

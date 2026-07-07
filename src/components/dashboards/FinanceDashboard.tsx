@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { BarChart3, Coins } from "lucide-react";
+import { BarChart3, Coins, Wallet, TrendingUp, Users, Activity } from "lucide-react";
+import { StatCard } from "@/components/ui/StatCard";
 
 type Tab = "overview" | "fees";
 
@@ -72,13 +73,6 @@ function OverviewTab({ institutionId }: { institutionId: string }) {
   const totalTransactions = wallets.reduce((sum: number, w: any) => sum + w.transactionCount, 0);
   const totalStudents = students?.length ?? 0;
 
-  const stats = [
-    { label: "Total Collected", value: `₦${totalCollected.toLocaleString()}`, color: "text-gold" },
-    { label: "Available Balance", value: `₦${totalBalance.toLocaleString()}`, color: "text-success" },
-    { label: "Transactions", value: totalTransactions.toLocaleString(), color: "text-info" },
-    { label: "Active Students", value: totalStudents.toLocaleString(), color: "text-pending" },
-  ];
-
   const walletTypeGroups = [
     { type: "institution", label: "Institution", gradient: "from-gold/10 to-gold/5" },
     { type: "faculty", label: "Faculty", gradient: "from-success/10 to-success/5" },
@@ -90,12 +84,31 @@ function OverviewTab({ institutionId }: { institutionId: string }) {
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="p-6 rounded-xl border border-border bg-surface">
-            <p className="text-sm text-muted mb-1">{stat.label}</p>
-            <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-          </div>
-        ))}
+        <StatCard
+          label="Total Collected"
+          value={`₦${totalCollected.toLocaleString()}`}
+          valueColor="text-gold"
+          icon={<Wallet />}
+          subtitle="Across all wallets"
+        />
+        <StatCard
+          label="Available Balance"
+          value={`₦${totalBalance.toLocaleString()}`}
+          valueColor="text-success"
+          icon={<TrendingUp />}
+        />
+        <StatCard
+          label="Transactions"
+          value={totalTransactions.toLocaleString()}
+          valueColor="text-info"
+          icon={<Activity />}
+        />
+        <StatCard
+          label="Active Students"
+          value={totalStudents.toLocaleString()}
+          valueColor="text-pending"
+          icon={<Users />}
+        />
       </div>
 
       {/* Wallet Breakdown */}
@@ -104,7 +117,7 @@ function OverviewTab({ institutionId }: { institutionId: string }) {
         if (typeWallets.length === 0) return null;
 
         return (
-          <div key={type} className={`rounded-xl border border-border bg-gradient-to-br ${gradient} p-6`}>
+          <div key={type} className={`card p-5 sm:p-6 bg-gradient-to-br ${gradient}`}>
             <h3 className="font-semibold text-primary mb-4">{label} Wallets</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -137,7 +150,7 @@ function OverviewTab({ institutionId }: { institutionId: string }) {
       })}
 
       {wallets.length === 0 && (
-        <div className="p-12 rounded-xl border border-border bg-surface text-center">
+        <div className="card p-12 text-center">
           <p className="text-muted">No wallets created yet. Import an institution structure to get started.</p>
         </div>
       )}
@@ -201,15 +214,14 @@ function FeesTab({ institutionId }: { institutionId: string }) {
         <p className="text-xs text-muted mt-0.5">Configure fixed fee items per academic level.</p>
       </div>
 
-      {/* Level Selector */}
-      <div className="flex gap-2 flex-wrap">
+      {/* Level Selector */}          <div className="flex gap-2 flex-wrap">
         {LEVELS.map((level) => (
           <button
             key={level}
             onClick={() => setSelectedLevel(level)}
-            className={`px-4 py-2 text-sm font-semibold rounded-lg border transition-all duration-200 ${
+            className={`px-4 py-2 text-sm font-semibold rounded-xl border transition-all duration-200 ${
               selectedLevel === level
-                ? "bg-gold text-black border-gold"
+                ? "bg-gold text-black border-gold shadow-button"
                 : "bg-transparent text-secondary border-border hover:bg-hover"
             }`}
           >
@@ -230,7 +242,7 @@ function FeesTab({ institutionId }: { institutionId: string }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Fee Items */}
-        <div className="p-5 rounded-xl border border-border bg-surface">
+        <div className="card p-5">
           <h3 className="font-semibold text-primary mb-3">Fee Items — {selectedLevel} Level</h3>
           {levelFees.length > 0 ? (
             <div className="space-y-2">
@@ -273,7 +285,7 @@ function FeesTab({ institutionId }: { institutionId: string }) {
         </div>
 
         {/* Add Fee Item */}
-        <div className="p-5 rounded-xl border border-border bg-surface">
+        <div className="card p-5">
           <h3 className="font-semibold text-primary mb-3">Add Fee Item</h3>
           <div className="space-y-3">
             <div>
@@ -283,7 +295,7 @@ function FeesTab({ institutionId }: { institutionId: string }) {
                 placeholder="e.g., Tuition, Lab Fee"
                 value={newItem.itemName}
                 onChange={(e) => setNewItem({ ...newItem, itemName: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
+                className="w-full px-3 py-2 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold focus:ring-1 focus:ring-gold/20"
               />
             </div>
             <div>
@@ -291,7 +303,7 @@ function FeesTab({ institutionId }: { institutionId: string }) {
               <select
                 value={newItem.category}
                 onChange={(e) => setNewItem({ ...newItem, category: e.target.value as any })}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
+                className="w-full px-3 py-2 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
               >
                 {FEE_CATEGORIES.map((cat) => (
                   <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -305,13 +317,13 @@ function FeesTab({ institutionId }: { institutionId: string }) {
                 placeholder="50000"
                 value={newItem.amount}
                 onChange={(e) => setNewItem({ ...newItem, amount: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
+                className="w-full px-3 py-2 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
               />
             </div>
             <button
               onClick={handleAdd}
               disabled={adding || !newItem.itemName || !newItem.amount}
-              className="w-full py-2.5 text-sm font-semibold rounded-lg bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110"
+              className="w-full py-2.5 text-sm font-semibold rounded-xl bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110 shadow-button"
             >
               {adding ? "Adding..." : "Add Fee Item"}
             </button>
