@@ -93,7 +93,7 @@ function MockCheckoutContent() {
 
   return (
     <div className="min-h-screen bg-app flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      <div className="w-full max-w-xl bg-surface border border-border rounded-2xl overflow-hidden shadow-2xl">
+      <div className="w-full max-w-xl card overflow-hidden">
         {success ? (
           <div className="p-8 sm:p-12 text-center flex flex-col items-center">
             <div className="w-16 h-16 rounded-full bg-success/10 text-success flex items-center justify-center mb-6 animate-pulse">
@@ -201,8 +201,7 @@ function MockCheckoutContent() {
               </div>
 
               {paymentMethod === "card" ? (
-                <div className="p-4 rounded-xl border border-border bg-surface-secondary space-y-3">
-                  <div className="h-40 rounded-xl bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 p-4 flex flex-col justify-between text-white shadow-md">
+                <div className="p-4 rounded-xl border border-border bg-surface-secondary space-y-3">                    <div className="h-40 sm:h-44 rounded-xl bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 p-4 flex flex-col justify-between text-white shadow-md">
                     <div className="flex justify-between items-start">
                       <span className="text-xs font-bold font-mono tracking-widest text-neutral-400">SANDBOX TEST CARD</span>
                       <span className="text-lg font-bold italic">VISA</span>
@@ -247,18 +246,17 @@ function MockCheckoutContent() {
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3">
+              {/* Action Buttons */}                <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => router.push("/dashboard")}
-                  className="w-full sm:w-1/3 py-2.5 rounded-lg border border-border text-secondary hover:bg-hover transition-colors font-semibold text-sm"
+                  className="w-full sm:w-1/3 py-2.5 rounded-xl border border-border text-secondary hover:bg-hover transition-colors font-semibold text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSimulatePayment}
                   disabled={processing}
-                  className="w-full sm:w-2/3 py-2.5 rounded-lg bg-gold text-black hover:brightness-110 disabled:opacity-50 transition-all font-bold text-sm flex items-center justify-center gap-2"
+                  className="w-full sm:w-2/3 py-2.5 rounded-xl bg-gold text-black hover:brightness-110 disabled:opacity-50 transition-all font-bold text-sm flex items-center justify-center gap-2 shadow-button"
                 >
                   {processing ? (
                     <>

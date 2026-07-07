@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import AppFooter from "@/components/AppFooter";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 
 const geistSans = Geist({
@@ -39,16 +40,7 @@ export default function RootLayout({
             <Navbar />
             <main className="flex-1">{children}</main>
           </ConvexClientProvider>
-          <footer className="border-t border-border-subtle py-6 sm:py-8">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-              <p className="text-sm text-muted">
-                Split — Institutional Payment Routing Platform
-              </p>
-              <p className="text-xs mt-1 text-muted-dark">
-                Route Every Payment Where It Belongs.
-              </p>
-            </div>
-          </footer>
+          <AppFooter />
         </body>
       </html>
     </ClerkProvider>

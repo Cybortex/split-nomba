@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { X, Menu } from "lucide-react";
+import Image from "next/image";
 
 export default function Navbar() {
   const { isSignedIn } = useAuth();
@@ -130,13 +131,13 @@ export default function Navbar() {
                 </button>
                 <Link
                   href="/register"
-                  className="hidden sm:inline-flex text-sm font-medium px-3 py-1.5 rounded-lg border border-border text-secondary hover:bg-hover transition-all duration-200"
+                  className="hidden md:inline-flex text-sm font-medium px-3 py-1.5 rounded-lg border border-border text-secondary hover:bg-hover transition-all duration-200"
                 >
                   Register
                 </Link>
                 <Link
                   href="/sign-in"
-                  className="text-sm font-semibold px-4 py-1.5 rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200"
+                  className="hidden md:inline-flex text-sm font-semibold px-4 py-1.5 rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200"
                 >
                   Sign In
                 </Link>
@@ -146,11 +147,14 @@ export default function Navbar() {
         </div>
 
         {/* Mobile menu */}
-        {mobileMenuOpen && (
-          <div 
-            ref={menuRef}
-            className="md:hidden border-t border-border-subtle py-2 pb-4 space-y-1 animate-slide-down"
-          >
+        <div
+          ref={menuRef}
+          className={`md:hidden grid transition-[grid-template-rows,opacity] duration-200 ease-out border-t border-border-subtle ${
+            mobileMenuOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+          }`}
+        >
+          <div className="overflow-hidden">
+            <div className="py-2 pb-4 space-y-1">
             <p className="px-3 py-2 text-xs font-medium text-muted-dark uppercase tracking-wider">
               Navigation
             </p>
@@ -172,7 +176,8 @@ export default function Navbar() {
               </>
             )}
           </div>
-        )}
+        </div>
+      </div>
       </div>
     </nav>
   );

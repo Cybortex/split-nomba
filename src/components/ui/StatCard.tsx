@@ -43,7 +43,7 @@ export function StatCard({
         <div
           className={`w-10 h-10 rounded-xl ${resolvedIconBg} flex items-center justify-center mb-3`}
         >
-          {React.cloneElement(icon as React.ReactElement, {
+          {React.cloneElement(icon as React.ReactElement<{ className?: string }>, {
             className: `w-5 h-5 ${valueColor}`,
           })}
         </div>
@@ -53,7 +53,7 @@ export function StatCard({
         <div className="flex items-start justify-between mb-4">
           <span />
           <span className="flex-shrink-0 p-2 rounded-xl bg-surface-secondary">
-            {React.cloneElement(icon as React.ReactElement, {
+            {React.cloneElement(icon as React.ReactElement<{ className?: string }>, {
               className: `w-5 h-5 ${valueColor}`,
             })}
           </span>

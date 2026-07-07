@@ -56,15 +56,14 @@ export default function PayPage() {
   if (!isSignedIn) {
     return (
       <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
-        <div className="max-w-md w-full p-8 rounded-2xl border border-border bg-surface text-center">
+        <div className="max-w-md w-full card p-8 text-center">
           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-gold/10">
             <Lock className="w-8 h-8 text-gold" />
           </div>
           <h2 className="text-xl font-semibold mb-2 text-primary">Sign in to Pay</h2>
-          <p className="text-sm mb-6 text-muted">You need to sign in before making a payment.</p>
-          <a
+          <p className="text-sm mb-6 text-muted">You need to sign in before making a payment.</p>            <a
             href="/dashboard"
-            className="inline-block px-6 py-2.5 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200"
+            className="inline-block px-6 py-2.5 text-sm font-semibold rounded-xl bg-gold text-black hover:brightness-110 transition-all duration-200 shadow-button"
           >
             Sign In
           </a>
@@ -76,7 +75,7 @@ export default function PayPage() {
   if (success) {
     return (
       <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
-        <div className="max-w-lg w-full p-6 sm:p-8 rounded-2xl border border-border bg-surface">
+        <div className="max-w-lg w-full card p-6 sm:p-8">
           <div className="text-center mb-6">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-success/10">
               <Check className="w-8 h-8 text-success" />
@@ -136,7 +135,7 @@ export default function PayPage() {
 
         <form
           onSubmit={handlePayment}
-          className="p-6 sm:p-8 rounded-2xl border border-border bg-surface space-y-5"
+          className="card p-6 sm:p-8 space-y-5"
         >
           {error && (
             <div className="p-3 rounded-lg text-sm bg-error/10 text-error border border-error/20">
@@ -153,7 +152,7 @@ export default function PayPage() {
               onChange={(e) => setMatric(e.target.value.toUpperCase())}
               disabled={loading}
               required
-              className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold focus:ring-1 focus:ring-gold/20"
 
             />
           </div>
@@ -167,8 +166,7 @@ export default function PayPage() {
 
           <button
             type="submit"
-            disabled={loading || !matric}
-            className="w-full py-2.5 text-sm font-semibold rounded-lg bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110"
+            disabled={loading || !matric}              className="w-full py-2.5 text-sm font-semibold rounded-xl bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110 shadow-button"
           >
             {loading ? "Connecting to Nomba..." : "Pay with Nomba"}
           </button>

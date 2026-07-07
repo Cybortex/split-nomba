@@ -72,14 +72,14 @@ export default function WithdrawalsPage() {
   if (!isSignedIn) {
     return (
       <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
-        <div className="max-w-md w-full p-8 rounded-2xl border border-border bg-surface text-center">
+        <div className="max-w-md w-full card p-8 text-center">
           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-gold/10">
             <Lock className="w-8 h-8 text-gold" />
           </div>
           <h2 className="text-xl font-semibold mb-2 text-primary">Sign In Required</h2>
           <p className="text-sm mb-6 text-muted">Sign in to manage withdrawals.</p>
           <SignInButton mode="modal">
-            <button className="px-6 py-2.5 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200">Sign In</button>
+            <button className="px-6 py-2.5 text-sm font-semibold rounded-xl bg-gold text-black hover:brightness-110 transition-all duration-200 shadow-button">Sign In</button>
           </SignInButton>
         </div>
       </div>
@@ -157,24 +157,24 @@ export default function WithdrawalsPage() {
           </div>
           {isExco && (
             <button onClick={() => setShowInitiate(!showInitiate)}
-              className="px-4 py-2 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200 flex-shrink-0">
+              className="px-4 py-2 text-sm font-semibold rounded-xl bg-gold text-black hover:brightness-110 transition-all duration-200 shadow-button flex-shrink-0">
               {showInitiate ? "Cancel" : "Initiate Withdrawal"}
             </button>
           )}
         </div>
 
         {error && (
-          <div className="p-3 rounded-lg text-sm bg-error/10 text-error border border-error/20">{error}</div>
+          <div className="p-3 rounded-xl text-sm bg-error/10 text-error border border-error/20">{error}</div>
         )}
 
         {showInitiate && isExco && (
-          <div className="p-6 rounded-2xl border border-border bg-surface space-y-4">
+          <div className="card p-5 sm:p-6 space-y-4">
             <h2 className="font-semibold text-primary">Initiate Withdrawal Request</h2>
             <div>
               <label className="block text-sm font-medium mb-1.5 text-secondary">Wallet / Association ID</label>
               <input type="text" placeholder="e.g., sug-SUG or faculty-SCIENCE" value={walletId}
                 onChange={(e) => setWalletId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold" />
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold focus:ring-1 focus:ring-gold/20" />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -183,7 +183,7 @@ export default function WithdrawalsPage() {
                 <select
                   value={bankCode}
                   onChange={(e) => setBankCode(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold focus:ring-1 focus:ring-gold/20"
                 >
                   <option value="">Select a Bank</option>
                   {NIGERIAN_BANKS.map((b) => (
@@ -201,26 +201,26 @@ export default function WithdrawalsPage() {
                   placeholder="e.g., 0123456789"
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value.replace(/[^0-9]/g, ""))}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold focus:ring-1 focus:ring-gold/20"
                 />
               </div>
             </div>
 
             {/* Verification name resolution card */}
             {verifying && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-surface-secondary border border-border text-xs text-muted">
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-surface-secondary border border-border text-xs text-muted">
                 <span className="animate-spin rounded-full h-3 w-3 border-2 border-gold border-t-transparent" />
                 Resolving recipient account name...
               </div>
             )}
             {recipientAccountName && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-success/5 border border-success/15 text-xs text-success">
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-success/5 border border-success/15 text-xs text-success">
                 <ShieldCheck className="w-4 h-4 text-success flex-shrink-0" />
                 <span>Verified Name: <strong className="font-mono uppercase">{recipientAccountName}</strong></span>
               </div>
             )}
             {verificationError && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-error/5 border border-error/15 text-xs text-error">
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-error/5 border border-error/15 text-xs text-error">
                 <AlertCircle className="w-4 h-4 text-error flex-shrink-0" />
                 <span>{verificationError}</span>
               </div>
@@ -230,16 +230,16 @@ export default function WithdrawalsPage() {
               <label className="block text-sm font-medium mb-1.5 text-secondary">Amount (₦)</label>
               <input type="number" placeholder="50000" value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none focus:border-gold" />
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none transition-all duration-200 focus:border-gold focus:ring-1 focus:ring-gold/20" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1.5 text-secondary">Reason</label>
               <textarea placeholder="Purpose of withdrawal" value={reason} rows={2}
                 onChange={(e) => setReason(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface-secondary text-primary text-sm outline-none resize-none focus:border-gold" />
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-surface-secondary text-primary text-sm outline-none resize-none transition-all duration-200 focus:border-gold focus:ring-1 focus:ring-gold/20" />
             </div>
             <button onClick={handleInitiate} disabled={processing === "initiate" || !walletId || !amount || !reason || (accountNumber.length > 0 && !recipientAccountName)}
-              className="px-6 py-2.5 text-sm font-semibold rounded-lg bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110 font-medium">
+              className="px-6 py-2.5 text-sm font-semibold rounded-xl bg-gold text-black transition-all duration-200 disabled:opacity-50 hover:brightness-110 shadow-button font-medium">
               {processing === "initiate" ? "Initiating..." : "Submit Request"}
             </button>
           </div>
@@ -249,13 +249,13 @@ export default function WithdrawalsPage() {
         {!requests ? (
           <div className="flex items-center justify-center h-32"><div className="skeleton w-8 h-8 rounded-full" /></div>
         ) : requests.length === 0 ? (
-          <div className="p-12 rounded-2xl border border-border bg-surface text-center">
+          <div className="card p-8 sm:p-12 text-center">
             <p className="text-muted">No withdrawal requests yet.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {requests.map((req: any) => (
-              <div key={req._id} className="p-5 rounded-2xl border border-border bg-surface transition-all duration-200 hover:border-gold-royal">
+              <div key={req._id} className="card p-5 transition-all duration-200 hover:border-gold-royal hover:shadow-card-hover">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3">
@@ -288,13 +288,13 @@ export default function WithdrawalsPage() {
                   <div className="flex gap-2 flex-shrink-0">
                     {req.status === "pending" && isAdvisor && (
                       <button onClick={() => handleApprove(req._id)} disabled={processing === req._id}
-                        className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-info text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50">
+                        className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-info text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50">
                         {processing === req._id ? "..." : "Approve"}
                       </button>
                     )}
                     {req.status === "approved" && (isExco || isAdvisor) && (
                       <button onClick={() => handleExecute(req._id)} disabled={processing === req._id}
-                        className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-success text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50">
+                        className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-success text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50">
                         {processing === req._id ? "..." : "Execute"}
                       </button>
                     )}

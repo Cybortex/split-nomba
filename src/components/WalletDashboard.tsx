@@ -16,7 +16,7 @@ export function WalletDashboard({ entityId, institutionId }: { entityId: string;
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-surface">
+    <div className="card overflow-hidden">
       <div className="p-6 border-b border-border">
         <h2 className="text-xl font-bold text-primary">{wallet.name}</h2>
         <p className="text-sm text-muted">Wallet • {wallet.type}</p>

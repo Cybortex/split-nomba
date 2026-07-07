@@ -276,17 +276,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen flex bg-app">
       {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden animate-fade-in-fast"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      <div
+        className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden transition-opacity duration-200 ease-out ${
+          sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setSidebarOpen(false)}
+      />
 
-      {/* Sidebar */}
+      {/* Sidebar — fixed (stationary) */}
       <aside
         className={`
-          fixed md:sticky top-16 md:top-16 z-50 h-[calc(100vh-4rem)]
+          fixed top-16 z-50 h-[calc(100vh-4rem)]
           w-[260px] border-r border-border bg-surface-secondary
           transition-transform duration-300 ease-out
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
@@ -297,10 +297,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </Suspense>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 min-w-0 overflow-y-auto">
-        {/* Mobile header bar */}
-        <div className="sticky top-16 z-30 md:hidden border-b border-border bg-app/90 backdrop-blur-lg px-4 py-3 flex items-center justify-between">
+      {/* Main content — left margin on desktop to account for fixed sidebar */}
+      <main className="flex-1 min-w-0 overflow-y-auto md:ml-[260px]">
+        {/* Mobile header bar — fixed below navbar */}
+        <div className="fixed top-16 z-30 md:hidden border-b border-border bg-app/90 backdrop-blur-lg px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -313,7 +313,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </div>
 
-        <div className="p-4 sm:p-6 lg:p-8">
+        <div className="p-4 sm:p-6 lg:p-8 pt-14 md:pt-0">
           {children}
         </div>
       </main>

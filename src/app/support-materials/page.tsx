@@ -32,9 +32,9 @@ export default function SupportMaterials() {
   ];
 
   return (
-    <div className="min-h-screen bg-app pb-24 text-secondary">
+    <div className="min-h-screen bg-app pb-16 sm:pb-24 text-secondary">
       {/* Hero Section */}
-      <div className="bg-surface border-b border-border-subtle pt-24 pb-20 px-4">
+      <div className="bg-surface border-b border-border-subtle pt-20 sm:pt-24 pb-16 sm:pb-20 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-primary mb-6">
             Project Documentation <span className="text-gold">&</span> Support
@@ -45,13 +45,13 @@ export default function SupportMaterials() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 mt-16 space-y-24">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-16 space-y-16 sm:space-y-24">
         
         {/* Section: What Split Does & How It Works */}
         <section>
           <div className="mb-10 text-center sm:text-left">
-            <h2 className="text-3xl font-bold text-primary mb-4 flex items-center justify-center sm:justify-start gap-3">
-              <Layers className="w-8 h-8 text-gold" />
+            <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-4 flex items-center justify-center sm:justify-start gap-3">
+              <Layers className="w-6 h-6 sm:w-8 sm:h-8 text-gold" />
               What Split Does & Implementation
             </h2>
             <p className="text-lg leading-relaxed">
@@ -60,7 +60,7 @@ export default function SupportMaterials() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="p-8 rounded-2xl bg-surface-secondary border border-border">
+            <div className="card p-6 sm:p-8">
               <h3 className="text-xl font-bold text-primary mb-4">Unified Collection</h3>
               <p className="leading-relaxed mb-4">
                 Instead of students paying tuition on one portal, faculty dues to a POS vendor, and SUG dues to a bank teller, Split unifies these into a single checkout flow powered by Nomba.
@@ -77,7 +77,7 @@ export default function SupportMaterials() {
               </ul>
             </div>
 
-            <div className="p-8 rounded-2xl bg-surface-secondary border border-border">
+            <div className="card p-6 sm:p-8">
               <h3 className="text-xl font-bold text-primary mb-4">Role-Based Governance</h3>
               <p className="leading-relaxed mb-4">
                 Funds are immediately split into dedicated sub-wallets. The system implements a strict governance model to manage these funds securely.
@@ -103,8 +103,8 @@ export default function SupportMaterials() {
         {/* Section: Tech Stack */}
         <section>
           <div className="mb-10 text-center sm:text-left">
-            <h2 className="text-3xl font-bold text-primary mb-4 flex items-center justify-center sm:justify-start gap-3">
-              <Server className="w-8 h-8 text-gold" />
+            <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-4 flex items-center justify-center sm:justify-start gap-3">
+              <Server className="w-6 h-6 sm:w-8 sm:h-8 text-gold" />
               Technology Stack
             </h2>
             <p className="text-lg leading-relaxed">
@@ -113,25 +113,25 @@ export default function SupportMaterials() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="p-6 rounded-2xl bg-surface border border-border">
+            <div className="card p-5 sm:p-6">
               <h3 className="font-bold text-primary mb-2 text-lg">Next.js</h3>
               <p className="text-sm leading-relaxed">
                 Chosen for its robust App Router, server-side rendering capabilities, and seamless integration with our backend. It allows us to deliver a fast, SEO-friendly, and highly responsive user interface.
               </p>
             </div>
-            <div className="p-6 rounded-2xl bg-surface border border-border">
+            <div className="card p-5 sm:p-6">
               <h3 className="font-bold text-primary mb-2 text-lg">Convex</h3>
               <p className="text-sm leading-relaxed">
                 Acts as our real-time database and serverless backend. We chose Convex because it automatically pushes state updates to the UI, ensuring that when an advisor approves a request, the finance dashboard updates instantly without polling.
               </p>
             </div>
-            <div className="p-6 rounded-2xl bg-surface border border-border">
+            <div className="card p-5 sm:p-6">
               <h3 className="font-bold text-primary mb-2 text-lg">Clerk</h3>
               <p className="text-sm leading-relaxed">
                 Manages our complex 9-tier role-based authentication system. We chose Clerk to offload session management and ensure that user identities and permissions are securely maintained across devices.
               </p>
             </div>
-            <div className="p-6 rounded-2xl bg-surface border border-border">
+            <div className="card p-5 sm:p-6">
               <h3 className="font-bold text-primary mb-2 text-lg">Nomba</h3>
               <p className="text-sm leading-relaxed">
                 We utilized Nomba's payment gateway and API to generate dedicated virtual accounts for every entity. This integration handles the heavy lifting of payment processing and webhooks securely.
@@ -143,13 +143,13 @@ export default function SupportMaterials() {
         {/* Section: Security Measures */}
         <section>
           <div className="mb-10 text-center sm:text-left">
-            <h2 className="text-3xl font-bold text-primary mb-4 flex items-center justify-center sm:justify-start gap-3">
-              <ShieldCheck className="w-8 h-8 text-gold" />
+            <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-4 flex items-center justify-center sm:justify-start gap-3">
+              <ShieldCheck className="w-6 h-6 sm:w-8 sm:h-8 text-gold" />
               Security Measures
             </h2>
           </div>
 
-          <div className="bg-surface-secondary border border-border rounded-2xl p-8 space-y-6">
+          <div className="card p-6 sm:p-8 space-y-6">
             <div className="flex gap-4">
               <Lock className="w-6 h-6 text-gold shrink-0 mt-1" />
               <div>
@@ -195,12 +195,12 @@ export default function SupportMaterials() {
         {/* Section: Detailed FAQ */}
         <section>
           <div className="mb-10 text-center sm:text-left">
-            <h2 className="text-3xl font-bold text-primary mb-4">Frequently Asked Questions</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-4">Frequently Asked Questions</h2>
           </div>
 
           <div className="space-y-6">
             {faqs.map((faq, index) => (
-              <div key={index} className="p-6 rounded-2xl bg-surface border border-border">
+              <div key={index} className="card p-6">
                 <h4 className="text-lg font-bold text-primary mb-3">{faq.q}</h4>
                 <p className="leading-relaxed">{faq.a}</p>
               </div>
