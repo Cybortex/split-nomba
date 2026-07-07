@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Lock } from "lucide-react";
+import { Lock, Check, X, Bot } from "lucide-react";
 
 export function AuditLogViewer({ institutionId }: { institutionId?: string }) {
   const logs = useQuery(api.auditLogs.getAll, institutionId ? { institutionId: institutionId as any } : {});
@@ -57,10 +57,10 @@ export function AuditLogViewer({ institutionId }: { institutionId?: string }) {
                   </td>
                   <td className="px-4 py-3 text-xs text-secondary font-mono">{log.entity}</td>
                   <td className="px-4 py-3 text-xs text-muted font-mono">
-                    {log.userId === "SYSTEM" ? "🤖 System" : log.userId.substring(0, 8) + "..."}
+                    {log.userId === "SYSTEM" ? <><Bot className="w-3.5 h-3.5 inline-flex mr-1 flex-shrink-0" /> System</> : log.userId.substring(0, 8) + "..."}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    {log.success ? <span className="text-success text-lg">✓</span> : <span className="text-error text-lg">✗</span>}
+                    {log.success ? <Check className="w-5 h-5 text-success" /> : <X className="w-5 h-5 text-error" />}
                   </td>
                 </tr>
               ))}

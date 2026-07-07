@@ -289,6 +289,18 @@ export const getReceipt = query({
       .filter((q) => q.eq(q.field("_id"), payment.institutionId as any))
       .first();
 
+    // Fallback: look up student email in users table by their matric in permissions list
+    let studentEmail = student?.email || "";
+    if (!studentEmail) {
+      const allUsers = await ctx.db.query("users").collect();
+      const studentUser = allUsers.find(
+        (u) => u.roles.includes("STUDENT") && u.permissions.includes(payment.studentMatric)
+      );
+      if (studentUser) {
+        studentEmail = studentUser.email;
+      }
+    }
+
     return {
       payment: {
         id: payment._id,
@@ -303,15 +315,19 @@ export const getReceipt = query({
         createdAt: payment.createdAt,
         completedAt: payment.completedAt,
       },
-      student: student
-        ? {
-            matric: student.matric,
-            email: student.email,
-            faculty: student.faculty,
-            department: student.department,
-            level: student.level,
-          }
-        : null,
+      student: {
+        matric: payment.studentMatric,
+        email: studentEmail || "N/A",
+        faculty: payment.faculty,
+        department: payment.department,
+        level: payment.level,
+      },
+      feeBreakdown: {
+        tuition: payment.feeTuition || payment.amount,
+        departmentDues: payment.feeDepartmentDues || 0,
+        facultyDues: payment.feeFacultyDues || 0,
+        sugDues: payment.feeSugDues || 0,
+      },
       institution: institution ? { name: institution.name } : null,
     };
   },

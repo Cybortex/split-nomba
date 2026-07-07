@@ -51,6 +51,48 @@ export function PaymentReceipt({ data }: { data: ReceiptData }) {
 
   return (
     <div className="max-w-2xl mx-auto">
+      {/* Local Print Stylesheet */}
+      <style>{`
+        @media print {
+          body {
+            background: white !important;
+            color: black !important;
+          }
+          nav, header, footer, .no-print, button, sidebar, .sticky, [role="navigation"], aside {
+            display: none !important;
+          }
+          .max-w-2xl {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          #receipt {
+            border: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          .bg-surface-secondary {
+            background-color: #f3f4f6 !important;
+            color: black !important;
+          }
+          .text-primary {
+            color: black !important;
+          }
+          .text-secondary {
+            color: #374151 !important;
+          }
+          .text-muted {
+            color: #4b5563 !important;
+          }
+          .text-gold {
+            color: #b45309 !important;
+          }
+        }
+      `}</style>
+
       {/* Print Button — hidden when printing */}
       <div className="no-print flex justify-end mb-4">
         <button
@@ -58,7 +100,7 @@ export function PaymentReceipt({ data }: { data: ReceiptData }) {
           className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-gold text-black hover:brightness-110 transition-all duration-200 flex items-center gap-2"
         >
           <Printer className="w-4 h-4" />
-          Print Receipt
+          Download PDF / Print Receipt
         </button>
       </div>
 
@@ -141,22 +183,18 @@ export function PaymentReceipt({ data }: { data: ReceiptData }) {
               <p className="text-xs text-muted">Matric Number</p>
               <p className="text-sm font-mono font-medium text-primary">{payment.matric}</p>
             </div>
-            {student && (
-              <>
-                <div>
-                  <p className="text-xs text-muted">Email</p>
-                  <p className="text-sm text-primary">{student.email}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted">Faculty</p>
-                  <p className="text-sm text-primary">{payment.faculty}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted">Department</p>
-                  <p className="text-sm text-primary">{payment.department}</p>
-                </div>
-              </>
-            )}
+            <div>
+              <p className="text-xs text-muted">Email</p>
+              <p className="text-sm text-primary">{student?.email || "N/A"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted">Faculty</p>
+              <p className="text-sm text-primary">{student?.faculty || payment.faculty}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted">Department</p>
+              <p className="text-sm text-primary">{student?.department || payment.department}</p>
+            </div>
             <div>
               <p className="text-xs text-muted">Level</p>
               <p className="text-sm font-mono text-primary">{payment.level} Level</p>
