@@ -15,6 +15,8 @@ interface ReceiptData {
     level: number;
     createdAt: number;
     completedAt?: number;
+    platformFee?: number;
+    nombaFee?: number;
   };
   student: {
     matric: string;
@@ -36,6 +38,10 @@ interface ReceiptData {
 export function PaymentReceipt({ data }: { data: ReceiptData }) {
   const { payment, student, institution, feeBreakdown } = data;
   const isCompleted = payment.status === "completed";
+  
+  const platformFee = payment.platformFee || 0;
+  const nombaFee = payment.nombaFee || 0;
+  const totalCharged = payment.amount + platformFee + nombaFee;
 
   const handlePrint = () => {
     window.print();
@@ -143,9 +149,9 @@ export function PaymentReceipt({ data }: { data: ReceiptData }) {
 
         {/* Amount */}
         <div className="text-center mb-6">
-          <p className="text-xs text-muted mb-1">Amount Paid</p>
+          <p className="text-xs text-muted mb-1">Total Charged</p>
           <p className="text-4xl font-bold text-gold font-mono tracking-tight">
-            ₦{payment.amount.toLocaleString()}
+            ₦{totalCharged.toLocaleString()}
           </p>
         </div>
 
@@ -159,7 +165,7 @@ export function PaymentReceipt({ data }: { data: ReceiptData }) {
                 { label: "Department Dues", amount: feeBreakdown.departmentDues },
                 { label: "Faculty Dues", amount: feeBreakdown.facultyDues },
                 { label: "SUG Dues", amount: feeBreakdown.sugDues },
-              ].map((item) => (
+              ].filter((item) => item.amount > 0).map((item) => (
                 <div key={item.label} className="flex justify-between py-1.5 border-b border-border-subtle last:border-0">
                   <span className="text-sm text-secondary">{item.label}</span>
                   <span className="text-sm font-mono font-medium text-primary">
@@ -167,10 +173,28 @@ export function PaymentReceipt({ data }: { data: ReceiptData }) {
                   </span>
                 </div>
               ))}
-              <div className="flex justify-between pt-2 border-t border-border">
-                <span className="text-sm font-bold text-primary">Total</span>
-                <span className="text-sm font-mono font-bold text-gold">
+              <div className="flex justify-between py-1.5 border-b border-border-subtle">
+                <span className="text-sm text-secondary">Academic Fees Subtotal</span>
+                <span className="text-sm font-mono font-medium text-primary">
                   ₦{payment.amount.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-border-subtle">
+                <span className="text-sm text-secondary">Platform Service Fee</span>
+                <span className="text-sm font-mono font-medium text-primary">
+                  ₦{platformFee.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-border-subtle">
+                <span className="text-sm text-secondary">Nomba Processing Fee</span>
+                <span className="text-sm font-mono font-medium text-primary">
+                  ₦{nombaFee.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between pt-2 border-t border-border">
+                <span className="text-sm font-bold text-primary">Total Charged</span>
+                <span className="text-sm font-mono font-bold text-gold">
+                  ₦{totalCharged.toLocaleString()}
                 </span>
               </div>
             </div>

@@ -65,6 +65,7 @@ export const routePayment = mutation({
     facultySlug: v.string(),
     departmentSlug: v.string(),
     platformFee: v.number(),
+    nombaFee: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const allocation: Record<string, { amount: number; name: string }> = {};
@@ -202,22 +203,12 @@ export const routePayment = mutation({
       }
     }
 
-    // 5. Platform fee — credit to institution wallet if exists, or just log
-    if (args.platformFee > 0 && instWallet) {
-      await creditWallet(
-        ctx,
-        instWallet._id,
-        args.institutionId,
-        args.nombaTransactionId,
-        args.platformFee,
-        "platform_fee"
-      );
-    }
-
-    // Mark payment completed
+    // Mark payment completed, saving transaction ID and Nomba fee
     await ctx.db.patch(args.paymentId, {
       status: "completed",
       completedAt: Date.now(),
+      nombaTransactionId: args.nombaTransactionId,
+      nombaFee: args.nombaFee,
     });
 
     // Log audit
@@ -227,7 +218,7 @@ export const routePayment = mutation({
       action: "PAYMENT_VERIFIED",
       entity: "payments",
       entityId: args.paymentId,
-      newValue: JSON.stringify({ allocation, nombaTransactionId: args.nombaTransactionId }),
+      newValue: JSON.stringify({ allocation, nombaTransactionId: args.nombaTransactionId, nombaFee: args.nombaFee }),
       timestamp: Date.now(),
       success: true,
     });
@@ -314,6 +305,8 @@ export const getReceipt = query({
         level: payment.level,
         createdAt: payment.createdAt,
         completedAt: payment.completedAt,
+        platformFee: payment.platformFee || 0,
+        nombaFee: payment.nombaFee || 0,
       },
       student: {
         matric: payment.studentMatric,

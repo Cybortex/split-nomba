@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { WalletCard, TransactionList } from "@/components/WalletCard";
 import { GraduationCap } from "lucide-react";
@@ -37,8 +37,8 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
       : "skip"
   );
 
-  const createAssociation = useMutation(api.associations.createAssociation);
-  const createSUG = useMutation(api.associations.createSUG);
+  const createAssociation = useAction(api.associations.createAssociation);
+  const createSUG = useAction(api.associations.createSUG);
   const assignStaffAdvisor = useMutation(api.associations.assignStaffAdvisor);
   const assignStudentExco = useMutation(api.associations.assignStudentExco);
   const removeStudentExco = useMutation(api.associations.removeStudentExco);
@@ -65,10 +65,10 @@ export function StudentAffairsDashboard({ activeTab = "overview" }: { activeTab?
   const [processingAction, setProcessingAction] = useState<string | null>(null);
 
   // Build a map of clerkId → user for quick lookups
-  const advisorMap = new Map(
+  const advisorMap = new Map<string, any>(
     (advisors || []).map((u: any) => [u.clerkId, u])
   );
-  const excoMap = new Map(
+  const excoMap = new Map<string, any>(
     (excos || []).map((u: any) => [u.clerkId, u])
   );
 

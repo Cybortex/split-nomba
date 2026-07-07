@@ -223,7 +223,7 @@ export function AssociationManager({
               </label>
               {association.studentExcoClerkIds && association.studentExcoClerkIds.length > 0 ? (
                 <div className="space-y-2">
-                  {association.studentExcoClerkIds.map((excoClerkId) => (
+                  {association.studentExcoClerkIds.map((excoClerkId: string) => (
                     <ExcoRow
                       key={excoClerkId}
                       clerkId={excoClerkId}
@@ -252,7 +252,7 @@ export function AssociationManager({
                 >
                   <option value="">-- Select Student Exco --</option>
                   {eligibleExcos
-                    ?.filter((u) => !association.studentExcoClerkIds.includes(u.clerkId))
+                    ?.filter((u: any) => !association.studentExcoClerkIds.includes(u.clerkId))
                     ?.map((stud: any) => (
                       <option key={stud.clerkId} value={stud.clerkId}>
                         {stud.name || stud.email} ({stud.email})

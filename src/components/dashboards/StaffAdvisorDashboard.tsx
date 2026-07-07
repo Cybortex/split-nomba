@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { WalletCard, TransactionList } from "@/components/WalletCard";
 import { Users } from "lucide-react";
@@ -23,19 +23,19 @@ export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: 
   );
 
   const associationId = association?._id;
+
+  // Find the advisor's wallet from accessible wallets (match by associationId)
+  const assocWalletData = accessibleWallets?.find(
+    (w: any) => w.access === "view" && w.association?._id?.toString() === associationId?.toString()
+  );
+  const assocWallet = assocWalletData?.wallet;
+
   const requests = useQuery(
     api.withdrawals.getWithdrawalHistory,
     associationId && institutionId
       ? { associationId: associationId as any, institutionId: institutionId as any }
       : "skip"
   );
-
-  // Find the wallet associated with this association
-  const assocWalletData = accessibleWallets?.find(
-    (w: any) => w.wallet.associationId && associationId &&
-      w.wallet.associationId.toString() === associationId.toString()
-  );
-  const assocWallet = assocWalletData?.wallet;
 
   const transactions = useQuery(
     api.wallets.getTransactions,
@@ -45,7 +45,7 @@ export function StaffAdvisorDashboard({ activeTab = "overview" }: { activeTab?: 
   );
 
   const approveRequest = useMutation(api.withdrawals.approveWithdrawal);
-  const execute = useMutation(api.withdrawals.executeWithdrawal);
+  const execute = useAction(api.withdrawals.executeWithdrawal);
 
   const [processing, setProcessing] = useState<string | null>(null);
 

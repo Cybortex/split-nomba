@@ -37,6 +37,14 @@ const STAT_CARDS = [
     isCurrency: true,
     suffix: "Across all institutions",
   },
+  {
+    label: "Platform Fees",
+    icon: <Coins className="w-6 h-6 text-gold-royal" />,
+    color: "text-gold-royal",
+    valueKey: "platformFees" as const,
+    isCurrency: true,
+    suffix: "Directly earned",
+  },
 ];
 
 export function AdminOverview() {
@@ -69,7 +77,7 @@ export function AdminOverview() {
       </div>
 
       {/* Global Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         {STAT_CARDS.map((stat) => {
           const mainValue = globalStats[stat.valueKey];
           const displayValue = stat.isCurrency

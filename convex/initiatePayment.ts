@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { action } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { internal, api } from "./_generated/api";
+import { getNombaToken } from "./nomba";
 
 // ============================================================================
 // PAYMENT INITIATION
@@ -64,7 +65,18 @@ export const initiatePayment = action({
 
     // Platform fee — ₦100 added on top of fee total
     const platformFee = 100;
-    const totalToCharge = amount + platformFee;
+    const netAmount = amount + platformFee;
+
+    // Nomba fee calculation (1.5% capped at ₦2000)
+    const rawTotal = Math.ceil(netAmount / (1 - 0.015));
+    const rawFee = rawTotal - netAmount;
+    let totalToCharge = rawTotal;
+    let nombaFee = rawFee;
+
+    if (rawFee > 2000) {
+      totalToCharge = netAmount + 2000;
+      nombaFee = 2000;
+    }
 
     // 3. Get student slug data for routing
     const facultySlug = (studentRecord as any).facultySlug || "";
@@ -104,79 +116,61 @@ export const initiatePayment = action({
       );
     }
 
-    // 6. Call Nomba with totalToCharge (fee total + platform fee)
-    const nombaApiKey = process.env.NOMBA_API_KEY;
-    const nombaBaseUrl = process.env.NOMBA_BASE_URL;
+    // 6. Call Nomba with totalToCharge (fee total + platform fee + transaction fee)
+    const merchantId = process.env.NOMBA_MERCHANT_ID;
+    const baseUrl = process.env.NOMBA_BASE_URL || "https://sandbox.nomba.com";
+
+    if (!merchantId) {
+      throw new Error("NOMBA_MERCHANT_ID is not configured in environment variables.");
+    }
 
     let nombaData: any;
-    let fallbackMode = false;
+    try {
+      const token = await getNombaToken();
+      console.log(`Initiating Nomba checkout order: Ref ${reference}, Amount ₦${totalToCharge}`);
 
-    if (!nombaApiKey || !nombaBaseUrl || nombaApiKey === "your_sandbox_key") {
-      console.warn("⚠️ Nomba credentials not configured. Using local Mock Checkout fallback.");
-      fallbackMode = true;
-    }
+      const response = await fetch(`${baseUrl}/v1/checkout/order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          accountId: merchantId,
+        },
+        body: JSON.stringify({
+          order: {
+            orderReference: reference,
+            customerId: args.studentMatric,
+            callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/pay/receipt?reference=${reference}`,
+            customerEmail: studentRecord.email,
+            amount: totalToCharge,
+            currency: "NGN",
+          },
+          tokenizeCard: false,
+        }),
+        signal: AbortSignal.timeout(12000),
+      });
 
-    if (!fallbackMode) {
-      try {
-        const nombaResponse = await fetch(
-          `${nombaBaseUrl}/transactions/initiate`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${nombaApiKey}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              amount: totalToCharge,
-              currency: "NGN",
-              customerName: "Student",
-              customerEmail: studentRecord.email,
-              description: `${studentRecord.faculty} - ${studentRecord.department} Level ${studentRecord.level}`,
-              reference,
-              callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/nomba`,
-              paymentMethods: ["card", "bank_transfer"],
-              metadata: {
-                studentMatric: args.studentMatric,
-                faculty: studentRecord.faculty,
-                department: studentRecord.department,
-                level: studentRecord.level,
-                institutionId: args.institutionId,
-                facultySlug,
-                departmentSlug,
-              },
-            }),
-            signal: AbortSignal.timeout(10000)
-          }
-        );
-
-        if (!nombaResponse.ok) {
-          const errorText = await nombaResponse.text();
-          console.error("Nomba API error response:", errorText);
-          throw new Error("Nomba returned error status");
-        }
-
-        nombaData = await nombaResponse.json();
-      } catch (err: any) {
-        console.warn("⚠️ Nomba Sandbox API is unreachable (e.g. network tunnel timeout). Falling back to local Mock Checkout Sandbox: ", err.message || err);
-        fallbackMode = true;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Nomba Checkout API error response:", errorText);
+        throw new Error(`Nomba Checkout API returned error status: ${response.statusText}`);
       }
-    }
 
-    if (fallbackMode) {
-      // Mock data matching Nomba transactions structure
-      nombaData = {
-        data: {
-          transactionId: `MOCK-TXN-${reference}`,
-          authorisationUrl: `/dashboard/pay/mock-checkout?reference=${reference}&amount=${totalToCharge}`,
-          expiresAt: Date.now() + 3600 * 1000,
-        }
-      };
+      const result = await response.json();
+      if (result.code !== "00" || !result.data?.checkoutLink) {
+        throw new Error(`Nomba Checkout error: ${result.description || "Unknown error"}`);
+      }
+
+      nombaData = result;
+    } catch (err: any) {
+      console.error("Nomba Checkout initiation failed:", err.message || err);
+      throw new Error(`Payment checkout failed to initialize: ${err.message || err}`);
     }
 
     // 7. Save payment record — store fee total + breakdown data for webhook
     const paymentId = await ctx.runMutation(i.paymentsInternal.createPayment, {
       institutionId: args.institutionId,
-      nombaTransactionId: nombaData.data.transactionId,
+      nombaTransactionId: reference, // Initially set to reference, updated to transactionId in webhook
       reference,
       studentMatric: args.studentMatric,
       faculty: studentRecord.faculty,
@@ -191,6 +185,7 @@ export const initiatePayment = action({
       facultySlug,
       departmentSlug,
       platformFee,
+      nombaFee,
     });
 
     // 8. Log audit
@@ -198,17 +193,18 @@ export const initiatePayment = action({
       institutionId: args.institutionId,
       action: "PAYMENT_INITIATED",
       entityId: paymentId,
-      newValue: { reference, amount: totalToCharge, matric: args.studentMatric, platformFee },
+      newValue: { reference, amount: totalToCharge, matric: args.studentMatric, platformFee, nombaFee },
       success: true,
     });
 
     return {
       reference,
-      authorisationUrl: nombaData.data.authorisationUrl,
-      transactionId: nombaData.data.transactionId,
-      expiresAt: nombaData.data.expiresAt,
+      authorisationUrl: nombaData.data.checkoutLink,
+      transactionId: reference,
+      expiresAt: Date.now() + 3600 * 1000,
       amount,
       platformFee,
+      nombaFee,
       totalToCharge,
       feeBreakdown,
       facultySlug,

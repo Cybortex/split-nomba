@@ -135,6 +135,7 @@ export async function POST(request: NextRequest) {
     const facultySlug = (existingTxn as any).facultySlug || "";
     const departmentSlug = (existingTxn as any).departmentSlug || "";
     const platformFee = (existingTxn as any).platformFee || Math.max(0, data.amount - existingTxn.amount);
+    const nombaFee = data.fee || data.transaction?.fee || 0;
 
     // Route payment to the 4 wallets using feeConfig-based routing
     const allocation = await client.mutation(api.payments.routePayment, {
@@ -145,9 +146,21 @@ export async function POST(request: NextRequest) {
       facultySlug,
       departmentSlug,
       platformFee,
+      nombaFee,
     });
 
     console.log(`✓ Payment routed: ${txnRef} → wallets updated`, allocation);
+
+    // Asynchronously trigger instant platform fee payout to platform owner
+    try {
+      console.log(`Triggering instant platform fee payout for payment reference: ${txnRef}`);
+      await client.action(api.nomba.payoutPlatformFeeAction, {
+        paymentReference: txnRef,
+      });
+    } catch (payoutErr) {
+      console.error("Instant platform fee payout failed:", payoutErr);
+      // Do not block webhook success response if payout fails
+    }
 
     return NextResponse.json({
       success: true,

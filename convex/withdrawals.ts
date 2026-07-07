@@ -1,6 +1,9 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, action, internalMutation, internalQuery } from "./_generated/server";
 import { requirePermission } from "./auth";
+import { api as anyApi, internal as anyInternal } from "./_generated/api";
+const api = anyApi as any;
+const internal = anyInternal as any;
 
 /**
  * Initiate a withdrawal request (STUDENT_EXCO only).
@@ -17,6 +20,10 @@ export const initiateWithdrawal = mutation({
     walletId: v.id("wallets"),
     amount: v.number(),
     reason: v.string(),
+    recipientBankName: v.optional(v.string()),
+    recipientAccountNumber: v.optional(v.string()),
+    recipientBankCode: v.optional(v.string()),
+    recipientAccountName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const association = await ctx.db
@@ -79,6 +86,10 @@ export const initiateWithdrawal = mutation({
         status: "approved",
         createdAt: Date.now(),
         approvedAt: Date.now(),
+        recipientBankName: args.recipientBankName,
+        recipientAccountNumber: args.recipientAccountNumber,
+        recipientBankCode: args.recipientBankCode,
+        recipientAccountName: args.recipientAccountName,
       });
 
       await ctx.db.insert("auditLogs", {
@@ -92,6 +103,7 @@ export const initiateWithdrawal = mutation({
           reason: args.reason,
           associationId: args.associationId,
           type: "sug_auto_approved",
+          recipientAccountName: args.recipientAccountName,
         }),
         timestamp: Date.now(),
         success: true,
@@ -121,6 +133,10 @@ export const initiateWithdrawal = mutation({
       initiatedBy: user.clerkId,
       status: "pending",
       createdAt: Date.now(),
+      recipientBankName: args.recipientBankName,
+      recipientAccountNumber: args.recipientAccountNumber,
+      recipientBankCode: args.recipientBankCode,
+      recipientAccountName: args.recipientAccountName,
     });
 
     // Log audit
@@ -134,6 +150,7 @@ export const initiateWithdrawal = mutation({
         amount: args.amount,
         reason: args.reason,
         associationId: args.associationId,
+        recipientAccountName: args.recipientAccountName,
       }),
       timestamp: Date.now(),
       success: true,
@@ -222,33 +239,30 @@ export const approveWithdrawal = mutation({
 });
 
 /**
- * Execute an approved withdrawal — deducts from wallet.
- * Can be called by either STUDENT_EXCO or STAFF_ADVISOR after approval.
+ * Internal query: Fetch a withdrawal request for execution.
  */
-export const executeWithdrawal = mutation({
+export const getWithdrawalForExecution = internalQuery({
+  args: { withdrawalId: v.id("withdrawalRequests") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.withdrawalId);
+  },
+});
+
+/**
+ * Internal mutation: Execute the ledger balance deduction and status updates.
+ */
+export const executeWithdrawalInternal = internalMutation({
   args: {
     withdrawalId: v.id("withdrawalRequests"),
+    clerkId: v.string(),
+    nombaTransferRef: v.optional(v.string()),
+    nombaTransferFee: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    // Must be either the initiator or the approver
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-
-    const request = await ctx.db
-      .query("withdrawalRequests")
-      .filter((q) => q.eq(q.field("_id"), args.withdrawalId as any))
-      .first();
-
+    const request = await ctx.db.get(args.withdrawalId);
     if (!request) throw new Error("Withdrawal request not found");
     if (request.status !== "approved")
       throw new Error("Withdrawal must be approved first");
-
-    if (
-      identity.subject !== request.initiatedBy &&
-      identity.subject !== request.approvedBy
-    ) {
-      throw new Error("Only the initiator or approver can execute this withdrawal");
-    }
 
     // Deduct from wallet
     const wallet = await ctx.db
@@ -287,27 +301,99 @@ export const executeWithdrawal = mutation({
     await ctx.db.patch(args.withdrawalId, {
       status: "completed",
       completedAt: Date.now(),
+      nombaTransferRef: args.nombaTransferRef,
+      nombaTransferFee: args.nombaTransferFee,
     });
 
     // Log audit
     await ctx.db.insert("auditLogs", {
       institutionId: request.institutionId,
-      userId: identity.subject,
+      userId: args.clerkId,
       action: "WITHDRAWAL_COMPLETED",
       entity: "withdrawalRequests",
       entityId: args.withdrawalId,
       newValue: JSON.stringify({
         amount: request.amount,
-        walletId: request.walletId,
+        walletId: wallet._id,
+        nombaTransferRef: args.nombaTransferRef,
+        nombaTransferFee: args.nombaTransferFee,
       }),
       timestamp: Date.now(),
       success: true,
+    });
+  },
+});
+
+/**
+ * Execute an approved withdrawal — deducts from wallet in database
+ * and triggers a real-world interbank transfer via Nomba payout API.
+ * Can be called by either STUDENT_EXCO or STAFF_ADVISOR after approval.
+ */
+export const executeWithdrawal = action({
+  args: {
+    withdrawalId: v.id("withdrawalRequests"),
+  },
+  handler: async (ctx, args) => {
+    // 1. Fetch request details
+    const request = await ctx.runQuery(internal.withdrawals.getWithdrawalForExecution, {
+      withdrawalId: args.withdrawalId,
+    });
+
+    if (!request) throw new Error("Withdrawal request not found");
+    if (request.status !== "approved")
+      throw new Error("Withdrawal must be approved first");
+
+    // 2. Validate executor rights
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    if (
+      identity.subject !== request.initiatedBy &&
+      identity.subject !== request.approvedBy
+    ) {
+      throw new Error("Only the initiator or approver can execute this withdrawal");
+    }
+
+    // 3. Dispatch real bank transfer if bank details are set
+    let payoutRes = null;
+    const merchantTxRef = `WDRAW-${args.withdrawalId.toString()}-${Date.now().toString().slice(-4)}`;
+
+    if (
+      request.recipientAccountNumber &&
+      request.recipientBankCode &&
+      request.recipientAccountName
+    ) {
+      try {
+        console.log(`Executing real-world payout: ₦${request.amount} to ${request.recipientAccountName}`);
+        payoutRes = await ctx.runAction(api.nomba.executeBankPayout, {
+          amount: request.amount,
+          accountNumber: request.recipientAccountNumber,
+          accountName: request.recipientAccountName,
+          bankCode: request.recipientBankCode,
+          merchantTxRef,
+          narration: request.reason || "Split Payout",
+        });
+      } catch (err: any) {
+        console.error("Nomba payout execution failed:", err.message || err);
+        throw new Error(`Real-world bank transfer failed. Wallet balance remains intact. Details: ${err.message || err}`);
+      }
+    } else {
+      console.warn("⚠️ No bank details provided on withdrawal. Executing virtual-only withdrawal.");
+    }
+
+    // 4. Update ledger balances and mark completed in DB
+    await ctx.runMutation(internal.withdrawals.executeWithdrawalInternal, {
+      withdrawalId: args.withdrawalId,
+      clerkId: identity.subject,
+      nombaTransferRef: payoutRes?.transferId || merchantTxRef,
+      nombaTransferFee: payoutRes?.fee || 0,
     });
 
     return {
       status: "completed",
       amount: request.amount,
-      message: `Withdrawal of ₦${request.amount.toLocaleString()} completed.`,
+      transferId: payoutRes?.transferId,
+      message: `Withdrawal of ₦${request.amount.toLocaleString()} completed successfully.`,
     };
   },
 });

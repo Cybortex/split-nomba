@@ -15,6 +15,7 @@ import type * as auth from "../auth.js";
 import type * as fees from "../fees.js";
 import type * as import_ from "../import.js";
 import type * as initiatePayment from "../initiatePayment.js";
+import type * as nomba from "../nomba.js";
 import type * as payments from "../payments.js";
 import type * as paymentsInternal from "../paymentsInternal.js";
 import type * as seed from "../seed.js";
@@ -39,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   fees: typeof fees;
   import: typeof import_;
   initiatePayment: typeof initiatePayment;
+  nomba: typeof nomba;
   payments: typeof payments;
   paymentsInternal: typeof paymentsInternal;
   seed: typeof seed;

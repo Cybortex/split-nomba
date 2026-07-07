@@ -176,6 +176,7 @@ export default defineSchema({
     facultySlug: v.optional(v.string()),
     departmentSlug: v.optional(v.string()),
     platformFee: v.optional(v.number()),
+    nombaFee: v.optional(v.number()),
   })
     .index("by_reference", ["reference"])
     .index("by_nombaTransactionId", ["nombaTransactionId"])
@@ -231,6 +232,13 @@ export default defineSchema({
     createdAt: v.number(),
     approvedAt: v.optional(v.number()),
     completedAt: v.optional(v.number()),
+    // Dynamic bank transfer details
+    recipientBankName: v.optional(v.string()),
+    recipientAccountNumber: v.optional(v.string()),
+    recipientBankCode: v.optional(v.string()),
+    recipientAccountName: v.optional(v.string()),
+    nombaTransferFee: v.optional(v.number()),
+    nombaTransferRef: v.optional(v.string()),
   })
     .index("by_institution", ["institutionId"])
     .index("by_association", ["associationId"])

@@ -250,8 +250,8 @@ export function StudentDashboard({ activeTab = "overview" }: { activeTab?: strin
 
             {feeOverview.feeBreakdown.categories.length > 0 ? (
               <div className="space-y-3 mb-5">
-                {feeOverview.feeBreakdown.categories.map((cat) => {
-                  const catLabel = cat.category.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+                {feeOverview.feeBreakdown.categories.map((cat: any) => {
+                  const catLabel = cat.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
                   return (
                     <div key={cat.category} className="p-3 rounded-lg bg-surface-secondary">
                       <div className="flex justify-between items-center mb-2">
@@ -263,7 +263,7 @@ export function StudentDashboard({ activeTab = "overview" }: { activeTab?: strin
                         </span>
                       </div>
                       <div className="space-y-1">
-                        {cat.items.map((item, i) => (
+                        {cat.items.map((item: any, i: number) => (
                           <div
                             key={`${item.name}-${i}`}
                             className="flex justify-between text-xs text-muted pl-2"
@@ -336,7 +336,7 @@ export function StudentDashboard({ activeTab = "overview" }: { activeTab?: strin
             </div>
           ) : (
             <div className="space-y-3">
-              {payments.map((payment) => (
+              {payments.map((payment: any) => (
                 <div
                   key={payment.id}
                   className="p-4 rounded-xl border border-border bg-surface-secondary"
@@ -370,8 +370,8 @@ export function StudentDashboard({ activeTab = "overview" }: { activeTab?: strin
                       </p>
                       <div className="space-y-1">
                         {payment.routing
-                          .filter((r) => r.direction === "credit")
-                          .map((r, i) => (
+                          .filter((r: any) => r.direction === "credit")
+                          .map((r: any, i: number) => (
                             <div
                               key={i}
                               className="flex justify-between text-xs"

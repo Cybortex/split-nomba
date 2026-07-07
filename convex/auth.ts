@@ -1,5 +1,5 @@
 import { query, mutation, action, internalMutation, internalQuery } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { internal, api } from "./_generated/api";
 import { v } from "convex/values";
 
 // ============================================================================
@@ -838,6 +838,25 @@ export const getUsersByRole = query({
   },
 });
 
+/**
+ * Public query wrapper around requirePermission, allowing actions to verify permissions.
+ */
+export const checkActionPermission = query({
+  args: {
+    requiredRole: v.string(),
+    scope: v.optional(
+      v.object({
+        institutionId: v.optional(v.string()),
+        entityId: v.optional(v.string()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const user = await requirePermission(ctx, args.requiredRole, args.scope as any);
+    return { clerkId: user.clerkId, email: user.email, name: user.name };
+  },
+});
+
 // ============================================================================
 // RBAC — MULTI-ROLE PERMISSION CHECK
 // ============================================================================
@@ -939,6 +958,10 @@ export const approveInstitutionInternal = internalMutation({
     registrationId: v.id("institutionRegistrations"),
     superAdminClerkId: v.string(),
     adminClerkId: v.string(),
+    bankName: v.optional(v.string()),
+    accountNumber: v.optional(v.string()),
+    accountName: v.optional(v.string()),
+    accountRef: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const registration = await ctx.db
@@ -969,6 +992,10 @@ export const approveInstitutionInternal = internalMutation({
       availableBalance: 0,
       minimumBalance: 0,
       transactionCount: 0,
+      bankName: args.bankName,
+      accountNumber: args.accountNumber,
+      accountName: args.accountName,
+      accountRef: args.accountRef,
     });
 
     // Mark registration as approved
@@ -1095,6 +1122,19 @@ export const approveAndSetupInstitution = action({
 
     const { adminEmail, adminName } = registration;
 
+    // Generate Nomba Virtual Account for this institution
+    const accountRef = `REF-VA-INST-${args.registrationId.toString()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    let vaDetails: any = null;
+    try {
+      vaDetails = await ctx.runAction(api.nomba.createVirtualAccount, {
+        accountRef,
+        accountName: registration.name.replace(/[^a-zA-Z0-9\s]/g, "").substring(0, 40),
+      });
+    } catch (err: any) {
+      console.error("Failed to generate Nomba Dedicated Virtual Account:", err.message || err);
+      throw new Error(`Institution approval failed: Dedicated Virtual Account setup failed. ${err.message || err}`);
+    }
+
     // ── Step 3: Create Clerk user (no password — uses email code to sign in) ──
     const clerkCreateRes = await fetch("https://api.clerk.com/v1/users", {
       method: "POST",
@@ -1132,6 +1172,10 @@ export const approveAndSetupInstitution = action({
         registrationId: args.registrationId,
         superAdminClerkId,
         adminClerkId: existingClerkId,
+        bankName: vaDetails.bankName,
+        accountNumber: vaDetails.bankAccountNumber,
+        accountName: vaDetails.bankAccountName,
+        accountRef: accountRef,
       });
 
       await ctx.runMutation(internal.auth.createInstitutionAdminRecord, {
@@ -1166,6 +1210,10 @@ export const approveAndSetupInstitution = action({
       registrationId: args.registrationId,
       superAdminClerkId,
       adminClerkId: clerkId,
+      bankName: vaDetails.bankName,
+      accountNumber: vaDetails.bankAccountNumber,
+      accountName: vaDetails.bankAccountName,
+      accountRef: accountRef,
     });
 
     await ctx.runMutation(internal.auth.createInstitutionAdminRecord, {

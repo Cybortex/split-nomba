@@ -25,6 +25,11 @@ export const getGlobalStats = query({
       0
     );
 
+    const totalPlatformFees = allPayments.reduce(
+      (sum, p) => sum + (p.status === "completed" ? (p.platformFee || 0) : 0),
+      0
+    );
+
     const completedPayments = allPayments.filter(
       (p) => p.status === "completed"
     ).length;
@@ -36,6 +41,7 @@ export const getGlobalStats = query({
       payments: allPayments.length,
       completedPayments,
       paymentVolume: totalPaymentVolume,
+      platformFees: totalPlatformFees,
     };
   },
 });

@@ -1,12 +1,14 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, action, internalMutation } from "./_generated/server";
 import { requirePermission } from "./auth";
+import { api as anyApi, internal as anyInternal } from "./_generated/api";
+const api = anyApi as any;
+const internal = anyInternal as any;
 
 /**
- * Create an association (STUDENT_AFFAIRS only).
- * Associations represent official student groups at faculty or department level.
+ * Internal mutation: Create an association and its wallet.
  */
-export const createAssociation = mutation({
+export const createAssociationInternal = internalMutation({
   args: {
     institutionId: v.id("institutions"),
     name: v.string(),
@@ -15,12 +17,13 @@ export const createAssociation = mutation({
     facultyId: v.optional(v.string()),
     departmentId: v.optional(v.string()),
     entityId: v.optional(v.string()),
+    bankName: v.string(),
+    accountNumber: v.string(),
+    accountName: v.string(),
+    accountRef: v.string(),
+    clerkId: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await requirePermission(ctx, "STUDENT_AFFAIRS", {
-      institutionId: args.institutionId as any,
-    });
-
     if (!args.slug.trim()) {
       throw new Error("Association slug is required");
     }
@@ -61,10 +64,7 @@ export const createAssociation = mutation({
     // Determine wallet type based on association type
     const walletType = args.type === "sug" ? "association" : args.type === "faculty" ? "faculty" : "department";
 
-    const accountNumber = "99" + Math.floor(10000000 + Math.random() * 90000000).toString();
-    const accountRef = `REF-VA-${args.type.toUpperCase()}-${args.slug.substring(0,6).toUpperCase()}-${Date.now().toString().slice(-4)}`;
-
-    // Also create the wallet for this association
+    // Create the wallet for this association
     const walletId = await ctx.db.insert("wallets", {
       institutionId: args.institutionId,
       type: walletType as any,
@@ -75,16 +75,16 @@ export const createAssociation = mutation({
       availableBalance: 0,
       minimumBalance: 0,
       transactionCount: 0,
-      bankName: "Providus Bank",
-      accountNumber,
-      accountName: `${args.name} Wallet`,
-      accountRef,
+      bankName: args.bankName,
+      accountNumber: args.accountNumber,
+      accountName: args.accountName,
+      accountRef: args.accountRef,
     });
 
     // Log audit
     await ctx.db.insert("auditLogs", {
       institutionId: args.institutionId,
-      userId: user.clerkId,
+      userId: args.clerkId,
       action: "ASSOCIATION_CREATED",
       entity: "associations",
       entityId: associationId,
@@ -103,19 +103,73 @@ export const createAssociation = mutation({
 });
 
 /**
- * Create the SUG association for an institution (STUDENT_AFFAIRS or INSTITUTION_ADMIN).
- * There should be exactly one SUG per institution.
+ * Create an association (STUDENT_AFFAIRS only) - now a Convex action.
+ * Generates a real-time Nomba Dedicated Virtual Account.
  */
-export const createSUG = mutation({
+export const createAssociation = action({
+  args: {
+    institutionId: v.id("institutions"),
+    name: v.string(),
+    slug: v.string(),
+    type: v.union(v.literal("sug"), v.literal("faculty"), v.literal("department")),
+    facultyId: v.optional(v.string()),
+    departmentId: v.optional(v.string()),
+    entityId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // 1. Verify permission
+    const user = await ctx.runQuery(api.auth.checkActionPermission, {
+      requiredRole: "STUDENT_AFFAIRS",
+      scope: { institutionId: args.institutionId.toString() },
+    });
+
+    // 2. Generate Nomba Virtual Account details
+    const accountRef = `REF-VA-${args.type.toUpperCase()}-${args.slug.substring(0, 6).toUpperCase()}-${Date.now().toString().slice(-4)}-${Math.floor(10 + Math.random() * 90)}`;
+    let vaDetails: any = null;
+    try {
+      vaDetails = await ctx.runAction(api.nomba.createVirtualAccount, {
+        accountRef,
+        accountName: args.name.replace(/[^a-zA-Z0-9\s]/g, "").slice(0, 40),
+      });
+    } catch (err: any) {
+      console.error("Failed to generate Nomba Dedicated Virtual Account:", err.message || err);
+      throw new Error(`Association creation failed: Dedicated Virtual Account setup failed. ${err.message || err}`);
+    }
+
+    // 3. Call internal mutation to save the association and wallet
+    const result = await ctx.runMutation(internal.associations.createAssociationInternal, {
+      institutionId: args.institutionId,
+      name: args.name,
+      slug: args.slug,
+      type: args.type,
+      facultyId: args.facultyId,
+      departmentId: args.departmentId,
+      entityId: args.entityId,
+      bankName: vaDetails.bankName,
+      accountNumber: vaDetails.bankAccountNumber,
+      accountName: vaDetails.bankAccountName,
+      accountRef: accountRef,
+      clerkId: user.clerkId,
+    });
+
+    return result;
+  },
+});
+
+/**
+ * Internal mutation: Create the SUG association.
+ */
+export const createSUGInternal = internalMutation({
   args: {
     institutionId: v.id("institutions"),
     name: v.optional(v.string()),
+    bankName: v.string(),
+    accountNumber: v.string(),
+    accountName: v.string(),
+    accountRef: v.string(),
+    clerkId: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await requirePermission(ctx, "STUDENT_AFFAIRS", {
-      institutionId: args.institutionId as any,
-    });
-
     // Check if SUG already exists
     const existing = await ctx.db
       .query("associations")
@@ -147,9 +201,6 @@ export const createSUG = mutation({
       createdAt: Date.now(),
     });
 
-    const accountNumber = "99" + Math.floor(10000000 + Math.random() * 90000000).toString();
-    const accountRef = `REF-VA-SUG-SUG-${Date.now().toString().slice(-4)}`;
-
     // Create SUG wallet
     const walletId = await ctx.db.insert("wallets", {
       institutionId: args.institutionId,
@@ -161,15 +212,16 @@ export const createSUG = mutation({
       availableBalance: 0,
       minimumBalance: 0,
       transactionCount: 0,
-      bankName: "Providus Bank",
-      accountNumber,
-      accountName: `${sugName} Wallet`,
-      accountRef,
+      bankName: args.bankName,
+      accountNumber: args.accountNumber,
+      accountName: args.accountName,
+      accountRef: args.accountRef,
     });
 
+    // Log audit
     await ctx.db.insert("auditLogs", {
       institutionId: args.institutionId,
-      userId: user.clerkId,
+      userId: args.clerkId,
       action: "ASSOCIATION_CREATED",
       entity: "associations",
       entityId: associationId,
@@ -184,6 +236,52 @@ export const createSUG = mutation({
     });
 
     return { associationId, walletId };
+  },
+});
+
+/**
+ * Create the SUG association (STUDENT_AFFAIRS only) - now a Convex action.
+ * Generates a real-time Nomba Dedicated Virtual Account.
+ */
+export const createSUG = action({
+  args: {
+    institutionId: v.id("institutions"),
+    name: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // 1. Verify permission
+    const user = await ctx.runQuery(api.auth.checkActionPermission, {
+      requiredRole: "STUDENT_AFFAIRS",
+      scope: { institutionId: args.institutionId.toString() },
+    });
+
+    const sugName = args.name || "Student Union Government";
+
+    // 2. Generate Nomba Virtual Account details
+    const accountRef = `REF-VA-SUG-SUG-${Date.now().toString().slice(-4)}-${Math.floor(10 + Math.random() * 90)}`;
+    let vaDetails: any = null;
+    try {
+      vaDetails = await ctx.runAction(api.nomba.createVirtualAccount, {
+        accountRef,
+        accountName: sugName.replace(/[^a-zA-Z0-9\s]/g, "").slice(0, 40),
+      });
+    } catch (err: any) {
+      console.error("Failed to generate Nomba Dedicated Virtual Account:", err.message || err);
+      throw new Error(`SUG creation failed: Dedicated Virtual Account setup failed. ${err.message || err}`);
+    }
+
+    // 3. Call internal mutation to save records
+    const result = await ctx.runMutation(internal.associations.createSUGInternal, {
+      institutionId: args.institutionId,
+      name: sugName,
+      bankName: vaDetails.bankName,
+      accountNumber: vaDetails.bankAccountNumber,
+      accountName: vaDetails.bankAccountName,
+      accountRef: accountRef,
+      clerkId: user.clerkId,
+    });
+
+    return result;
   },
 });
 
