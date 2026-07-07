@@ -11,7 +11,7 @@ export default function SupportMaterials() {
     },
     {
       q: "How does the automated fee splitting work?",
-      a: "When an institution is configured, administrators define fee schedules for different student levels (e.g., Tuition, SUG Dues, Faculty Dues, Department Dues). When a student pays, Nomba processes the single transaction, and our backend instantly calculates the split according to the schedule. It then virtually allocates the exact amounts to the respective dedicated Providus Bank virtual accounts tied to each association or faculty."
+      a: "When an institution is configured, administrators define fee schedules for different student levels (e.g., Tuition, SUG Dues, Faculty Dues, Department Dues). When a student pays, Nomba processes the single transaction, and our backend instantly calculates the split according to the schedule. It then virtually allocates the exact amounts to the respective dedicated virtual accounts tied to each association or faculty."
     },
     {
       q: "What is the Withdrawal Consensus Mechanism?",
@@ -132,9 +132,9 @@ export default function SupportMaterials() {
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-surface border border-border">
-              <h3 className="font-bold text-primary mb-2 text-lg">Nomba & Providus</h3>
+              <h3 className="font-bold text-primary mb-2 text-lg">Nomba</h3>
               <p className="text-sm leading-relaxed">
-                We utilized Nomba's payment gateway and API to generate dedicated Providus Bank virtual accounts for every entity. This integration handles the heavy lifting of payment processing and webhooks securely.
+                We utilized Nomba's payment gateway and API to generate dedicated virtual accounts for every entity. This integration handles the heavy lifting of payment processing and webhooks securely.
               </p>
             </div>
           </div>
