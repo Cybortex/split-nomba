@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import { ArrowUp, Mail, Phone, ShieldCheck, FileText, RotateCcw } from "lucide-react";
 
 export default function AppFooter() {
@@ -31,9 +32,13 @@ export default function AppFooter() {
           {/* ── Column 1: Brand ── */}
           <div className="lg:col-span-4 space-y-4">
             <Link href="/" className="inline-flex items-center gap-2 group">
-              <div className="w-9 h-9 rounded-xl bg-gold/10 flex items-center justify-center border border-gold/20 group-hover:bg-gold/20 transition-all duration-300">
-                <span className="text-sm font-bold text-gold font-mono">S</span>
-              </div>
+              <Image
+                src="/logo.png"
+                alt="Split Logo"
+                width={36}
+                height={36}
+                className="w-9 h-9 object-contain transition-transform duration-300 group-hover:scale-110"
+              />
               <span className="text-lg font-bold tracking-tight text-primary">
                 Split<span className="text-gold">.</span>
               </span>
@@ -140,9 +145,13 @@ export default function AppFooter() {
             </h4>
             <div className="p-4 rounded-xl bg-surface border border-border space-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center border border-gold/20">
-                  <span className="text-sm font-bold text-gold font-mono">C</span>
-                </div>
+                <Image
+                  src="/CybortexLogo.png"
+                  alt="Cybortex Technologies Logo"
+                  width={40}
+                  height={40}
+                  className="w-10 h-10 object-contain"
+                />
                 <div>
                   <p className="text-sm font-semibold text-primary">
                     Cybortex Technologies

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -165,7 +166,19 @@ export default function PrivacyPolicy() {
               <p><strong className="text-primary">Phone:</strong>{" "}
                 <a href="tel:+2349071649725" className="text-gold hover:text-gold-royal transition-colors">+234 907 164 9725</a>
               </p>
-              <p><strong className="text-primary">Developer:</strong> Cybortex Technologies</p>
+              <div className="flex items-center gap-2 pt-1">
+                <Image
+                  src="/CybortexLogo.png"
+                  alt="Cybortex Technologies Logo"
+                  width={28}
+                  height={28}
+                  className="w-7 h-7 object-contain"
+                />
+                <div>
+                  <p className="text-xs font-semibold text-primary">Cybortex Technologies</p>
+                  <p className="text-xs text-muted-dark">Software Development &amp; Innovation</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

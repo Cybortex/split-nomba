@@ -4,6 +4,7 @@ import { useSignIn } from "@clerk/nextjs/legacy";
 import { useRouter } from "next/navigation";
 import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Loader2,
   Mail,
@@ -413,9 +414,14 @@ export default function CustomSignInForm() {
             href="/"
             className="inline-flex items-center gap-2 mb-5 group"
           >
-            <div className="w-12 h-12 rounded-2xl bg-gold/10 flex items-center justify-center border border-gold/20 group-hover:bg-gold/20 transition-all duration-300">
-              <span className="text-xl font-bold text-gold font-mono">S</span>
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Split Logo"
+              width={48}
+              height={48}
+              className="w-12 h-12 object-contain transition-transform duration-300 group-hover:scale-110"
+              priority
+            />
           </Link>
           <h1 className="text-2xl sm:text-3xl font-bold text-primary">
             {mode === "forgot" ? "Reset your password" : "Welcome back"}
