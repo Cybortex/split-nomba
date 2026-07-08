@@ -68,6 +68,7 @@ export const createPayment = internalMutation({
     facultySlug: v.optional(v.string()),
     departmentSlug: v.optional(v.string()),
     platformFee: v.optional(v.number()),
+    nombaFee: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("payments", {
@@ -87,6 +88,7 @@ export const createPayment = internalMutation({
       facultySlug: args.facultySlug,
       departmentSlug: args.departmentSlug,
       platformFee: args.platformFee,
+      nombaFee: args.nombaFee,
       createdAt: Date.now(),
     });
   },
