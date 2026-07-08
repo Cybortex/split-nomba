@@ -51,6 +51,26 @@ export default function SupportMaterials() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-16 space-y-16 sm:space-y-24">
         
+        {/* Section: Pitch Deck Presentation */}
+        <section>
+          <div className="mb-10 text-center sm:text-left">
+            <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-4 flex items-center justify-center sm:justify-start gap-3">
+              <Rocket className="w-6 h-6 sm:w-8 sm:h-8 text-gold" />
+              Official Pitch Deck
+            </h2>
+            <p className="text-lg leading-relaxed">
+              Explore our comprehensive slide deck outlining the vision, execution, and technical impact of the Split platform.
+            </p>
+          </div>
+          <div className="card p-2 sm:p-4 bg-surface border border-border-subtle rounded-xl shadow-xl overflow-hidden">
+            <iframe 
+              src="/Pitchdeck.pdf#toolbar=0" 
+              className="w-full h-[600px] sm:h-[800px] rounded-lg border-0"
+              title="Split Platform Pitch Deck"
+            />
+          </div>
+        </section>
+
         {/* Section: What Split Does & How It Works */}
         <section>
           <div className="mb-10 text-center sm:text-left">
