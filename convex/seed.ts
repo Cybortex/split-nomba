@@ -199,7 +199,7 @@ export const seedDemoInstitution = mutation({
       const accountNumber = "99" + Math.floor(10000000 + Math.random() * 90000000).toString();
       const accountRef = `REF-VA-${refType.toUpperCase()}-${Date.now().toString().slice(-4)}`;
       return {
-        bankName: "Providus Bank",
+        bankName: "Wema Bank",
         accountNumber,
         accountName: name.slice(0, 30),
         accountRef,

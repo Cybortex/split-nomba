@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ShieldCheck, Server, Layers, Key, Zap, CheckCircle2, FileText, Lock, Rocket } from "lucide-react";
+import { ShieldCheck, Server, Layers, Key, Zap, CheckCircle2, FileText, Lock, Rocket, Activity } from "lucide-react";
 
 export default function SupportMaterials() {
   const faqs = [
@@ -100,6 +100,56 @@ export default function SupportMaterials() {
                   <span><strong>Finance Officers</strong> execute the final disbursement.</span>
                 </li>
               </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Section: Project Timeline & Integrations */}
+        <section>
+          <div className="mb-10 text-center sm:text-left">
+            <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-4 flex items-center justify-center sm:justify-start gap-3">
+              <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-gold" />
+              Development Timeline & Integrations
+            </h2>
+            <p className="text-lg leading-relaxed">
+              An overview of the core features and integrations we successfully built for the Nomba Hackathon.
+            </p>
+          </div>
+
+          <div className="relative border-l-2 border-border-subtle ml-4 sm:ml-6 space-y-10 py-4">
+            <div className="relative pl-8 sm:pl-10">
+              <div className="absolute -left-[11px] top-1 w-5 h-5 rounded-full bg-gold border-4 border-surface shadow"></div>
+              <h3 className="text-xl font-bold text-primary mb-2">1. Role-Based Authentication & Setup</h3>
+              <p className="leading-relaxed mb-2">Developed a comprehensive 9-tier role system allowing precise access control for Deans, HODs, Finance Officers, Advisors, and Students.</p>
+              <div className="inline-block bg-surface px-3 py-1 rounded-full text-xs font-semibold text-gold border border-border-subtle">Integration: Clerk Auth</div>
+            </div>
+
+            <div className="relative pl-8 sm:pl-10">
+              <div className="absolute -left-[11px] top-1 w-5 h-5 rounded-full bg-gold border-4 border-surface shadow"></div>
+              <h3 className="text-xl font-bold text-primary mb-2">2. Automated Virtual Wallet Provisioning</h3>
+              <p className="leading-relaxed mb-2">Built dynamic wallet creation mapping directly to university faculties, departments, and associations using Wema Bank virtual accounts.</p>
+              <div className="inline-block bg-surface px-3 py-1 rounded-full text-xs font-semibold text-gold border border-border-subtle">Integration: Convex DB</div>
+            </div>
+
+            <div className="relative pl-8 sm:pl-10">
+              <div className="absolute -left-[11px] top-1 w-5 h-5 rounded-full bg-gold border-4 border-surface shadow"></div>
+              <h3 className="text-xl font-bold text-primary mb-2">3. Dynamic Fee Splitting Engine</h3>
+              <p className="leading-relaxed mb-2">Engineered a flexible algorithm that calculates the exact required dues and tuition fractions instantly based on a student's department and level.</p>
+              <div className="inline-block bg-surface px-3 py-1 rounded-full text-xs font-semibold text-gold border border-border-subtle">Internal Logic</div>
+            </div>
+
+            <div className="relative pl-8 sm:pl-10">
+              <div className="absolute -left-[11px] top-1 w-5 h-5 rounded-full bg-gold border-4 border-surface shadow"></div>
+              <h3 className="text-xl font-bold text-primary mb-2">4. Payment Gateway & Webhook Sync</h3>
+              <p className="leading-relaxed mb-2">Integrated seamless checkout experiences and secure backend webhooks with cryptographic HMAC verification to finalize split transactions.</p>
+              <div className="inline-block bg-surface px-3 py-1 rounded-full text-xs font-semibold text-gold border border-border-subtle">Integration: Nomba API</div>
+            </div>
+
+            <div className="relative pl-8 sm:pl-10">
+              <div className="absolute -left-[11px] top-1 w-5 h-5 rounded-full bg-gold border-4 border-surface shadow"></div>
+              <h3 className="text-xl font-bold text-primary mb-2">5. Multi-Signature Withdrawal Consensus</h3>
+              <p className="leading-relaxed mb-2">Implemented a strict approval pipeline where Student Excos initiate and Staff Advisors approve requests before Finance Officers can disburse funds.</p>
+              <div className="inline-block bg-surface px-3 py-1 rounded-full text-xs font-semibold text-gold border border-border-subtle">Integration: Convex Real-time</div>
             </div>
           </div>
         </section>
