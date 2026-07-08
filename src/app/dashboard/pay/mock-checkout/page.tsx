@@ -225,7 +225,7 @@ function MockCheckoutContent() {
                     <p className="text-xs font-bold text-secondary">Transfer Reference Account</p>
                     <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
                       <span className="text-muted">Bank Name:</span>
-                      <span className="text-primary font-medium">Providus Bank (Mock)</span>
+                      <span className="text-primary font-medium">Wema Bank (Mock)</span>
                       <span className="text-muted">Account Number:</span>
                       <span className="text-primary font-bold font-mono">9938491032</span>
                       <span className="text-muted">Account Name:</span>
