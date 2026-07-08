@@ -5,6 +5,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import AppFooter from "@/components/AppFooter";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
+import { ToastProvider } from "@/components/Toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,8 +38,10 @@ export default function RootLayout({
       >
         <body className="min-h-full flex flex-col bg-app">
           <ConvexClientProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
+            <ToastProvider>
+              <Navbar />
+              <main className="flex-1">{children}</main>
+            </ToastProvider>
           </ConvexClientProvider>
           <AppFooter />
         </body>

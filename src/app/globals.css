@@ -70,6 +70,7 @@
   --animate-pulse-gold: pulse-gold 2s infinite;
   --animate-fade-in-fast: fade-in 0.15s ease-out;
   --animate-slide-in-left: slide-in-left 0.3s ease-out;
+  --animate-slide-in-right: slide-in-right 0.3s ease-out;
   --animate-fade-out: fade-out 0.15s ease-in;
 }
 
