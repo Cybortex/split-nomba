@@ -106,8 +106,16 @@ export default function CustomSignInForm() {
         if (result.status === "complete") {
           await setActive({ session: result.createdSessionId });
           router.push("/dashboard");
+        } else if (result.status === "needs_first_factor") {
+          // Password was accepted but email is unverified or similar
+          console.log("Needs first factor. Switching to OTP.");
+          setError("Your email needs verification. Please use the One-Time Code option.");
+          switchMode("otp");
+        } else if (result.status === "needs_second_factor") {
+          setError("Two-factor authentication is required, which is not supported in this basic form yet.");
         } else {
-          setError("Additional verification is required. Please try again.");
+          console.log("Clerk SignIn incomplete:", result);
+          setError(`Additional verification required. Status: ${result.status}`);
         }
       } catch (err: any) {
         const message =
