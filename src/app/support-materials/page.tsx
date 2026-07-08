@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ShieldCheck, Server, Layers, Key, Zap, CheckCircle2, FileText, Lock } from "lucide-react";
+import { ShieldCheck, Server, Layers, Key, Zap, CheckCircle2, FileText, Lock, Rocket } from "lucide-react";
 
 export default function SupportMaterials() {
   const faqs = [
@@ -28,6 +28,10 @@ export default function SupportMaterials() {
     {
       q: "What happens if a webhook event is missed?",
       a: "Our system relies on real-time webhook events from Nomba to confirm transaction completion. However, we also implement idempotency checks based on transaction references to ensure that even if a webhook is retried or delivered late, no student is credited twice and no wallet balance is falsely inflated."
+    },
+    {
+      q: "Does this support Federal Universities using the Treasury Single Account (TSA)?",
+      a: "For the scope of this Nomba Hackathon project, we assume a Private or State institution model where tuition and dues go to commercial bank accounts perfectly suited for Nomba. In a real-world Federal University deployment, the platform would adopt a hybrid architecture: tuition payments would generate an RRR via Remita to sweep directly into the TSA, while faculty and departmental dues would continue to be processed and split seamlessly through Nomba into their respective commercial union accounts."
     }
   ];
 
@@ -188,6 +192,46 @@ export default function SupportMaterials() {
                   Our webhook processor checks transaction references against the database before applying balances. This guarantees that duplicate webhook deliveries will never result in double-crediting a wallet.
                 </p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section: Future Roadmap */}
+        <section>
+          <div className="mb-10 text-center sm:text-left">
+            <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-4 flex items-center justify-center sm:justify-start gap-3">
+              <Rocket className="w-6 h-6 sm:w-8 sm:h-8 text-gold" />
+              Future Development Plans
+            </h2>
+            <p className="text-lg leading-relaxed">
+              We have a clear vision for how Split can evolve beyond this hackathon MVP into a comprehensive financial ecosystem for tertiary institutions.
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            <div className="card p-6 border-l-4 border-gold">
+              <h4 className="text-lg font-bold text-primary mb-2">Biometric & Multi-Factor Authentication</h4>
+              <p className="leading-relaxed">Implement step-up security verification (such as fingerprint scanning, face unlock, or SMS/email OTPs) for executing high-volume or critical withdrawals.</p>
+            </div>
+            
+            <div className="card p-6 border-l-4 border-gold">
+              <h4 className="text-lg font-bold text-primary mb-2">AI Smart Analytics</h4>
+              <p className="leading-relaxed">Integrate predictive analytics and AI forecasting models to assist school deans, HODs, and finance officers in predicting fee compliance rates and preparing departmental budgets.</p>
+            </div>
+
+            <div className="card p-6 border-l-4 border-gold">
+              <h4 className="text-lg font-bold text-primary mb-2">Course Representative Fee Collection Portal</h4>
+              <p className="leading-relaxed">Design a delegated collection channel enabling class/course representatives to securely collect physical dues or track local department micro-payments on behalf of their peers.</p>
+            </div>
+
+            <div className="card p-6 border-l-4 border-gold">
+              <h4 className="text-lg font-bold text-primary mb-2">Institutional Crowdfunding Platform</h4>
+              <p className="leading-relaxed">Introduce crowdfunding features allowing associations, departments, or faculties to raise money for specific school projects, laboratories, or SUG events.</p>
+            </div>
+
+            <div className="card p-6 border-l-4 border-gold">
+              <h4 className="text-lg font-bold text-primary mb-2">Personal Student & Staff Mobile Banking App</h4>
+              <p className="leading-relaxed">Develop a lightweight, dedicated mobile application for students and staff to receive allowances, manage micro-payments, and monitor association fund transparency on the go.</p>
             </div>
           </div>
         </section>
