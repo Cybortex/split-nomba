@@ -99,8 +99,8 @@ export function StudentPaymentForm() {
 
       <div className="bg-gold-subtle border border-gold/15 p-4 rounded-xl mb-6 text-center">
         <p className="text-muted text-sm">Amount to Pay</p>
-        <p className="text-3xl font-bold text-gold">₦75,000</p>
-        <p className="text-xs text-muted mt-1">Calculated server-side — frontend cannot modify</p>
+        <p className="text-3xl font-bold text-gold">Calculated on server</p>
+        <p className="text-xs text-muted mt-1">The amount is securely computed based on your fee configuration</p>
       </div>
 
       <button

@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { syncSuperAdminRole } from "@/lib/clerk-sync";
+import Image from "next/image";
 import { 
   BarChart3, Users, GraduationCap, Calendar, Settings, Coins, 
   Landmark, Banknote, CreditCard, ScrollText, Handshake, Briefcase, 
@@ -119,9 +120,13 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       {/* Brand & Institution Info */}
       <div className="px-5 py-5 border-b border-border-subtle">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-gold/10 flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-bold text-gold">S</span>
-          </div>
+          <Image
+            src="/logo.png"
+            alt="Split Logo"
+            width={32}
+            height={32}
+            className="w-8 h-8 object-contain flex-shrink-0"
+          />
           <div className="min-w-0">
             <h1 className="text-sm font-bold text-primary truncate">
               {myInstitution?.name || "Institution"}

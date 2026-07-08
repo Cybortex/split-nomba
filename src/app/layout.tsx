@@ -23,6 +23,12 @@ export const metadata: Metadata = {
     "Route every payment where it belongs. Automated fee distribution for institutions.",
 };
 
+export const viewport = {
+  themeColor: "#08090B",
+  width: "device-width",
+  initialScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

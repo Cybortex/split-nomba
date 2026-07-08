@@ -5,7 +5,6 @@ import { StatCard } from "@/components/ui/StatCard";
 
 export function StaffDashboard({ activeTab }: { activeTab?: string }) {
   // MOCKUP: Staff personal allowance dashboard
-  // TODO: Connect to real backend queries when allowance/payroll system is built
 
   const mockAllowances = [
     { date: "2026-06-01", description: "Monthly Allowance - June", amount: 150000, status: "paid" },

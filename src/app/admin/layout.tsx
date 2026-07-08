@@ -7,6 +7,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { syncSuperAdminRole } from "@/lib/clerk-sync";
 import { Suspense } from "react";
+import Image from "next/image";
 import {
   LayoutDashboard, CheckCircle, Building2, ScrollText,
   Menu, X,
@@ -29,9 +30,13 @@ function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
       {/* Brand */}
       <div className="px-5 py-5 border-b border-border-subtle">
         <Link href="/admin" className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-gold/10 flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-bold text-gold">S</span>
-          </div>
+          <Image
+            src="/logo.png"
+            alt="Split Logo"
+            width={32}
+            height={32}
+            className="w-8 h-8 object-contain flex-shrink-0"
+          />
           <div className="min-w-0">
             <h1 className="text-sm font-bold text-primary truncate">
               Admin Panel

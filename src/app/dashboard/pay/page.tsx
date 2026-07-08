@@ -114,7 +114,7 @@ export default function PayPage() {
 
           <a
             href={success.authorisationUrl}
-            className="block w-full py-2.5 text-sm font-semibold rounded-lg text-center bg-gold text-black hover:brightness-110 transition-all duration-200"
+            className="block w-full py-2.5 text-sm font-semibold rounded-xl text-center bg-gold text-black hover:brightness-110 transition-all duration-200"
           >
             Continue to Payment
           </a>
@@ -138,7 +138,7 @@ export default function PayPage() {
           className="card p-6 sm:p-8 space-y-5"
         >
           {error && (
-            <div className="p-3 rounded-lg text-sm bg-error/10 text-error border border-error/20">
+            <div className="p-3 rounded-xl text-sm bg-error/10 text-error border border-error/20">
               {error}
             </div>
           )}
@@ -171,7 +171,7 @@ export default function PayPage() {
             {loading ? "Connecting to Nomba..." : "Pay with Nomba"}
           </button>
 
-          <div className="p-3 rounded-lg bg-gold-subtle">
+          <div className="p-3 rounded-xl bg-gold-subtle">
             <p className="text-xs text-gold-royal flex items-start gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5 text-gold-royal flex-shrink-0 mt-0.5" />
               <span>Security: Payment amount is calculated on the server. The frontend cannot modify it.</span>
